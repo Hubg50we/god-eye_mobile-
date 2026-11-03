@@ -138,6 +138,78 @@ public class MainActivity extends AppCompatActivity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.postDelayed(() -> handleAssistIntent(getIntent()), 1000);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                super.onReceivedError(view, errorCode, description, failingUrl);
+                // Auto-recover from any unreachable dev URL or network error
+                if (failingUrl != null && !failingUrl.startsWith("file:///android_asset/")) {
+                    view.post(() -> {
+                        Toast.makeText(context, "Dev server unreachable. Returning to Local Tactical HUD.", Toast.LENGTH_SHORT).show();
+                        view.loadUrl("file:///android_asset/web/index.html");
+                    });
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                if (request != null && request.isForMainFrame()) {
+                    String failingUrl = request.getUrl() != null ? request.getUrl().toString() : "";
+                    if (!failingUrl.startsWith("file:///android_asset/")) {
+                        view.post(() -> {
+                            Toast.makeText(context, "Connection refused. Resuming Local Tactical HUD.", Toast.LENGTH_SHORT).show();
+                            view.loadUrl("file:///android_asset/web/index.html");
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url == null) return false;
+
+                // Stay in local asset app
+                if (url.startsWith("file:///android_asset/")) {
+                    return false;
+                }
+
+                // Block accidental localhost/10.0.2.2 dev redirects from destroying local app state
+                if (url.contains("10.0.2.2") || url.contains("localhost") || url.contains("127.0.0.1")) {
+                    Toast.makeText(context, "Local dev server unreachable. Staying on local HUD.", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+
+                // External web links open safely in external browser
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        });
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+                callback.invoke(origin, true, false);
+            }
+
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                request.grant(request.getResources());
+            }
+        });
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
                         @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -848,7 +920,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public String getAppVersion() {
-            return "2.6.0";
+            return "2.6.1";
         }
     }
 }

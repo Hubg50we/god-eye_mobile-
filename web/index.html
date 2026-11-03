@@ -940,7 +940,7 @@
             <button class="t-btn" onclick="toggleRangeFinder()">
                 📏 RANGING
             </button>
-            <button class="t-btn t-btn-primary" onclick="launchLocalDev()">
+            <button class="t-btn t-btn-primary" id="btn3DTiles" onclick="toggle3DTiles()">
                 ⚡ 3D TILES
             </button>
         </div>
@@ -1117,7 +1117,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">REMOTE 3D TILES SERVER URL (DEV / CLOUD):</label>
-                <input type="text" class="form-input" id="cfgUrl" placeholder="http://10.0.2.2:5173 or https://gods-eye.vercel.app">
+                <input type="text" class="form-input" id="cfgUrl" placeholder="Optional Custom Server (Leave blank for 100% Offline App)">
             </div>
             <div class="form-group">
                 <label class="form-label">GOOGLE PHOTOREALISTIC 3D TILES KEY:</label>
@@ -4876,10 +4876,49 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
             }
         }
 
-        function launchLocalDev() {
+        let global3DTileset = null;
+        async function toggle3DTiles() {
             triggerHaptic(25);
-            const savedUrl = localStorage.getItem('gev_url') || 'http://10.0.2.2:5173';
-            window.location.href = savedUrl;
+            playSciFiBeep('confirm');
+
+            if (!cesiumViewer) {
+                showToast("Initializing Cesium 3D Engine...");
+                await initCesiumGlobe();
+            }
+            if (!cesiumViewer) {
+                showToast("Cesium viewer unavailable in offline mode");
+                return;
+            }
+
+            try {
+                if (global3DTileset) {
+                    cesiumViewer.scene.primitives.remove(global3DTileset);
+                    global3DTileset = null;
+                    showToast("Photorealistic 3D Tiles disengaged");
+                    const btn = document.getElementById('btn3DTiles');
+                    if (btn) btn.classList.remove('active');
+                } else {
+                    showToast("Streaming Google Photorealistic 3D Tiles...");
+                    if (typeof Cesium.createGooglePhotorealistic3DTileset === 'function') {
+                        global3DTileset = await Cesium.createGooglePhotorealistic3DTileset();
+                    } else if (typeof Cesium.Cesium3DTileset.fromIonAssetId === 'function') {
+                        global3DTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207);
+                    }
+                    if (global3DTileset) {
+                        cesiumViewer.scene.primitives.add(global3DTileset);
+                        showToast("Google Photorealistic 3D Tiles: ONLINE");
+                        const btn = document.getElementById('btn3DTiles');
+                        if (btn) btn.classList.add('active');
+                    }
+                }
+            } catch (e) {
+                console.error("[3D-TILES] Error:", e);
+                showToast("3D Tiles: " + (e.message || "Failed to load tileset"));
+            }
+        }
+
+        function launchLocalDev() {
+            toggle3DTiles();
         }
 
         function openSettings() {
@@ -4905,7 +4944,6 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
 
             closeSettings();
             showToast("Tactical parameters & Cesium Ion saved");
-            if (url) window.location.href = url;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
