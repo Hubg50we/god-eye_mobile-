@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>God's Eye View — Tactical AI Assistant & Intelligence Console</title>
+    <title>God's Eye View — Autonomous AI Assistant & Tactical Console</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,11 +13,11 @@
             user-select: none;
         }
         :root {
-            --bg-color: #08090d;
-            --card-bg: rgba(13, 16, 26, 0.94);
+            --bg-color: #06070a;
+            --card-bg: rgba(11, 14, 24, 0.95);
             --card-border: rgba(0, 255, 204, 0.25);
             --cyan: #00ffcc;
-            --cyan-glow: rgba(0, 255, 204, 0.45);
+            --cyan-glow: rgba(0, 255, 204, 0.5);
             --cyan-dim: rgba(0, 255, 204, 0.12);
             --amber: #ffb700;
             --amber-dim: rgba(255, 183, 0, 0.15);
@@ -58,13 +58,13 @@
         header {
             position: relative;
             z-index: 10;
-            padding: calc(env(safe-area-inset-top, 20px) + 10px) 16px 10px 16px;
+            padding: calc(env(safe-area-inset-top, 20px) + 8px) 16px 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(180deg, rgba(8,9,13,0.96) 0%, rgba(8,9,13,0.5) 85%, transparent 100%);
+            background: linear-gradient(180deg, rgba(6,7,10,0.98) 0%, rgba(6,7,10,0.6) 85%, transparent 100%);
             border-bottom: 1px solid rgba(0, 255, 204, 0.2);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
         }
         .brand {
             display: flex;
@@ -91,15 +91,16 @@
             content: '';
             width: 8px;
             height: 8px;
-            background: var(--amber);
+            background: var(--purple);
             border-radius: 50%;
+            box-shadow: 0 0 8px var(--purple);
         }
         .brand-text {
             display: flex;
             flex-direction: column;
         }
         .brand-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             letter-spacing: 2px;
             color: var(--text-main);
@@ -123,7 +124,7 @@
         .hud-chip {
             font-size: 10px;
             font-family: var(--font-mono);
-            padding: 5px 9px;
+            padding: 5px 10px;
             border: 1px solid var(--purple);
             border-radius: 20px;
             background: var(--purple-dim);
@@ -133,7 +134,7 @@
             align-items: center;
             gap: 5px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
             transition: all 0.2s;
         }
         .hud-chip:active {
@@ -158,15 +159,15 @@
         /* Floating AI Assistant Orb Button */
         .ai-assistant-fab {
             position: fixed;
-            right: 18px;
-            bottom: calc(env(safe-area-inset-bottom, 16px) + 76px);
+            right: 16px;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 74px);
             z-index: 25;
-            width: 54px;
-            height: 54px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: radial-gradient(circle, #2e1065 0%, #0f172a 100%);
+            background: radial-gradient(circle, #3b0764 0%, #0f172a 100%);
             border: 2px solid var(--purple);
-            box-shadow: 0 0 20px var(--purple-glow), 0 4px 15px rgba(0,0,0,0.6);
+            box-shadow: 0 0 24px var(--purple-glow), 0 6px 20px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -182,15 +183,15 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 1px dashed rgba(192, 132, 252, 0.6);
-            animation: orb-spin 10s linear infinite;
+            border: 1.5px dashed rgba(192, 132, 252, 0.7);
+            animation: orb-spin 8s linear infinite;
         }
         @keyframes orb-spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
         .ai-fab-icon {
-            font-size: 22px;
+            font-size: 24px;
             z-index: 2;
         }
         .ai-fab-badge {
@@ -200,7 +201,7 @@
             color: #08090d;
             font-size: 8px;
             font-weight: 900;
-            padding: 1px 5px;
+            padding: 1px 6px;
             border-radius: 8px;
             letter-spacing: 0.5px;
         }
@@ -213,8 +214,8 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 12px 14px;
-            padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 8px);
+            padding: 10px 14px;
+            padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 6px);
             max-width: 650px;
             margin: 0 auto;
             width: 100%;
@@ -235,12 +236,12 @@
         }
         .category-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
-            background: rgba(13, 16, 26, 0.85);
+            background: rgba(11, 14, 24, 0.88);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(148, 163, 184, 0.2);
             color: var(--text-sub);
             padding: 6px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: var(--font-mono);
             font-size: 11px;
             font-weight: bold;
@@ -252,10 +253,10 @@
             border-color: var(--cyan);
             color: var(--cyan);
             background: var(--cyan-dim);
-            box-shadow: 0 0 8px rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.25);
         }
 
-        /* Compact Asset Status Bar */
+        /* Status Card */
         .status-card {
             background: var(--card-bg);
             backdrop-filter: blur(16px);
@@ -323,7 +324,7 @@
             border-color: var(--purple);
             color: var(--purple);
             background: var(--purple-dim);
-            box-shadow: 0 0 10px rgba(192, 132, 252, 0.2);
+            box-shadow: 0 0 12px rgba(192, 132, 252, 0.25);
         }
         .t-btn-purple:active {
             background: var(--purple);
@@ -339,7 +340,7 @@
             color: #000;
         }
 
-        /* Modals */
+        /* Modals & Fullscreen Expansion */
         #assistantModal, #assessmentModal, #settingsModal {
             display: none;
             position: fixed;
@@ -348,7 +349,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.88);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
             z-index: 100;
             justify-content: center;
             align-items: flex-end;
@@ -360,24 +361,35 @@
             }
         }
         .tactical-modal-card {
-            background: #0f121e;
-            border: 1px solid var(--purple);
+            background: #0d101a;
+            border: 1.5px solid var(--purple);
             border-radius: 14px;
             padding: 16px;
             width: 100%;
-            max-width: 480px;
-            box-shadow: 0 0 45px rgba(192, 132, 252, 0.3);
+            max-width: 520px;
+            box-shadow: 0 0 45px rgba(192, 132, 252, 0.35);
             font-family: var(--font-mono);
             max-height: 85vh;
             display: flex;
             flex-direction: column;
             position: relative;
+            transition: all 0.3s ease;
+        }
+        .tactical-modal-card.fullscreen-mode {
+            max-width: 100vw;
+            max-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            border-radius: 0;
+            border: none;
+            padding-top: calc(env(safe-area-inset-top, 20px) + 12px);
+            padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 12px);
         }
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(192, 132, 252, 0.2);
         }
@@ -390,59 +402,48 @@
             align-items: center;
             gap: 6px;
         }
-        .close-icon {
-            background: transparent;
-            border: none;
-            color: var(--text-sub);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px;
+        .header-btn-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
         }
-        .close-icon:hover { color: var(--red); }
+        .icon-btn {
+            background: transparent;
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            color: var(--text-sub);
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .icon-btn:hover { color: #fff; border-color: var(--purple); }
 
-        /* Assistant Voice Banner & Animated Avatar */
+        /* Assistant Voice Banner & Animated Waveform */
         .assistant-avatar-banner {
             display: flex;
             align-items: center;
             gap: 12px;
             background: rgba(192, 132, 252, 0.08);
-            border: 1px solid rgba(192, 132, 252, 0.25);
+            border: 1px solid rgba(192, 132, 252, 0.3);
             border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 12px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
         }
         .assistant-core-orb {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: radial-gradient(circle, var(--purple) 0%, #3b0764 100%);
-            box-shadow: 0 0 14px var(--purple-glow);
+            box-shadow: 0 0 16px var(--purple-glow);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             position: relative;
         }
-        .assistant-wave-bars {
-            display: flex;
-            gap: 3px;
-            align-items: center;
-            height: 16px;
-        }
-        .wave-bar {
-            width: 3px;
-            height: 6px;
-            background: var(--purple);
-            border-radius: 2px;
-            animation: wave 1.2s infinite ease-in-out;
-        }
-        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
-        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 10px; }
-        .wave-bar:nth-child(4) { animation-delay: 0.1s; height: 16px; }
-        .wave-bar:nth-child(5) { animation-delay: 0.3s; height: 8px; }
-        @keyframes wave {
-            0%, 100% { transform: scaleY(0.4); }
-            50% { transform: scaleY(1.4); }
+        #audioWaveCanvas {
+            width: 70px;
+            height: 24px;
         }
 
         /* Chat History */
@@ -456,11 +457,14 @@
             flex-direction: column;
             gap: 8px;
         }
+        .tactical-modal-card.fullscreen-mode .chat-history {
+            max-height: none;
+        }
         .chat-bubble {
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 11px;
-            line-height: 1.4;
+            line-height: 1.45;
         }
         .chat-bubble.agent {
             background: rgba(192, 132, 252, 0.1);
@@ -474,7 +478,7 @@
             align-self: flex-end;
         }
 
-        /* Voice Controls & Input */
+        /* Assistant Command Quick Chips */
         .chip-row {
             display: flex;
             gap: 6px;
@@ -485,9 +489,9 @@
         .chip-row::-webkit-scrollbar { display: none; }
         .query-chip {
             background: rgba(192, 132, 252, 0.08);
-            border: 1px solid rgba(192, 132, 252, 0.3);
+            border: 1px solid rgba(192, 132, 252, 0.35);
             color: var(--purple);
-            padding: 5px 10px;
+            padding: 5px 11px;
             border-radius: 14px;
             font-size: 10px;
             cursor: pointer;
@@ -497,6 +501,8 @@
             background: var(--purple);
             color: #000;
         }
+
+        /* Voice Input Row */
         .chat-input-row {
             display: flex;
             gap: 6px;
@@ -504,7 +510,7 @@
         }
         .chat-input {
             flex: 1;
-            background: #08090d;
+            background: #06070a;
             border: 1px solid rgba(192, 132, 252, 0.4);
             color: #fff;
             padding: 9px 12px;
@@ -515,20 +521,20 @@
         .chat-input:focus {
             outline: none;
             border-color: var(--purple);
-            box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.4);
         }
         .voice-mic-btn {
             background: var(--purple);
             color: #08090d;
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             transition: all 0.2s;
         }
@@ -539,7 +545,7 @@
         }
         @keyframes pulse-mic {
             0% { transform: scale(1); box-shadow: 0 0 4px var(--red); }
-            100% { transform: scale(1.08); box-shadow: 0 0 16px var(--red); }
+            100% { transform: scale(1.08); box-shadow: 0 0 18px var(--red); }
         }
 
         /* Threat Assessment Card */
@@ -595,7 +601,7 @@
         .form-label { display: block; color: var(--text-sub); font-size: 10px; margin-bottom: 4px; }
         .form-input {
             width: 100%;
-            background: #08090d;
+            background: #06070a;
             border: 1px solid rgba(0, 255, 204, 0.3);
             color: #fff;
             padding: 9px;
@@ -649,8 +655,8 @@
         <div class="interactive-panel status-card">
             <div class="status-grid">
                 <div class="status-item">
-                    <span class="status-label">AI ASSISTANT AGENT:</span>
-                    <span class="status-val" style="color:var(--purple);">AEGIS AI Assistant (Ready)</span>
+                    <span class="status-label">AI ASSISTANT AUTHORITY:</span>
+                    <span class="status-val" style="color:var(--purple);">Full App Control (Active)</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">HARDWARE RUNTIME:</span>
@@ -681,14 +687,19 @@
         </div>
     </main>
 
-    <!-- AEGIS Conversational AI Assistant Modal -->
+    <!-- AEGIS Conversational AI Assistant Modal (Full Control Center) -->
     <div id="assistantModal">
-        <div class="tactical-modal-card">
+        <div class="tactical-modal-card" id="assistantModalCard">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>✨ AEGIS — TACTICAL AI ASSISTANT</span>
+                    <span>✨ AEGIS — FULL ACCESS AI ASSISTANT</span>
                 </div>
-                <button class="close-icon" onclick="closeAssistant()">✕</button>
+                <div class="header-btn-group">
+                    <button class="icon-btn" onclick="toggleAssistantFullscreen()" title="Toggle Fullscreen">⛶</button>
+                    <button class="icon-btn" onclick="exportFullSitrep()" title="Copy Sitrep">📋</button>
+                    <button class="icon-btn" onclick="shareFullSitrep()" title="Share Sitrep">📤</button>
+                    <button class="close-icon" onclick="closeAssistant()">✕</button>
+                </div>
             </div>
 
             <div class="assistant-avatar-banner">
@@ -696,41 +707,36 @@
                     <span>🤖</span>
                 </div>
                 <div style="flex:1;">
-                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS Tactical Assistant</div>
-                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Ready to assist. Voice & command loop active.</div>
+                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS AI Assistant Core</div>
+                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Full App Access Active · Camera, Filters, Voice, GPS.</div>
                 </div>
-                <div class="assistant-wave-bars" id="waveBars" style="opacity:0.4;">
-                    <div class="wave-bar"></div>
-                    <div class="wave-bar"></div>
-                    <div class="wave-bar"></div>
-                    <div class="wave-bar"></div>
-                    <div class="wave-bar"></div>
-                </div>
+                <canvas id="audioWaveCanvas"></canvas>
             </div>
 
             <div class="chat-history" id="chatHistory">
                 <div class="chat-bubble agent">
-                    <strong>AEGIS Assistant:</strong> Greetings, Commander. I am your God's Eye AI Assistant. I can track flights, monitor earthquakes, calculate satellite passes, inspect weather, and control the 3D globe for you. What would you like me to analyze?
+                    <strong>AEGIS Assistant:</strong> Welcome, Commander. I have full autonomous control of this console. You can command me via voice or text to fly anywhere ("Fly to Tokyo"), scan threats ("Analyze earthquakes"), control zoom, track the space station, or share intelligence reports.
                 </div>
             </div>
 
             <div class="chip-row">
+                <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo')">✈️ Fly to Tokyo</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Show me all seismic earthquakes')">💥 Show Earthquakes</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Where is the International Space Station?')">🛰 Track ISS Orbit</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Scan military airspace patrols')">✈ Military Flights</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station')">🛰 Track ISS Orbit</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Toggle auto orbit rotation')">🔄 Toggle Auto-Orbit</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Lock onto my GPS location')">📍 Center On My GPS</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Benchmark local neural net')">⚡ Benchmark Neural Net</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Benchmark neural net')">⚡ Neural Benchmark</div>
             </div>
 
             <div class="chat-input-row">
                 <button class="voice-mic-btn" id="micBtn" onclick="toggleVoiceRecognition()" title="Voice Input">🎙️</button>
-                <input type="text" class="chat-input" id="assistantInput" placeholder="Speak or type a command..." onkeydown="if(event.key==='Enter') sendAssistantText()">
-                <button class="t-btn t-btn-purple" style="padding: 0 14px; height: 36px;" onclick="sendAssistantText()">ASK</button>
+                <input type="text" class="chat-input" id="assistantInput" placeholder="Command AI: 'Fly to Paris', 'Scan quakes'..." onkeydown="if(event.key==='Enter') sendAssistantText()">
+                <button class="t-btn t-btn-purple" style="padding: 0 14px; height: 38px;" onclick="sendAssistantText()">RUN</button>
             </div>
         </div>
     </div>
 
-    <!-- Asset Assessment Modal -->
+    <!-- Asset Evaluation Modal -->
     <div id="assessmentModal">
         <div class="tactical-modal-card">
             <div class="modal-header">
@@ -799,10 +805,11 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">AI ASSISTANT ENGINE:</label>
+                <label class="form-label">AI ASSISTANT SYSTEM STATUS:</label>
                 <div style="font-size:11px; color:var(--purple); margin-bottom:8px;">
-                    ✓ Built-in AEGIS Tactical AI Assistant (100% On-Device)<br>
-                    ✓ Voice Input (Speech-to-Text) + Voice Output (TTS)
+                    ✓ AEGIS Assistant (Full Control Over 3D Camera, Layers, & OS)<br>
+                    ✓ Built-In Web Audio Synthesizer & Speech Recognition<br>
+                    ✓ Autonomous Geocoding Search (Powered by Photon OpenStreetMap)
                 </div>
             </div>
             <div class="form-group">
@@ -826,7 +833,68 @@
 
     <script>
         // ==========================================
-        // 1. EMBEDDED LOCAL NEURAL AGENT
+        // 1. AUDIO SYNTHESIZER & WAVEFORM VISUALIZER
+        // ==========================================
+        let audioCtx = null;
+        function playSciFiBeep(type = 'confirm') {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+                if (type === 'confirm') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now); // D5
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (ignored) {}
+        }
+
+        // Animated Audio Waveform Visualizer
+        const waveCanvas = document.getElementById('audioWaveCanvas');
+        const waveCtx = waveCanvas.getContext('2d');
+        let wavePhase = 0;
+        let isWaveActive = false;
+
+        function drawWaveform() {
+            waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+            waveCtx.strokeStyle = isWaveActive ? '#c084fc' : 'rgba(192, 132, 252, 0.3)';
+            waveCtx.lineWidth = 1.8;
+            waveCtx.beginPath();
+
+            const amp = isWaveActive ? 8 : 2;
+            const freq = isWaveActive ? 0.25 : 0.1;
+            wavePhase += isWaveActive ? 0.2 : 0.05;
+
+            for (let x = 0; x < waveCanvas.width; x++) {
+                const y = (waveCanvas.height / 2) + Math.sin(x * freq + wavePhase) * amp * Math.sin(x / waveCanvas.width * Math.PI);
+                if (x === 0) waveCtx.moveTo(x, y);
+                else waveCtx.lineTo(x, y);
+            }
+            waveCtx.stroke();
+            requestAnimationFrame(drawWaveform);
+        }
+        drawWaveform();
+
+        // ==========================================
+        // 2. EMBEDDED LOCAL NEURAL AGENT
         // ==========================================
         class SmallLocalAI {
             constructor() {
@@ -943,7 +1011,7 @@
         const localAI = new SmallLocalAI();
 
         // ==========================================
-        // 2. DATA MODELS & PUBLIC FEEDS
+        // 3. DATA MODELS & PUBLIC FEEDS
         // ==========================================
         const state = {
             category: 'ALL',
@@ -953,7 +1021,8 @@
             satellites: [],
             weather: null,
             userGps: null,
-            voiceActive: false
+            voiceActive: false,
+            autoOrbit: true
         };
 
         function triggerHaptic(durationMs = 25) {
@@ -1066,7 +1135,7 @@
         }
 
         // ==========================================
-        // 3. 3D SPHERICAL GLOBE CANVAS
+        // 4. 3D SPHERICAL GLOBE CANVAS
         // ==========================================
         const canvas = document.getElementById('globeCanvas');
         const ctx = canvas.getContext('2d');
@@ -1076,6 +1145,8 @@
         window.addEventListener('resize', () => {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
+            waveCanvas.width = 70;
+            waveCanvas.height = 24;
         });
 
         let rotX = 0.25;
@@ -1084,9 +1155,22 @@
         let isDragging = false;
         let startX = 0, startY = 0;
 
+        // Smooth camera flight animation state
+        let targetRotX = rotX, targetRotY = rotY, targetZoom = zoom;
+        let isAnimatingCamera = false;
+
+        function smoothFlyTo(lat, lon, newZoom = 1.0) {
+            targetRotY = - (lon * Math.PI / 180) - Math.PI / 2;
+            targetRotX = (lat * Math.PI / 180);
+            targetZoom = newZoom;
+            isAnimatingCamera = true;
+            state.autoOrbit = false;
+        }
+
         window.addEventListener('pointerdown', (e) => {
             if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab')) return;
             isDragging = true;
+            isAnimatingCamera = false;
             startX = e.clientX;
             startY = e.clientY;
         });
@@ -1120,10 +1204,17 @@
         let screenAssets = [];
 
         function render() {
-            ctx.fillStyle = '#08090d';
+            ctx.fillStyle = '#06070a';
             ctx.fillRect(0, 0, width, height);
 
-            if (!isDragging) {
+            if (isAnimatingCamera) {
+                rotX += (targetRotX - rotX) * 0.08;
+                rotY += (targetRotY - rotY) * 0.08;
+                zoom += (targetZoom - zoom) * 0.08;
+                if (Math.hypot(targetRotX - rotX, targetRotY - rotY) < 0.001) {
+                    isAnimatingCamera = false;
+                }
+            } else if (state.autoOrbit && !isDragging) {
                 rotY += 0.002;
             }
 
@@ -1131,8 +1222,9 @@
             const cy = height * 0.40;
             const r = Math.min(width, height) * 0.38 * zoom;
 
+            // Earth Atmosphere Glow
             const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.25);
-            glow.addColorStop(0, 'rgba(0, 255, 204, 0.08)');
+            glow.addColorStop(0, 'rgba(0, 255, 204, 0.09)');
             glow.addColorStop(0.8, 'rgba(0, 255, 204, 0.02)');
             glow.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = glow;
@@ -1236,6 +1328,7 @@
             for (const item of screenAssets) {
                 const d = Math.hypot(item.x - px, item.y - py);
                 if (d < 24) {
+                    playSciFiBeep('confirm');
                     triggerHaptic(30);
                     selectAssetAndAssess(item.asset);
                     return;
@@ -1244,7 +1337,7 @@
         }
 
         // ==========================================
-        // 4. ASSET EVALUATION
+        // 5. ASSET EVALUATION
         // ==========================================
         function selectAssetAndAssess(asset) {
             state.selectedAsset = asset;
@@ -1341,9 +1434,10 @@
         }
 
         // ==========================================
-        // 5. CONVERSATIONAL AI ASSISTANT SYSTEM
+        // 6. CONVERSATIONAL AI ASSISTANT (FULL ACCESS)
         // ==========================================
         function openAssistant() {
+            playSciFiBeep('confirm');
             triggerHaptic(25);
             document.getElementById('assistantModal').style.display = 'flex';
         }
@@ -1351,6 +1445,13 @@
         function closeAssistant() {
             document.getElementById('assistantModal').style.display = 'none';
             if (window.speechSynthesis) window.speechSynthesis.cancel();
+            isWaveActive = false;
+        }
+
+        function toggleAssistantFullscreen() {
+            playSciFiBeep('confirm');
+            const card = document.getElementById('assistantModalCard');
+            card.classList.toggle('fullscreen-mode');
         }
 
         function addChatMessage(sender, text) {
@@ -1369,28 +1470,28 @@
                 utterance.rate = 1.05;
                 utterance.pitch = 1.0;
 
-                const wave = document.getElementById('waveBars');
                 utterance.onstart = () => {
-                    if (wave) wave.style.opacity = '1.0';
+                    isWaveActive = true;
                     document.getElementById('assistantStateText').textContent = 'Speaking...';
                 };
                 utterance.onend = () => {
-                    if (wave) wave.style.opacity = '0.4';
-                    document.getElementById('assistantStateText').textContent = 'Listening and ready.';
+                    isWaveActive = false;
+                    document.getElementById('assistantStateText').textContent = 'Full App Access Active · Camera, Filters, Voice, GPS.';
                 };
                 utterance.onerror = () => {
-                    if (wave) wave.style.opacity = '0.4';
+                    isWaveActive = false;
                     document.getElementById('assistantStateText').textContent = 'Ready.';
                 };
 
                 window.speechSynthesis.speak(utterance);
-                triggerHaptic(35);
+                triggerHaptic(30);
             }
         }
 
-        // Voice Recognition (Speech-to-Text)
+        // Speech-to-Text Voice Input
         let recognition = null;
         function toggleVoiceRecognition() {
+            playSciFiBeep('confirm');
             triggerHaptic(30);
             const micBtn = document.getElementById('micBtn');
 
@@ -1404,7 +1505,8 @@
                 if (recognition) recognition.stop();
                 state.voiceActive = false;
                 micBtn.classList.remove('listening');
-                document.getElementById('assistantStateText').textContent = 'Voice input stopped.';
+                isWaveActive = false;
+                document.getElementById('assistantStateText').textContent = 'Voice input standby.';
                 return;
             }
 
@@ -1416,8 +1518,9 @@
 
                 recognition.onstart = () => {
                     state.voiceActive = true;
+                    isWaveActive = true;
                     micBtn.classList.add('listening');
-                    document.getElementById('assistantStateText').textContent = '🎙️ Listening... speak now!';
+                    document.getElementById('assistantStateText').textContent = '🎙️ Listening... speak your command!';
                     triggerHaptic(20);
                 };
 
@@ -1428,21 +1531,20 @@
                 };
 
                 recognition.onerror = (event) => {
-                    console.warn("Speech recognition error:", event.error);
                     state.voiceActive = false;
+                    isWaveActive = false;
                     micBtn.classList.remove('listening');
                     document.getElementById('assistantStateText').textContent = 'Microphone standby.';
                 };
 
                 recognition.onend = () => {
                     state.voiceActive = false;
+                    isWaveActive = false;
                     micBtn.classList.remove('listening');
-                    document.getElementById('assistantStateText').textContent = 'Ready for command.';
                 };
 
                 recognition.start();
             } catch (e) {
-                console.error("Recognition start failed:", e);
                 showToast("Failed to start voice listener");
             }
         }
@@ -1455,58 +1557,108 @@
             executeAssistantCommand(query);
         }
 
-        // Assistant Intent Matching & Execution
+        // Full App Action Dispatcher
         async function executeAssistantCommand(cmd) {
+            playSciFiBeep('confirm');
             addChatMessage('user', cmd);
             triggerHaptic(25);
 
             const lower = cmd.toLowerCase();
             let reply = '';
 
-            // Assistant Globe Control & Data Queries
-            if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
+            // 1. Geocoding / Fly to City Search ("Fly to Tokyo", "Go to Paris", "Find Hawaii")
+            const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i);
+            if (flyMatch && !lower.includes('earthquake') && !lower.includes('iss') && !lower.includes('flight')) {
+                const queryLocation = flyMatch[1].trim();
+                document.getElementById('assistantStateText').textContent = `Geocoding '${queryLocation}'...`;
+                try {
+                    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(queryLocation)}&limit=1`);
+                    const data = await res.json();
+                    if (data.features && data.features.length > 0) {
+                        const feat = data.features[0];
+                        const lon = feat.geometry.coordinates[0];
+                        const lat = feat.geometry.coordinates[1];
+                        const name = feat.properties.name || queryLocation;
+                        const country = feat.properties.country || '';
+
+                        smoothFlyTo(lat, lon, 1.2);
+                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E.`;
+                    } else {
+                        reply = `I searched global geodetic databases for "${queryLocation}" but found no matching coordinates.`;
+                    }
+                } catch (e) {
+                    reply = `Geocoding network lookup failed. Please verify connection.`;
+                }
+            }
+            // 2. Camera Zoom & Rotation Controls
+            else if (lower.includes('zoom in')) {
+                zoom = Math.min(2.0, zoom + 0.25);
+                reply = `Zoom increased to ${(zoom * 100).toFixed(0)}%.`;
+            } else if (lower.includes('zoom out')) {
+                zoom = Math.max(0.6, zoom - 0.25);
+                reply = `Zoom decreased to ${(zoom * 100).toFixed(0)}%.`;
+            } else if (lower.includes('toggle auto orbit') || lower.includes('stop rotate') || lower.includes('start rotate') || lower.includes('spin')) {
+                state.autoOrbit = !state.autoOrbit;
+                reply = `Planetary auto-orbit rotation is now ${state.autoOrbit ? 'ENABLED' : 'PAUSED'}.`;
+            } else if (lower.includes('reset view') || lower.includes('reset camera')) {
+                rotX = 0.25;
+                rotY = 0.0;
+                zoom = 1.0;
+                state.autoOrbit = true;
+                reply = `Planetary camera reset to default polar orientation and 100% zoom.`;
+            }
+            // 3. Category Layer Filters
+            else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
                 switchCategory('SEISMIC');
                 const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                 if (maxQ) {
-                    rotY = - (maxQ.lon * Math.PI / 180) - Math.PI / 2;
-                    rotX = (maxQ.lat * Math.PI / 180);
-                    reply = `I have centered the 3D globe on the strongest earthquake of the day: ${maxQ.mag} magnitude at ${maxQ.title}. There are currently ${state.quakes.length} earthquakes tracked by USGS.`;
+                    smoothFlyTo(maxQ.lat, maxQ.lon, 1.15);
+                    reply = `I centered the 3D globe on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} global earthquakes.`;
                 } else {
-                    reply = `Filtered the globe to seismic faults. No significant earthquakes recorded in the last 24 hours.`;
+                    reply = `Seismic telemetry filter engaged.`;
                 }
             } else if (lower.includes('iss') || lower.includes('space station') || lower.includes('satellite') || lower.includes('orbit')) {
                 switchCategory('SPACE');
                 const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
                 if (iss) {
-                    rotY = - (iss.lon * Math.PI / 180) - Math.PI / 2;
-                    rotX = (iss.lat * Math.PI / 180);
-                    reply = `Tracking the International Space Station at ${iss.alt} kilometers altitude, traveling at ${iss.velocity.toLocaleString()} kilometers per hour over ${iss.lat.toFixed(1)} degrees latitude.`;
+                    smoothFlyTo(iss.lat, iss.lon, 1.2);
+                    reply = `Camera locked onto International Space Station at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
                 } else {
-                    reply = `Orbital satellites are highlighted on your globe.`;
+                    reply = `Satellite orbital vectors displayed on the globe.`;
                 }
-            } else if (lower.includes('military') || lower.includes('patrol') || lower.includes('air defense')) {
+            } else if (lower.includes('military') || lower.includes('patrol')) {
                 switchCategory('AIR');
                 const mil = state.flights.find(f => f.military);
                 if (mil) {
-                    rotY = - (mil.lon * Math.PI / 180) - Math.PI / 2;
-                    rotX = (mil.lat * Math.PI / 180);
-                    reply = `I have locked onto tactical patrol flight ${mil.id} (${mil.title}) cruising at Flight Level ${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
+                    smoothFlyTo(mil.lat, mil.lon, 1.25);
+                    reply = `Locked onto special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
                 } else {
-                    reply = `Displaying active airspace tracks. All current commercial and defense corridors are nominal.`;
+                    reply = `Airspace tracks active. All defense patrol vectors nominal.`;
                 }
             } else if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
                 switchCategory('AIR');
-                reply = `Airspace mode engaged. Currently monitoring ${state.flights.length} commercial and tactical flights with live ADS-B vectors.`;
-            } else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
+                reply = `Airspace mode active. Tracking ${state.flights.length} live commercial and tactical flights with 3D kinematic vectors.`;
+            }
+            // 4. Native OS Controls
+            else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
                 centerOnGps();
-                reply = `Acquiring your real-time hardware GPS satellites and rotating the globe to your exact coordinates.`;
+                reply = `Acquiring device GPS satellites and orienting globe directly over your location.`;
+            } else if (lower.includes('keep screen awake') || lower.includes('wake lock')) {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenOn === 'function') {
+                    window.GodsEyeNative.setKeepScreenOn(true);
+                }
+                reply = `Device wake-lock engaged. Display will remain on indefinitely during operations.`;
+            } else if (lower.includes('copy sitrep') || lower.includes('copy report')) {
+                exportFullSitrep();
+                reply = `Tactical multi-domain sitrep copied to your device clipboard.`;
+            } else if (lower.includes('share')) {
+                shareFullSitrep();
+                reply = `Opening Android system share sheet with intelligence sitrep.`;
             } else if (lower.includes('benchmark')) {
                 const b = localAI.benchmark(500);
-                reply = `I executed a local neural benchmark: ${b.iterations} inferences completed in ${b.totalMs} milliseconds (${b.infPerSec.toLocaleString()} inferences per second) directly on your device CPU. Zero cloud dependencies.`;
-            } else if (lower.includes('who are you') || lower.includes('what are you')) {
-                reply = `I am AEGIS, your on-device Tactical AI Assistant for God's Eye View. I synthesize global spatial data, evaluate threats, and control this 3D planetary intelligence console.`;
+                reply = `Neural benchmark complete: ${b.iterations} forward-passes executed in ${b.totalMs} ms (${b.infPerSec.toLocaleString()} inferences/sec) 100% on-device.`;
             } else {
-                reply = `Understood, Commander. Analyzing your query: "${cmd}". The global situational picture is currently nominal with ${state.flights.length} flights, ${state.quakes.length} seismic events, and active orbital satellites. You can tap any point on the globe for a detailed breakdown.`;
+                reply = `Command received: "${cmd}". The global situational picture is nominal with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
             }
 
             addChatMessage('agent', reply);
@@ -1514,7 +1666,57 @@
         }
 
         // ==========================================
-        // 6. UI ACTIONS & INITIALIZATION
+        // 7. EXPORT & SHARE FULL SITREP
+        // ==========================================
+        function getSitrepText() {
+            const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+            const maxF = [...state.flights].sort((a,b) => b.speed - a.speed)[0];
+            const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
+
+            return `🛰️ GOD'S EYE VIEW — TACTICAL SITREP
+Date: ${new Date().toUTCString()}
+Status: DEFCON NOMINAL / GUARDED
+
+✈ AIRSPACE:
+• ${state.flights.length} flights tracked
+• Lead vector: ${maxF ? maxF.title + ' (' + maxF.speed + ' KTS at FL' + Math.round(maxF.alt/100) + ')' : 'Nominal'}
+
+💥 SEISMIC (USGS):
+• ${state.quakes.length} earthquakes logged (past 24h)
+• Peak rupture: ${maxQ ? maxQ.mag + ' M near ' + maxQ.title : 'None'}
+
+🛰 ORBITAL TELEMETRY:
+• Target: ${iss ? iss.title : 'ISS'}
+• Alt: ${iss ? iss.alt + ' km · ' + iss.velocity + ' km/h' : '420 km'}
+
+Processed on-device via AEGIS Tactical AI Assistant.`;
+        }
+
+        function exportFullSitrep() {
+            playSciFiBeep('confirm');
+            const text = getSitrepText();
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.copyToClipboard === 'function') {
+                window.GodsEyeNative.copyToClipboard(text);
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+                showToast("Sitrep copied to clipboard");
+            }
+        }
+
+        function shareFullSitrep() {
+            playSciFiBeep('confirm');
+            const text = getSitrepText();
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.shareText === 'function') {
+                window.GodsEyeNative.shareText("God's Eye Tactical Sitrep", text);
+            } else if (navigator.share) {
+                navigator.share({ title: "God's Eye Tactical Sitrep", text });
+            } else {
+                exportFullSitrep();
+            }
+        }
+
+        // ==========================================
+        // 8. UI ACTIONS & INITIALIZATION
         // ==========================================
         function switchCategory(cat) {
             triggerHaptic(15);
@@ -1531,8 +1733,7 @@
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         state.userGps = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-                        rotY = - (pos.coords.longitude * Math.PI / 180) - Math.PI / 2;
-                        rotX = (pos.coords.latitude * Math.PI / 180);
+                        smoothFlyTo(pos.coords.latitude, pos.coords.longitude, 1.25);
                         showToast(`GPS Locked: ${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°`);
                         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=temperature_2m,wind_speed_10m`)
                             .then(r => r.json())

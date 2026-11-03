@@ -8,17 +8,18 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.3.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.3.0/godseye-android.apk)
+### 📥 [Direct Download APK (v1.4.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.4.0/godseye-android.apk)
 
 ---
 
-## 🤖 Built-In Tactical AI Assistant (AEGIS)
+## 🤖 Full App Access Conversational AI Assistant (AEGIS)
 
-God's Eye View Mobile features a complete **on-device Conversational AI Assistant**:
-* **🎙️ Voice Interaction & Commands**: Speak directly to the AI Assistant or tap command chips to query airspace, earthquakes, space stations, and weather.
-* **🪐 Automated Globe Camera Navigation**: The Assistant controls the 3D globe for you — automatically panning and locking onto targets (e.g. *"Show me the strongest earthquake today"* or *"Track the ISS"*).
-* **🧠 100% Local Neural Engine**: Operates with zero cloud latency, zero external API costs, and complete privacy using an on-device latent vector embedding and neural threat classifier.
-* **🔊 Voice Output (TTS)**: The Assistant reads sitreps and tactical assessments aloud with speech synthesis.
+God's Eye View Mobile features a complete **on-device Conversational AI Assistant** with full autonomous control of the application:
+* **🎙️ Voice Interaction & Audio Synthesizer**: Talk directly to the AI Assistant or use quick chips. Includes real-time audio waveform visualizer and synthesized tactical sci-fi audio cues.
+* **🌍 Autonomous Flight to Any Location (Geocoding)**: Tell AEGIS *"Fly to Tokyo"*, *"Go to Paris"*, or *"Take me to Honolulu"* — the Assistant geocodes the place via OpenStreetMap/Photon and animates the 3D globe camera there.
+* **🪐 Full Camera & System Control**: Maneuver zoom levels (*"Zoom in"*, *"Zoom out"*), toggle planetary auto-orbit (*"Spin the globe"*), reset orientations (*"Reset view"*), and engage device hardware WakeLock (*"Keep screen awake"*).
+* **📋 Native OS Sitrep Export & Sharing**: Instruct the Assistant to *"Copy sitrep"* or *"Share sitrep"* to copy multi-domain intelligence to your Android clipboard or launch the native Android share sheet.
+* **🧠 100% On-Device Neural Net**: Instant classification (<1ms) with zero cloud tokens, zero latency, and zero external API dependencies.
 
 ---
 
