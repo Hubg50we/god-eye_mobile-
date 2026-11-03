@@ -170,12 +170,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (matches != null && !matches.isEmpty()) {
-                String spokenText = matches.get(0).replace("'", "\\'");
+        if (requestCode == SPEECH_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (matches != null && !matches.isEmpty()) {
+                    String spokenText = matches.get(0).replace("'", "\\'");
+                    if (webView != null) {
+                        webView.evaluateJavascript("if (window.onNativeSpeechResult) window.onNativeSpeechResult('" + spokenText + "');", null);
+                    }
+                }
+            } else {
                 if (webView != null) {
-                    webView.evaluateJavascript("if (window.onNativeSpeechResult) window.onNativeSpeechResult('" + spokenText + "');", null);
+                    webView.evaluateJavascript("if (window.onNativeSpeechCancel) window.onNativeSpeechCancel();", null);
                 }
             }
         }
@@ -326,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public String getAppVersion() {
-            return "1.7.0";
+            return "1.7.1";
         }
     }
 }

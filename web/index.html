@@ -746,7 +746,7 @@
                     <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS AI Assistant Core</div>
                     <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.</div>
                 </div>
-                <canvas id="audioWaveCanvas"></canvas>
+                <canvas id="audioWaveCanvas" width="70" height="24"></canvas>
             </div>
 
             <!-- Active Task Status Card in Assistant Drawer -->
@@ -946,7 +946,7 @@
 
         // Plot Assets onto CesiumJS 3D Globe
         function updateCesiumAssets() {
-            if (!cesiumViewer) return;
+            if (!cesiumViewer || !cesiumViewer.entities) return;
             cesiumViewer.entities.removeAll();
 
             let activeList = [];
@@ -955,21 +955,26 @@
             if (state.category === 'ALL' || state.category === 'SPACE') activeList.push(...state.satellites);
 
             for (const asset of activeList) {
+                const lon = Number(asset.lon);
+                const lat = Number(asset.lat);
+                if (isNaN(lon) || isNaN(lat)) continue;
+
                 if (asset.type === 'SEISMIC') {
                     cesiumViewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, 100),
+                        position: Cesium.Cartesian3.fromDegrees(lon, lat, 100),
                         ellipse: {
-                            semiMinorAxis: (asset.mag * 35000),
-                            semiMajorAxis: (asset.mag * 35000),
-                            material: asset.mag >= 4.5 ? Cesium.Color.RED.withAlpha(0.6) : Cesium.Color.ORANGE.withAlpha(0.6),
+                            semiMinorAxis: Math.max(1000, ((Number(asset.mag) || 1) * 35000)),
+                            semiMajorAxis: Math.max(1000, ((Number(asset.mag) || 1) * 35000)),
+                            material: (asset.mag >= 4.5) ? Cesium.Color.RED.withAlpha(0.6) : Cesium.Color.ORANGE.withAlpha(0.6),
                             outline: true,
                             outlineColor: Cesium.Color.WHITE
                         },
                         userData: asset
                     });
                 } else if (asset.type === 'AIR') {
+                    const altMeters = Math.max(0, (Number(asset.alt) || 10000) * 0.3048);
                     cesiumViewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, (asset.alt || 10000) * 0.3048),
+                        position: Cesium.Cartesian3.fromDegrees(lon, lat, altMeters),
                         point: {
                             pixelSize: 10,
                             color: asset.military ? Cesium.Color.RED : Cesium.Color.CYAN,
@@ -979,8 +984,9 @@
                         userData: asset
                     });
                 } else if (asset.type === 'SPACE') {
+                    const satAltMeters = Math.max(100000, (Number(asset.alt) || 420) * 1000);
                     cesiumViewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, (asset.alt || 420) * 1000),
+                        position: Cesium.Cartesian3.fromDegrees(lon, lat, satAltMeters),
                         point: {
                             pixelSize: 14,
                             color: Cesium.Color.YELLOW,
@@ -1287,6 +1293,9 @@
         }
 
         function latLonToVector3(lat, lon, alt = 0) {
+            lat = Number(lat) || 0;
+            lon = Number(lon) || 0;
+            alt = Number(alt) || 0;
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 180) * (Math.PI / 180);
             const r = earthRadius + alt;
@@ -1308,7 +1317,7 @@
 
         function setupGlobeTouchControls(domElem) {
             domElem.addEventListener('pointerdown', (e) => {
-                if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab') || e.target.closest('.map-style-selector')) return;
+                if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab') || e.target.closest('.map-style-selector') || e.target.closest('#hudTaskStrip')) return;
                 isUserInteracting = true;
                 onPointerDownPointerX = e.clientX;
                 onPointerDownPointerY = e.clientY;
@@ -1317,7 +1326,7 @@
             });
 
             domElem.addEventListener('pointermove', (e) => {
-                if (!isUserInteracting) return;
+                if (!isUserInteracting || pinchDist > 0) return;
                 targetLon = (onPointerDownPointerX - e.clientX) * 0.3 + onPointerDownLon;
                 targetLat = (e.clientY - onPointerDownPointerY) * 0.3 + onPointerDownLat;
                 targetLat = Math.max(-85, Math.min(85, targetLat));
@@ -1327,24 +1336,37 @@
                 if (!isUserInteracting) return;
                 isUserInteracting = false;
                 const dist = Math.hypot(e.clientX - onPointerDownPointerX, e.clientY - onPointerDownPointerY);
-                if (dist < 8) {
+                if (dist < 8 && pinchDist === 0) {
                     onGlobeTap(e.clientX, e.clientY);
                 }
             });
 
+            domElem.addEventListener('pointercancel', () => {
+                isUserInteracting = false;
+            });
+
             domElem.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
+                if (e.touches.length >= 2) {
+                    isUserInteracting = false;
                     pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 }
-            });
+            }, { passive: true });
+
             domElem.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2) {
+                if (e.touches.length === 2 && pinchDist > 0) {
+                    isUserInteracting = false;
                     const newDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                     const delta = (pinchDist - newDist) * 0.4;
                     camera.position.z = Math.max(140, Math.min(500, camera.position.z + delta));
                     pinchDist = newDist;
                 }
-            });
+            }, { passive: true });
+
+            domElem.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) {
+                    pinchDist = 0;
+                }
+            }, { passive: true });
         }
 
         function onGlobeTap(clientX, clientY) {
@@ -1395,8 +1417,26 @@
         // 4. POPULATE REAL 3D ASSETS
         // ==========================================
         function update3DAssetMeshes() {
+            if (!asset3DGroup) return;
+
+            // Thorough GPU memory disposal to prevent WebGL leaks on mobile
             while (asset3DGroup.children.length > 0) {
-                asset3DGroup.remove(asset3DGroup.children[0]);
+                const child = asset3DGroup.children[0];
+                asset3DGroup.remove(child);
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                    else child.material.dispose();
+                }
+                if (child.children && child.children.length > 0) {
+                    child.children.forEach(sub => {
+                        if (sub.geometry) sub.geometry.dispose();
+                        if (sub.material) {
+                            if (Array.isArray(sub.material)) sub.material.forEach(m => m.dispose());
+                            else sub.material.dispose();
+                        }
+                    });
+                }
             }
 
             let activeList = [];
@@ -1879,11 +1919,14 @@
         // 8. ASSET EVALUATION
         // ==========================================
         function selectAssetAndAssess(asset) {
+            if (!asset) return;
             state.selectedAsset = asset;
 
-            document.getElementById('targetId').textContent = asset.id;
-            document.getElementById('targetType').textContent = asset.title;
-            document.getElementById('targetPos').textContent = `${asset.lat.toFixed(2)}°, ${asset.lon.toFixed(2)}°`;
+            const lat = Number(asset.lat) || 0;
+            const lon = Number(asset.lon) || 0;
+            document.getElementById('targetId').textContent = asset.id || 'TACTICAL-TARGET';
+            document.getElementById('targetType').textContent = asset.title || 'Unknown Asset';
+            document.getElementById('targetPos').textContent = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
 
             let kinematics = 'N/A';
             let features = new Float32Array(6);
@@ -2061,6 +2104,14 @@
             if (micBtn) micBtn.classList.remove('listening');
             document.getElementById('assistantStateText').textContent = 'Voice standby.';
             showToast("Voice input: " + errMsg);
+        };
+
+        window.onNativeSpeechCancel = function() {
+            state.voiceActive = false;
+            isWaveActive = false;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.remove('listening');
+            document.getElementById('assistantStateText').textContent = 'Voice standby.';
         };
 
         let recognition = null;

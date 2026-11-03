@@ -8,7 +8,7 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.7.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.7.0/godseye-android.apk)
+### 📥 [Direct Download APK (v1.7.1)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.7.1/godseye-android.apk)
 
 ---
 
