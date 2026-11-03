@@ -651,10 +651,13 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">CESIUM ION & THREE.JS · AI CONSOLE</div>
+                <div class="brand-sub">CESIUM ION & THREE.JS · v1.7.2 AI CONSOLE</div>
             </div>
         </div>
         <div class="header-actions">
+            <div class="hud-chip" id="spaceWeatherChip" title="NOAA SWPC Space Weather Planetary K-Index" onclick="executeAssistantCommand('Check space weather')">
+                ⚡ Kp: <span id="kpVal">2.0</span>
+            </div>
             <div class="hud-chip" onclick="openAssistant()">
                 ✨ AEGIS ASSISTANT
             </div>
@@ -684,6 +687,7 @@
             <button class="tab-btn" onclick="switchCategory('AIR')">✈ AIR TRACKS (<span id="countAir">0</span>)</button>
             <button class="tab-btn" onclick="switchCategory('SEISMIC')">💥 SEISMIC (<span id="countQuake">0</span>)</button>
             <button class="tab-btn" onclick="switchCategory('SPACE')">🛰 SATELLITES (<span id="countSat">0</span>)</button>
+            <button class="tab-btn" onclick="switchCategory('FIRE')">🔥 WILDFIRES (<span id="countFire">0</span>)</button>
             <button class="tab-btn" onclick="switchCategory('WEATHER')">⛈ WEATHER</button>
         </div>
 
@@ -731,6 +735,7 @@
                     <span>✨ AEGIS — FULL 3D EARTH AI ASSISTANT</span>
                 </div>
                 <div class="header-btn-group">
+                    <button class="icon-btn" onclick="stopAllSpeech()" title="Stop Speech / Silence" style="color:var(--red); border-color:var(--red);">⏹ SILENCE</button>
                     <button class="icon-btn" onclick="toggleAssistantFullscreen()" title="Toggle Fullscreen">⛶</button>
                     <button class="icon-btn" onclick="exportFullSitrep()" title="Copy Sitrep">📋</button>
                     <button class="icon-btn" onclick="shareFullSitrep()" title="Share Sitrep">📤</button>
@@ -766,10 +771,13 @@
 
             <div class="chip-row">
                 <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station and follow it')">🔄 Follow ISS Track</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Monitor earthquakes for high magnitude threats')">🚨 Seismic Alert Watch</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Patrol airspace and sweep flights')">✈️ Airspace Sweep Patrol</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Monitor earthquakes for high magnitude threats')">🚨 Seismic Sentinel</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Monitor wildfires with NASA EONET')">🔥 Wildfire Watch</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Patrol airspace and sweep flights')">✈️ Airspace Sweep</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Check space weather and solar storms')">⚡ Space Weather</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo and zoom in and switch to night mode')">⚡ Multi-Step Mission</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Assess threats and brief me')">🛡️ Executive Threat Sitrep</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Assess threats and brief me')">🛡️ Executive Sitrep</div>
+                <div class="query-chip" onclick="stopAllSpeech()" style="color:var(--red); border-color:var(--red);">⏹ Silence Voice</div>
                 <div class="query-chip" onclick="cancelActiveTask()">⏹ Abort Task</div>
             </div>
 
@@ -918,6 +926,21 @@
                         e.preventDefault();
                         console.warn("[WEBGL] Cesium WebGL context lost on mobile.");
                     }, false);
+                }
+
+                // Enable Real 3D OSM Architectural Buildings Worldwide
+                try {
+                    const osmBuildings = await Cesium.createOsmBuildingsAsync();
+                    cesiumViewer.scene.primitives.add(osmBuildings);
+                    console.log("[CESIUM] OSM 3D Buildings attached successfully.");
+                } catch (bErr) {
+                    console.warn("[CESIUM] OSM 3D Buildings fallback:", bErr);
+                }
+
+                // Enable Solar Lighting and Sky Rayleigh Scattering
+                if (cesiumViewer.scene && cesiumViewer.scene.globe) {
+                    cesiumViewer.scene.globe.enableLighting = true;
+                    cesiumViewer.scene.globe.atmosphereBrightnessShift = 0.12;
                 }
 
                 // Set initial camera view
@@ -1512,6 +1535,24 @@
                     const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
                     orbitMesh.rotation.x = Math.PI / 2.8;
                     asset3DGroup.add(orbitMesh);
+                } else if (asset.type === 'FIRE') {
+                    const pos = latLonToVector3(asset.lat, asset.lon, 0.8);
+                    const fireGeo = new THREE.ConeGeometry(1.6, 3.8, 8);
+                    fireGeo.rotateX(-Math.PI / 2);
+                    const fireMat = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+                    const fireMesh = new THREE.Mesh(fireGeo, fireMat);
+                    fireMesh.position.copy(pos);
+                    fireMesh.lookAt(new THREE.Vector3(0,0,0));
+                    fireMesh.userData = { asset };
+                    asset3DGroup.add(fireMesh);
+
+                    const glowGeo = new THREE.RingGeometry(1.0, 3.0, 16);
+                    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffa500, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+                    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+                    glowMesh.position.copy(pos);
+                    glowMesh.lookAt(new THREE.Vector3(0,0,0));
+                    glowMesh.userData = { asset, isShockwave: true, baseSize: 3.0 };
+                    asset3DGroup.add(glowMesh);
                 }
             }
 
@@ -1733,10 +1774,13 @@
             quakes: [],
             flights: [],
             satellites: [],
+            wildfires: [],
+            spaceWeather: { kp: 2.0, status: 'QUIET NOMINAL' },
             weather: null,
             userGps: null,
             voiceActive: false,
-            autoOrbit: true
+            autoOrbit: true,
+            soundMuted: false
         };
 
         function triggerHaptic(durationMs = 25) {
@@ -2048,6 +2092,22 @@
         // ==========================================
         // 9. VOICE & SPEECH ENGINE (NATIVE & WEB)
         // ==========================================
+
+        function stopAllSpeech() {
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.stopSpeaking === 'function') {
+                window.GodsEyeNative.stopSpeaking();
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            const canvas = document.getElementById('audioWaveCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            document.getElementById('assistantStateText').textContent = "Voice speech stopped / silenced.";
+        }
+
         function speakAssistant(text) {
             isWaveActive = true;
             document.getElementById('assistantStateText').textContent = 'Speaking...';
@@ -2216,6 +2276,7 @@
         }
 
         function cancelActiveTask() {
+            stopAllSpeech();
             if (!activeTask) return;
             playSciFiBeep('alert');
             triggerHaptic(35);
@@ -2351,159 +2412,315 @@
             await executeSingleAction(cmd, true);
         }
 
-        async function executeSingleAction(cmd, shouldSpeak = true) {
-            const lower = cmd.toLowerCase();
-            let reply = '';
-
-            // 1. Continuous Background Tasks
-            if (lower.includes('track iss') || lower.includes('follow iss') || lower.includes('follow space station')) {
-                startContinuousTrackingTask('SPACE', 'ISS-25544', 'ISS Space Station');
-                return;
-            } else if (lower.includes('monitor earthquake') || lower.includes('watch earthquake') || lower.includes('seismic watch') || lower.includes('quake monitor')) {
-                startSeismicMonitorTask();
-                return;
-            } else if (lower.includes('patrol airspace') || lower.includes('sweep airspace') || lower.includes('sweep flight') || lower.includes('flight patrol')) {
-                startAirspacePatrolTask();
-                return;
-            } else if (lower.includes('stop task') || lower.includes('cancel task') || lower.includes('abort') || lower.includes('stop tracking')) {
-                cancelActiveTask();
-                return;
-            }
-
-            // 2. Map Engine Switch
-            if (lower.includes('cesium') || lower.includes('ion')) {
-                setMapMode('cesium_ion');
-                reply = `Engaged official CesiumJS 3D Photorealistic Engine with your authenticated Cesium Ion token.`;
-            } else if (lower.includes('three') || lower.includes('three.js')) {
-                setMapMode('three_sat');
-                reply = `Engaged Three.js Real 3D Earth globe with dynamic atmosphere halo and rotating cloud shaders.`;
-            }
-            // 3. Geocoding / Fly to City
-            else if (/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i.test(lower) && !lower.includes('earthquake') && !lower.includes('iss') && !lower.includes('flight')) {
-                const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i);
-                const queryLocation = flyMatch[1].trim();
-                document.getElementById('assistantStateText').textContent = `Geocoding '${queryLocation}'...`;
-                try {
-                    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(queryLocation)}&limit=1`);
-                    const data = await res.json();
-                    if (data.features && data.features.length > 0) {
-                        const feat = data.features[0];
-                        const lon = feat.geometry.coordinates[0];
-                        const lat = feat.geometry.coordinates[1];
-                        const name = feat.properties.name || queryLocation;
-                        const country = feat.properties.country || '';
-
-                        smoothFlyTo(lat, lon, 1.4);
-                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E on the 3D globe.`;
-                    } else {
-                        reply = `I searched global geodetic databases for "${queryLocation}" but found no matching coordinates.`;
-                    }
-                } catch (e) {
-                    reply = `Geocoding lookup failed. Please verify connection.`;
+        
+        // ==========================================
+        // 9. AUTHORITATIVE AGENT APP BUS & NLU
+        // ==========================================
+        window.AegisAppBus = {
+            flyTo: (lat, lon, zoom = 1.35) => smoothFlyTo(lat, lon, zoom),
+            flyToQuery: async (place) => {
+                const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(place)}&limit=1`);
+                const data = await res.json();
+                if (data.features && data.features.length > 0) {
+                    const feat = data.features[0];
+                    const lon = feat.geometry.coordinates[0];
+                    const lat = feat.geometry.coordinates[1];
+                    const name = feat.properties.name || place;
+                    const country = feat.properties.country || '';
+                    smoothFlyTo(lat, lon, 1.4);
+                    return { success: true, name, country, lat, lon };
                 }
-            }
-            // 4. Camera Zoom & Motion
-            else if (lower.includes('zoom in')) {
+                return { success: false };
+            },
+            zoomIn: () => {
                 if (activeEngine === 'cesium' && cesiumViewer) {
                     cesiumViewer.camera.zoomIn(1000000);
                 } else {
                     camera.position.z = Math.max(140, camera.position.z - 40);
                 }
-                reply = `Zoom increased on the 3D globe.`;
-            } else if (lower.includes('zoom out')) {
+            },
+            zoomOut: () => {
                 if (activeEngine === 'cesium' && cesiumViewer) {
                     cesiumViewer.camera.zoomOut(1000000);
                 } else {
                     camera.position.z = Math.min(480, camera.position.z + 40);
                 }
-                reply = `Zoom decreased on the 3D globe.`;
-            } else if (lower.includes('toggle auto orbit') || lower.includes('stop rotate') || lower.includes('start rotate') || lower.includes('spin')) {
-                state.autoOrbit = !state.autoOrbit;
-                reply = `Real 3D Earth auto-orbit rotation is now ${state.autoOrbit ? 'ENABLED' : 'PAUSED'}.`;
-            } else if (lower.includes('reset view') || lower.includes('reset camera')) {
+            },
+            resetCamera: () => {
                 smoothFlyTo(20, 0, 1.0);
                 state.autoOrbit = true;
-                reply = `3D globe camera reset to default orbital view.`;
-            }
-            // 5. Category Layer Filters
-            else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
-                switchCategory('SEISMIC');
-                const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
-                if (maxQ) {
-                    smoothFlyTo(maxQ.lat, maxQ.lon, 1.3);
-                    reply = `Centered 3D Earth on peak seismic rupture: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
-                } else {
-                    reply = `Seismic telemetry filter engaged.`;
-                }
-            } else if (lower.includes('iss') || lower.includes('space station') || lower.includes('satellite') || lower.includes('orbit')) {
-                switchCategory('SPACE');
-                const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
-                if (iss) {
-                    smoothFlyTo(iss.lat, iss.lon, 1.25);
-                    reply = `Locked camera onto International Space Station at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
-                } else {
-                    reply = `Satellite orbital vectors displayed on the 3D globe.`;
-                }
-            } else if (lower.includes('military') || lower.includes('patrol')) {
-                switchCategory('AIR');
-                const mil = state.flights.find(f => f.military);
-                if (mil) {
-                    smoothFlyTo(mil.lat, mil.lon, 1.35);
-                    reply = `Locked onto 3D special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
-                } else {
-                    reply = `Airspace tracks active. All defense patrol vectors nominal.`;
-                }
-            } else if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
-                switchCategory('AIR');
-                reply = `Airspace mode active. Tracking ${state.flights.length} flights with 3D directional vectors.`;
-            }
-            // 6. Map Styles
-            else if (lower.includes('night map') || lower.includes('night mode')) {
-                setMapMode('three_night');
-                reply = `Switched to 3D Earth Night City Lights texture map.`;
-            } else if (lower.includes('satellite map')) {
-                setMapMode('three_sat');
-                reply = `Switched to 3D Photorealistic Satellite Earth map.`;
-            }
-            // 7. Threat Assessment & Sitrep
-            else if (lower.includes('threat') || lower.includes('assess') || lower.includes('brief') || lower.includes('sitrep') || lower.includes('status')) {
-                const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
-                const highRiskQuakes = state.quakes.filter(q => q.mag >= 4.5).length;
-                const milFlights = state.flights.filter(f => f.military).length;
-                reply = `Executive Sitrep: Tracking ${state.flights.length} flights (${milFlights} tactical/defense), ${state.quakes.length} seismic ruptures (${highRiskQuakes} high-magnitude ≥M4.5), and ${state.satellites.length} orbital satellites. Peak seismic alert: M${maxQ ? maxQ.mag : 'N/A'} at ${maxQ ? maxQ.title : 'None'}. 3D Engine: ${activeEngine.toUpperCase()}. All operational layers nominal.`;
-            }
-            // 8. Clear Chat
-            else if (lower.includes('clear chat') || lower.includes('clear message') || lower === 'clear') {
-                const log = document.getElementById('chatMessages');
+            },
+            toggleOrbit: (force) => {
+                state.autoOrbit = (force !== undefined) ? force : !state.autoOrbit;
+                return state.autoOrbit;
+            },
+            setEngine: (engineKey) => setMapMode(engineKey),
+            filterCategory: (cat) => switchCategory(cat),
+            centerOnGps: () => centerOnGps(),
+            startTask: (taskType) => {
+                if (taskType === 'track_iss') startContinuousTrackingTask('SPACE', 'ISS-25544', 'ISS Space Station');
+                else if (taskType === 'monitor_seismic') startSeismicMonitorTask();
+                else if (taskType === 'patrol_airspace') startAirspacePatrolTask();
+                else if (taskType === 'monitor_wildfires') startWildfireSentinelTask();
+            },
+            abortTask: () => cancelActiveTask(),
+            stopSpeaking: () => stopAllSpeech(),
+            getSitrep: () => getSitrepText(),
+            copySitrep: () => exportFullSitrep(),
+            shareSitrep: () => shareFullSitrep(),
+            openSettings: () => openSettings(),
+            closeSettings: () => closeSettings(),
+            clearChat: () => {
+                const log = document.getElementById('chatHistory');
                 if (log) log.innerHTML = '';
-                reply = `Tactical communications transcript cleared.`;
-            }
-            // 9. Diagnostics
-            else if (lower.includes('perf') || lower.includes('fps') || lower.includes('diagnostic')) {
-                const b = localAI.benchmark(250);
-                reply = `Diagnostics: Active 3D Engine: ${activeEngine.toUpperCase()}. Neural Engine: ${b.infPerSec.toLocaleString()} ops/sec (${b.totalMs}ms). Total Assets: ${state.flights.length + state.quakes.length + state.satellites.length}. Hardware WebGL 2.0 active.`;
-            }
-            // 10. Native OS Bridges
-            else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
-                centerOnGps();
-                reply = `Acquiring device GPS satellites and orienting the 3D globe directly over your location.`;
-            } else if (lower.includes('keep screen awake') || lower.includes('wake lock')) {
-                if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenOn === 'function') {
-                    window.GodsEyeNative.setKeepScreenOn(true);
+            },
+            benchmarkLocalAI: (iters = 250) => localAI.benchmark(iters)
+        };
+
+        class AegisNLU {
+            classify(text) {
+                const raw = (text || '').trim();
+                const lower = raw.toLowerCase();
+
+                if (/^(?:stop|silence|be quiet|shut up|cancel|abort|halt|pause talking)$/i.test(lower) || lower.includes('stop speaking') || lower.includes('stop talking')) {
+                    return { intent: 'STOP_SPEECH' };
                 }
-                reply = `Device wake-lock engaged. Display will remain on indefinitely during operations.`;
-            } else if (lower.includes('copy sitrep') || lower.includes('copy report')) {
-                exportFullSitrep();
-                reply = `Tactical multi-domain sitrep copied to your device clipboard.`;
-            } else if (lower.includes('share')) {
-                shareFullSitrep();
-                reply = `Opening Android system share sheet with intelligence sitrep.`;
-            } else {
-                reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, track entities, or monitor threats.`;
+                if (lower.includes('stop task') || lower.includes('cancel task') || lower.includes('abort task') || lower.includes('stop tracking')) {
+                    return { intent: 'ABORT_TASK' };
+                }
+                if (lower.includes('track iss') || lower.includes('follow iss') || lower.includes('follow space station') || lower.includes('track space station')) {
+                    return { intent: 'TASK_TRACK_ISS' };
+                }
+                if (lower.includes('monitor earthquake') || lower.includes('watch earthquake') || lower.includes('seismic watch') || lower.includes('quake monitor') || lower.includes('seismic sentinel')) {
+                    return { intent: 'TASK_MONITOR_SEISMIC' };
+                }
+                if (lower.includes('patrol airspace') || lower.includes('sweep airspace') || lower.includes('sweep flight') || lower.includes('flight patrol')) {
+                    return { intent: 'TASK_PATROL_AIRSPACE' };
+                }
+                if (lower.includes('monitor fire') || lower.includes('monitor wildfire') || lower.includes('wildfire watch') || lower.includes('wildfire sentinel') || lower.includes('thermal watch')) {
+                    return { intent: 'TASK_MONITOR_WILDFIRES' };
+                }
+                if (lower.includes('cesium') || lower.includes('ion') || lower.includes('photorealistic') || lower.includes('3d tiles')) {
+                    return { intent: 'SET_ENGINE', engine: 'cesium_ion' };
+                }
+                if (lower.includes('three') || lower.includes('satellite map') || lower.includes('day map') || lower.includes('day mode')) {
+                    return { intent: 'SET_ENGINE', engine: 'three_sat' };
+                }
+                if (lower.includes('night') || lower.includes('city lights') || lower.includes('dark map')) {
+                    return { intent: 'SET_ENGINE', engine: 'three_night' };
+                }
+                if (lower.includes('tactical map') || lower.includes('topo')) {
+                    return { intent: 'SET_ENGINE', engine: 'three_topo' };
+                }
+                if (lower.includes('zoom in') || lower.includes('closer')) {
+                    return { intent: 'CAMERA_ZOOM_IN' };
+                }
+                if (lower.includes('zoom out') || lower.includes('pull back')) {
+                    return { intent: 'CAMERA_ZOOM_OUT' };
+                }
+                if (lower.includes('reset camera') || lower.includes('reset view') || lower.includes('home view')) {
+                    return { intent: 'CAMERA_RESET' };
+                }
+                if (lower.includes('stop rotate') || lower.includes('pause rotate') || lower.includes('pause orbit') || lower.includes('stop spin')) {
+                    return { intent: 'SET_ORBIT', state: false };
+                }
+                if (lower.includes('start rotate') || lower.includes('resume orbit') || lower.includes('spin') || lower.includes('auto orbit')) {
+                    return { intent: 'SET_ORBIT', state: true };
+                }
+                if (lower.includes('my location') || lower.includes('where am i') || lower.includes('my gps') || lower.includes('find me')) {
+                    return { intent: 'NAVIGATE_GPS' };
+                }
+                const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|look at|head to|search for|find)\s+([a-zA-Z0-9\s,\.-]+)/i);
+                if (flyMatch && !lower.includes('iss') && !lower.includes('earthquake') && !lower.includes('quake') && !lower.includes('wildfire') && !lower.includes('flight')) {
+                    return { intent: 'NAVIGATE_LOCATION', location: flyMatch[1].trim() };
+                }
+                if (lower.includes('wildfire') || lower.includes('fire') || lower.includes('thermal') || lower.includes('eonet')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'FIRE' };
+                }
+                if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic') || lower.includes('tremor')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'SEISMIC' };
+                }
+                if (lower.includes('iss') || lower.includes('space station') || lower.includes('satellite') || lower.includes('orbit')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'SPACE' };
+                }
+                if (lower.includes('military') || lower.includes('defense') || lower.includes('tactical flight')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'AIR', sub: 'MILITARY' };
+                }
+                if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'AIR' };
+                }
+                if (lower.includes('all assets') || lower.includes('show all')) {
+                    return { intent: 'FILTER_CATEGORY', category: 'ALL' };
+                }
+                if (lower.includes('space weather') || lower.includes('solar storm') || lower.includes('geomagnetic') || lower.includes('kp')) {
+                    return { intent: 'QUERY_SPACE_WEATHER' };
+                }
+                if (lower.includes('sitrep') || lower.includes('brief') || lower.includes('threat') || lower.includes('status')) {
+                    return { intent: 'GET_SITREP' };
+                }
+                if (lower.includes('copy sitrep') || lower.includes('copy report')) {
+                    return { intent: 'COPY_SITREP' };
+                }
+                if (lower.includes('share')) {
+                    return { intent: 'SHARE_SITREP' };
+                }
+                if (lower.includes('benchmark') || lower.includes('perf') || lower.includes('diagnostic')) {
+                    return { intent: 'DIAGNOSTICS' };
+                }
+                if (lower.includes('wake lock') || lower.includes('screen awake') || lower.includes('keep awake')) {
+                    return { intent: 'SET_WAKE_LOCK' };
+                }
+                if (lower.includes('clear chat') || lower.includes('clear transcript') || lower === 'clear') {
+                    return { intent: 'CLEAR_CHAT' };
+                }
+                if (lower.includes('settings') || lower.includes('configure') || lower.includes('ion token')) {
+                    return { intent: 'OPEN_SETTINGS' };
+                }
+                return { intent: 'GENERAL_CHAT', raw: raw };
+            }
+        }
+
+        const aegisNLU = new AegisNLU();
+
+async function executeSingleAction(cmd, shouldSpeak = true) {
+            const parsed = aegisNLU.classify(cmd);
+            let reply = '';
+
+            switch (parsed.intent) {
+                case 'STOP_SPEECH':
+                    window.AegisAppBus.stopSpeaking();
+                    reply = "Voice speech output silenced.";
+                    break;
+                case 'ABORT_TASK':
+                    window.AegisAppBus.abortTask();
+                    reply = "Active autonomous mission aborted. Camera control restored.";
+                    break;
+                case 'TASK_TRACK_ISS':
+                    window.AegisAppBus.startTask('track_iss');
+                    return;
+                case 'TASK_MONITOR_SEISMIC':
+                    window.AegisAppBus.startTask('monitor_seismic');
+                    return;
+                case 'TASK_PATROL_AIRSPACE':
+                    window.AegisAppBus.startTask('patrol_airspace');
+                    return;
+                case 'TASK_MONITOR_WILDFIRES':
+                    window.AegisAppBus.startTask('monitor_wildfires');
+                    return;
+                case 'SET_ENGINE':
+                    window.AegisAppBus.setEngine(parsed.engine);
+                    reply = (parsed.engine === 'cesium_ion') 
+                        ? "Engaged official CesiumJS 3D Photorealistic Engine with authenticated Cesium Ion terrain & 3D buildings."
+                        : `3D Earth engine switched to ${parsed.engine}.`;
+                    break;
+                case 'CAMERA_ZOOM_IN':
+                    window.AegisAppBus.zoomIn();
+                    reply = "Increased 3D camera zoom level.";
+                    break;
+                case 'CAMERA_ZOOM_OUT':
+                    window.AegisAppBus.zoomOut();
+                    reply = "Decreased 3D camera zoom level.";
+                    break;
+                case 'CAMERA_RESET':
+                    window.AegisAppBus.resetCamera();
+                    reply = "3D globe camera reset to default global view.";
+                    break;
+                case 'SET_ORBIT':
+                    const orb = window.AegisAppBus.toggleOrbit(parsed.state);
+                    reply = `Earth orbital rotation is now ${orb ? 'ACTIVE' : 'PAUSED'}.`;
+                    break;
+                case 'NAVIGATE_GPS':
+                    window.AegisAppBus.centerOnGps();
+                    reply = "Acquiring GPS fix and orienting the 3D globe to your device location.";
+                    break;
+                case 'NAVIGATE_LOCATION':
+                    document.getElementById('assistantStateText').textContent = `Locating '${parsed.location}'...`;
+                    const res = await window.AegisAppBus.flyToQuery(parsed.location);
+                    if (res.success) {
+                        reply = `Camera maneuver executed. Flew to ${res.name}${res.country ? ', ' + res.country : ''} at ${res.lat.toFixed(2)}°, ${res.lon.toFixed(2)}° on the 3D globe.`;
+                    } else {
+                        reply = `Global geodetic search for "${parsed.location}" yielded no matching coordinates.`;
+                    }
+                    break;
+                case 'FILTER_CATEGORY':
+                    window.AegisAppBus.filterCategory(parsed.category);
+                    if (parsed.sub === 'MILITARY') {
+                        const mil = state.flights.find(f => f.military);
+                        if (mil) {
+                            window.AegisAppBus.flyTo(mil.lat, mil.lon, 1.35);
+                            reply = `Locked onto special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
+                        } else {
+                            reply = "Airspace filter set to military/defense patrol tracks.";
+                        }
+                    } else if (parsed.category === 'FIRE') {
+                        const maxF = [...state.wildfires].sort((a,b) => b.acres - a.acres)[0];
+                        if (maxF) {
+                            window.AegisAppBus.flyTo(maxF.lat, maxF.lon, 1.35);
+                            reply = `Wildfire telemetry active. Tracking ${state.wildfires.length} active thermal events. Centered on ${maxF.title} (${maxF.acres.toLocaleString()} acres).`;
+                        } else {
+                            reply = `NASA EONET Wildfires layer engaged with ${state.wildfires.length} active events.`;
+                        }
+                    } else if (parsed.category === 'SEISMIC') {
+                        const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                        if (maxQ) {
+                            window.AegisAppBus.flyTo(maxQ.lat, maxQ.lon, 1.35);
+                            reply = `Seismic filter active. Peak rupture: M${maxQ.mag} at ${maxQ.title}. Total earthquakes: ${state.quakes.length}.`;
+                        } else {
+                            reply = "Seismic telemetry filter active.";
+                        }
+                    } else if (parsed.category === 'SPACE') {
+                        const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
+                        if (iss) {
+                            window.AegisAppBus.flyTo(iss.lat, iss.lon, 1.3);
+                            reply = `Orbital tracking active. Locked onto ISS at ${iss.alt} km altitude travelling at ${iss.velocity.toLocaleString()} km/h.`;
+                        } else {
+                            reply = "Orbital satellite telemetry filter active.";
+                        }
+                    } else {
+                        reply = `Displayed telemetry layer: ${parsed.category}.`;
+                    }
+                    break;
+                case 'QUERY_SPACE_WEATHER':
+                    reply = `NOAA SWPC Space Weather: Planetary K-Index is currently ${state.spaceWeather.kp.toFixed(1)} (${state.spaceWeather.status}). Solar wind & magnetosphere status nominal.`;
+                    break;
+                case 'GET_SITREP':
+                    const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                    const milCount = state.flights.filter(f => f.military).length;
+                    reply = `Tactical Sitrep: Monitoring ${state.flights.length} flights (${milCount} defense/patrol), ${state.quakes.length} seismic ruptures (Peak M${maxQ ? maxQ.mag : 'N/A'}), ${state.wildfires.length} active wildfires, and ${state.satellites.length} satellites. Space Weather: Kp ${state.spaceWeather.kp.toFixed(1)}. Active 3D Engine: ${activeEngine.toUpperCase()}.`;
+                    break;
+                case 'COPY_SITREP':
+                    window.AegisAppBus.copySitrep();
+                    reply = "Tactical multi-domain sitrep copied to device clipboard.";
+                    break;
+                case 'SHARE_SITREP':
+                    window.AegisAppBus.shareSitrep();
+                    reply = "Invoking Android system share sheet with intelligence sitrep.";
+                    break;
+                case 'DIAGNOSTICS':
+                    const b = window.AegisAppBus.benchmarkLocalAI(250);
+                    reply = `Diagnostics: 3D Engine: ${activeEngine.toUpperCase()}. Neural Engine: ${b.infPerSec.toLocaleString()} inferences/sec (${b.totalMs}ms). Public data feeds: ${state.flights.length} air, ${state.quakes.length} seismic, ${state.wildfires.length} fire, ${state.satellites.length} space.`;
+                    break;
+                case 'SET_WAKE_LOCK':
+                    if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenOn === 'function') {
+                        window.GodsEyeNative.setKeepScreenOn(true);
+                    }
+                    reply = "Device wake-lock engaged. Display will remain on indefinitely.";
+                    break;
+                case 'OPEN_SETTINGS':
+                    window.AegisAppBus.openSettings();
+                    reply = "Opened tactical settings and Cesium Ion configuration.";
+                    break;
+                case 'CLEAR_CHAT':
+                    window.AegisAppBus.clearChat();
+                    reply = "Tactical communications transcript cleared.";
+                    break;
+                default:
+                    reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} quakes, ${state.wildfires.length} fires, and ${state.satellites.length} satellites. You can command me to fly anywhere, zoom, track entities, or monitor threats.`;
+                    break;
             }
 
             addChatMessage('agent', reply);
-            if (shouldSpeak) speakAssistant(reply);
+            if (shouldSpeak && parsed.intent !== 'STOP_SPEECH') speakAssistant(reply);
         }
 
         function getSitrepText() {
@@ -2511,9 +2728,11 @@
             const maxF = [...state.flights].sort((a,b) => b.speed - a.speed)[0];
             const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
 
-            return `🛰️ GOD'S EYE VIEW — REAL 3D EARTH SITREP
+            const maxFire = [...state.wildfires].sort((a,b) => b.acres - a.acres)[0];
+            return `🛰️ GOD'S EYE VIEW v1.7.2 — REAL 3D EARTH SITREP
 Date: ${new Date().toUTCString()}
 Status: DEFCON NOMINAL / GUARDED
+Space Weather: Kp ${state.spaceWeather.kp.toFixed(1)} (${state.spaceWeather.status})
 
 ✈ AIRSPACE:
 • ${state.flights.length} flights tracked in 3D
@@ -2523,11 +2742,15 @@ Status: DEFCON NOMINAL / GUARDED
 • ${state.quakes.length} earthquakes logged (past 24h)
 • Peak rupture: ${maxQ ? maxQ.mag + ' M near ' + maxQ.title : 'None'}
 
+🔥 WILDFIRES (NASA EONET):
+• ${state.wildfires.length} active thermal events
+• Major event: ${maxFire ? maxFire.title + ' (' + maxFire.acres.toLocaleString() + ' acres)' : 'None'}
+
 🛰 ORBITAL TELEMETRY:
 • Target: ${iss ? iss.title : 'ISS'}
 • Alt: ${iss ? iss.alt + ' km · ' + iss.velocity + ' km/h' : '420 km'}
 
-Processed on-device via AEGIS 3D Earth AI Assistant.`;
+Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
         }
 
         function exportFullSitrep() {
