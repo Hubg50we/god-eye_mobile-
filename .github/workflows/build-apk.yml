@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Android Debug APK
         working-directory: android
-        run: gradle assembleDebug --stacktrace --no-daemon
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Verify APK Generated
         run: |
