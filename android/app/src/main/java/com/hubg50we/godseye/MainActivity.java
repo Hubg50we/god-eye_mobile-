@@ -918,9 +918,25 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+
+        @JavascriptInterface
+        public boolean setVoiceLocale(String languageTag, float pitch, float rate) {
+            runOnUiThread(() -> {
+                try {
+                    if (tts != null) {
+                        Locale loc = Locale.forLanguageTag(languageTag != null ? languageTag : "en-GB");
+                        tts.setLanguage(loc);
+                        tts.setPitch(pitch > 0 ? pitch : 1.0f);
+                        tts.setSpeechRate(rate > 0 ? rate : 1.0f);
+                    }
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
         @JavascriptInterface
         public String getAppVersion() {
-            return "3.1.0";
+            return "3.2.0";
         }
     }
 }

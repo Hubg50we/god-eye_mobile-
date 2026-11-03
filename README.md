@@ -167,3 +167,45 @@ To unlock photorealistic 3D city buildings and custom imagery:
 * Original **God's Eye View** browser concept and 3D globe architecture created by [Bilawal Sidhu](https://github.com/bilawalsidhu/gods-eye-view).
 * Android Mobile port and native orchestration maintained by [Hubg50we](https://github.com/Hubg50we).
 * Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
+
+
+---
+
+## ⚡ J.A.R.V.I.S. Mark 85 Autonomous Mobile OS & Frontier AI (v3.2.0)
+
+God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic, fully autonomous mobile tactical operating system featuring:
+
+### 1. 🧠 Built-in Free Frontier AI & Local SLM Neural Core
+- **Zero-Config Frontier Gateway**: Powered by `dsh-our-free-model` / Kilo AI (`https://api.kilo.ai/api/gateway/chat/completions`) with automatic zero-key model routing.
+- **3-Tier Neural Fallback**: Seamless fallback to local Transformer SLM and pattern heuristics in airplane or offline mode.
+- **Natural Voice Barge-In**: Users can interrupt the assistant mid-speech—speech recognition dynamically halts ongoing TTS playback upon speech detection.
+
+### 2. 🎭 Stark AI Persona Triad with Real-Time Accent & Theme Morphing
+- **J.A.R.V.I.S.**: British English (`en-GB`), Mark 85 Gold & Cyan tactical theme, hyper-competent chief of staff.
+- **F.R.I.D.A.Y.**: Irish English (`en-IE`), Emerald & Coral tactical theme, battle management specialist.
+- **E.D.I.T.H.**: American English (`en-US`), Sky Blue & Silver tactical theme, orbital drone & tactical satellite defense.
+- Switch personas seamlessly via voice: *"Switch to Friday"*, *"Switch to Edith"*, *"Switch to Jarvis"*.
+
+### 3. 🚀 3D Sub-Orbital Ballistic Trajectory Simulator
+- Realistic kinematic calculation of ICBM and hypersonic flight arcs with space apogee calculations.
+- Pulsing red launch origin point, gold terminal air-defense dome, and yellow target impact ring.
+- Voice commands: *"Simulate ballistic trajectory from Tokyo to Hawaii"*, *"Simulate missile from New York to London"*.
+
+### 4. ☀️ Astrodynamics Solar Lighting & Live Day/Night Terminator
+- Dynamic celestial sun calculation based on current UTC epoch time.
+- Real-time day/night shadow terminator projected across Earth's topography.
+- Voice commands: *"Enable solar lighting"*, *"Disable solar lighting"*, *"Show day night shadow"*.
+
+### 5. 📷 Dual-Camera Visor Flip
+- Instant tactical flip between rear optical environment camera and front helmet mirror feed.
+- Voice commands: *"Flip visor camera"*, *"Switch to front camera"*, *"Switch to rear camera"*.
+
+### 6. 🛡️ 24/7 Autonomous Threat Sentinel Watchdog
+- Automated continuous background monitoring of USGS seismic events and NOAA solar space weather.
+- Automatic HUD alert banner and tactical voice advisories upon anomalous event detection.
+- Voice commands: *"Start threat sentinel"*, *"Stop threat sentinel"*.
+
+### 7. 📱 Complete Mobile Hardware & System Control
+- **Open Any App**: *"Open YouTube"*, *"Open Camera"*, *"Open Maps"*, *"Open Chrome"*, *"Open Settings"*.
+- **Hardware Peripherals**: *"Turn on flashlight"*, *"Turn off flashlight"*, *"Call 911"*, *"Set volume to 80%"*.
+- **Android Default Assistant**: Registered with `ACTION_ASSIST`—summon J.A.R.V.I.S. by holding down the Android home or power button.

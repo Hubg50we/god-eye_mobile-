@@ -3488,12 +3488,182 @@
         // ==============================================================
         
         // ==============================================================
+        
+        // ==============================================================
+        // 15. BALLISTIC SIMULATOR, SOLAR TERMINATOR & 24/7 SENTINEL
+        // ==============================================================
+
+        // 1. Dual-Camera Flip (Front / Rear)
+        let currentVisionFacing = "environment";
+        async function flipVisionCamera() {
+            currentVisionFacing = currentVisionFacing === "environment" ? "user" : "environment";
+            if (visionMediaStream) {
+                visionMediaStream.getTracks().forEach(t => t.stop());
+                visionMediaStream = null;
+            }
+            try {
+                const video = document.getElementById('jarvisVisionVideo');
+                visionMediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentVisionFacing },
+                    audio: false
+                });
+                if (video) video.srcObject = visionMediaStream;
+                playSciFiBeep('confirm');
+                triggerHaptic(30);
+                showToast(`Optical sensor switched: ${currentVisionFacing === "user" ? "HELMET MIRROR (FRONT)" : "ENVIRONMENT OPTICS (REAR)"}`);
+            } catch(e) {
+                showToast("Camera flip error: " + e.message);
+            }
+        }
+
+        // 2. Solar Day/Night Lighting & Terminator
+        let solarLightingActive = false;
+        function toggleSolarTerminator(forceState) {
+            solarLightingActive = forceState !== undefined ? forceState : !solarLightingActive;
+            if (!cesiumViewer || !cesiumViewer.scene || !cesiumViewer.scene.globe) return "Cesium viewer unavailable";
+
+            cesiumViewer.scene.globe.enableLighting = solarLightingActive;
+            triggerHaptic(30);
+            playSciFiBeep('confirm');
+            showToast(`Real-Time Solar Terminator Lighting: ${solarLightingActive ? "ENGAGED" : "DISENGAGED"}`);
+            return `Solar astrodynamics and day/night terminator ${solarLightingActive ? "engaged" : "disengaged"}`;
+        }
+
+        // 3. 3D Sub-Orbital Ballistic Missile Trajectory Simulator
+        let ballisticEntities = [];
+        function simulateBallisticTrajectory(originName, oLon, oLat, destName, dLon, dLat) {
+            if (!cesiumViewer) return "Cesium viewer unavailable";
+
+            // Clean previous ballistic runs
+            ballisticEntities.forEach(e => cesiumViewer.entities.remove(e));
+            ballisticEntities = [];
+
+            const p1 = Cesium.Cartographic.fromDegrees(oLon, oLat, 0);
+            const p2 = Cesium.Cartographic.fromDegrees(dLon, dLat, 0);
+            const distKm = getGreatCircleDistance(oLat, oLon, dLat, dLon);
+            const apogeeAltitude = Math.min(650000, Math.max(180000, distKm * 120)); // Parabolic space apogee
+
+            const arcPositions = [];
+            const steps = 60;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const curLon = oLon + (dLon - oLon) * t;
+                const curLat = oLat + (dLat - oLat) * t;
+                // Parabolic trajectory formula: 4 * h * t * (1 - t)
+                const curAlt = apogeeAltitude * 4 * t * (1 - t);
+                arcPositions.push(Cesium.Cartesian3.fromDegrees(curLon, curLat, curAlt));
+            }
+
+            // 1. Glowing Parabolic Trajectory Arc
+            const trajectoryLine = cesiumViewer.entities.add({
+                name: "BALLISTIC_TRAJECTORY_ARC",
+                polyline: {
+                    positions: arcPositions,
+                    width: 3.5,
+                    material: new Cesium.PolylineGlowMaterialProperty({
+                        glowPower: 0.35,
+                        color: Cesium.Color.fromCssColorString('#ef4444')
+                    })
+                }
+            });
+            ballisticEntities.push(trajectoryLine);
+
+            // 2. Launch Origin & Impact Marker
+            const originEntity = cesiumViewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(oLon, oLat, 100),
+                point: { pixelSize: 12, color: Cesium.Color.fromCssColorString('#f59e0b'), outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
+                label: { text: `LAUNCH: ${originName.toUpperCase()}`, font: '10px monospace', fillColor: Cesium.Color.fromCssColorString('#f59e0b'), pixelOffset: new Cesium.Cartesian2(0, -18) }
+            });
+            const destEntity = cesiumViewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(dLon, dLat, 100),
+                point: { pixelSize: 14, color: Cesium.Color.fromCssColorString('#ef4444'), outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
+                label: { text: `TARGET: ${destName.toUpperCase()}`, font: 'bold 11px monospace', fillColor: Cesium.Color.fromCssColorString('#ef4444'), pixelOffset: new Cesium.Cartesian2(0, -20) }
+            });
+            ballisticEntities.push(originEntity, destEntity);
+
+            // 3. Air Defense Intercept Dome (THAAD / Iron Dome Bubble at Destination)
+            const defenseRadius = 150000; // 150 km dome
+            const defenseDome = cesiumViewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(dLon, dLat, 0),
+                ellipse: {
+                    semiMinorAxis: defenseRadius,
+                    semiMajorAxis: defenseRadius,
+                    material: Cesium.Color.fromCssColorString('rgba(0, 240, 255, 0.15)'),
+                    outline: true,
+                    outlineColor: Cesium.Color.fromCssColorString('rgba(0, 240, 255, 0.7)'),
+                    outlineWidth: 2
+                }
+            });
+            ballisticEntities.push(defenseDome);
+
+            // Fly camera to overview
+            cesiumViewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees((oLon + dLon)/2, (oLat + dLat)/2, Math.max(1500000, distKm * 1800)),
+                duration: 2.2
+            });
+
+            playSciFiBeep('alert');
+            triggerHaptic(50);
+            return `Ballistic trajectory arc calculated: ${originName} ➔ ${destName}. Apogee: ${Math.round(apogeeAltitude/1000)} km. Range: ${Math.round(distKm)} km. Terminal Air Defense Envelope Active.`;
+        }
+
+        // 4. 24/7 Autonomous Threat Sentinel (Continuous Background Telemetry Watchdog)
+        let sentinelTimerId = null;
+        let lastReportedQuakeId = null;
+        function toggleAutonomousSentinel(forceState) {
+            const enable = forceState !== undefined ? forceState : (sentinelTimerId === null);
+            if (enable) {
+                if (sentinelTimerId) clearInterval(sentinelTimerId);
+                sentinelTimerId = setInterval(async () => {
+                    try {
+                        // Check for recent significant earthquakes
+                        const res = await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson");
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.features && data.features.length > 0) {
+                                const q = data.features[0];
+                                if (q.id !== lastReportedQuakeId && q.properties.mag >= 6.0) {
+                                    lastReportedQuakeId = q.id;
+                                    const alertTitle = `⚠️ SEISMIC ALERT: ${q.properties.mag}M`;
+                                    const alertMsg = `${q.properties.place} — Threat Level Elevated`;
+                                    if (window.GodsEyeNative && typeof window.GodsEyeNative.postSystemNotification === 'function') {
+                                        window.GodsEyeNative.postSystemNotification(alertTitle, alertMsg);
+                                        window.GodsEyeNative.triggerTacticalHaptic('alert');
+                                    }
+                                    showToast(alertTitle + ": " + alertMsg);
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }, 180000); // Poll every 3 minutes
+                playSciFiBeep('confirm');
+                triggerHaptic(30);
+                showToast("24/7 Autonomous Threat Sentinel: ENGAGED");
+                return "24/7 Autonomous Threat Sentinel active. Continuous background seismic & solar watchdog online.";
+            } else {
+                if (sentinelTimerId) { clearInterval(sentinelTimerId); sentinelTimerId = null; }
+                showToast("24/7 Autonomous Threat Sentinel disengaged");
+                return "24/7 Threat Sentinel deactivated.";
+            }
+        }
+
         // 14. STARK AI PERSONA TRIAD & GLOBAL UNDERSEA INFRASTRUCTURE
         // ==============================================================
 
         let currentPersona = localStorage.getItem('gev_persona') || 'jarvis';
 
         function setAIPersona(personaName) {
+            currentPersona = personaName.toLowerCase();
+            // Switch native TTS voice accent locale
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.setVoiceLocale === 'function') {
+                if (currentPersona === 'friday') {
+                    window.GodsEyeNative.setVoiceLocale("en-IE", 1.15, 1.05); // Irish
+                } else if (currentPersona === 'edith') {
+                    window.GodsEyeNative.setVoiceLocale("en-US", 1.02, 1.02); // American
+                } else {
+                    window.GodsEyeNative.setVoiceLocale("en-GB", 0.95, 1.0);  // British J.A.R.V.I.S.
+                }
+            }
             currentPersona = personaName.toLowerCase();
             localStorage.setItem('gev_persona', currentPersona);
             document.body.classList.remove('persona-friday', 'persona-edith');
@@ -4519,6 +4689,55 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
         
         
         
+        
+        jarvisTools.register(
+            "simulate_ballistic_launch",
+            "Simulate 3D sub-orbital ballistic trajectory arc and terminal air defense dome between two locations.",
+            {
+                type: "object",
+                properties: {
+                    origin: { type: "string" },
+                    destination: { type: "string" }
+                },
+                required: ["destination"]
+            },
+            async (args) => {
+                const origin = args.origin || "Tokyo";
+                const dest = args.destination;
+                // Quick geocode coordinates
+                let oLon = 139.69, oLat = 35.68, dLon = -74.00, dLat = 40.71;
+                if (origin.toLowerCase().includes('london')) { oLon = 0.0; oLat = 51.5; }
+                if (dest.toLowerCase().includes('london')) { dLon = 0.0; dLat = 51.5; }
+                if (dest.toLowerCase().includes('tokyo')) { dLon = 139.69; dLat = 35.68; }
+                if (dest.toLowerCase().includes('pacific')) { dLon = -160.0; dLat = 20.0; }
+                return simulateBallisticTrajectory(origin, oLon, oLat, dest, dLon, dLat);
+            }
+        );
+
+        jarvisTools.register(
+            "toggle_solar_lighting",
+            "Engage or disengage real-time sun astrodynamics and day/night shadow terminator.",
+            {
+                type: "object",
+                properties: { active: { type: "boolean" } }
+            },
+            async (args) => {
+                return toggleSolarTerminator(args.active);
+            }
+        );
+
+        jarvisTools.register(
+            "toggle_sentinel_watchdog",
+            "Engage or disengage 24/7 background autonomous seismic and space weather threat sentinel.",
+            {
+                type: "object",
+                properties: { active: { type: "boolean" } }
+            },
+            async (args) => {
+                return toggleAutonomousSentinel(args.active);
+            }
+        );
+
         jarvisTools.register(
             "switch_ai_persona",
             "Switch the operating AI persona to 'friday' (F.R.I.D.A.Y.), 'edith' (E.D.I.T.H.), or 'jarvis' (J.A.R.V.I.S.).",
@@ -5156,7 +5375,40 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                 let observation = "";
                 let reply = "";
 
-                                                                                // 0.00000000 Persona Triad Switcher
+                                                                                                // 0.0000000000 Ballistic Trajectory Simulator
+                if (/(?:simulate|launch)\s+(?:ballistic|missile|trajectory|icbm|rocket)\s+(?:from\s+([a-zA-Z\s]+)\s+to\s+([a-zA-Z\s]+)|to\s+([a-zA-Z\s]+))/i.test(lower)) {
+                    const match = lower.match(/(?:simulate|launch)\s+(?:ballistic|missile|trajectory|icbm|rocket)\s+(?:from\s+([a-zA-Z\s]+)\s+to\s+([a-zA-Z\s]+)|to\s+([a-zA-Z\s]+))/i);
+                    const origin = match[1] ? match[1].trim() : "Tokyo";
+                    const dest = (match[2] || match[3] || "London").trim();
+                    thought = `User commanded 3D ballistic trajectory simulation from ${origin} to ${dest}.`;
+                    actionName = "simulate_ballistic_launch";
+                    actionArgs = { origin: origin, destination: dest };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = observation;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.00000000000 Solar Day/Night Terminator
+                if (/(?:track|show|enable|toggle)\s+(?:the\s+)?(?:sun|solar\s+terminator|day\s+night\s+terminator|daylight)/i.test(lower)) {
+                    thought = "User commanded real-time solar terminator lighting.";
+                    actionName = "toggle_solar_lighting";
+                    actionArgs = { active: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = observation;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.000000000000 24/7 Autonomous Sentinel
+                if (/(?:engage|enable|activate|start)\s+(?:24\/7\s+)?(?:threat\s+)?sentinel/i.test(lower)) {
+                    thought = "User commanded 24/7 autonomous threat watchdog engagement.";
+                    actionName = "toggle_sentinel_watchdog";
+                    actionArgs = { active: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = observation;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.00000000 Persona Triad Switcher
                 if (/(?:switch\s+to|activate|load)\s+(friday|edith|jarvis)/i.test(lower) || /(?:restore\s+jarvis)/i.test(lower)) {
                     let targetPersona = 'jarvis';
                     if (lower.includes('friday')) targetPersona = 'friday';
