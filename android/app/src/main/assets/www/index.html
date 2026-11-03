@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>God's Eye View - Tactical Mobile Console</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        body {
+            background-color: #0a0a0f;
+            color: #00ffcc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Tactical Background Canvas */
+        #radarCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.65;
+        }
+
+        /* Tactical HUD Header */
+        header {
+            position: relative;
+            z-index: 10;
+            padding: 24px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.2);
+            background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 100%);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #00ffcc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+        }
+        .brand-icon::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #ffb700;
+            border-radius: 50%;
+        }
+        .brand-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffffff;
+        }
+        .brand-title span {
+            color: #00ffcc;
+        }
+        .status-badge {
+            font-size: 10px;
+            padding: 4px 8px;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            background: rgba(0, 255, 204, 0.1);
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Tactical Deck */
+        main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .telemetry-card {
+            background: rgba(18, 19, 28, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 204, 0.25);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .telemetry-label {
+            color: #94a3b8;
+        }
+        .telemetry-value {
+            color: #00ffcc;
+            font-weight: bold;
+        }
+
+        /* Action Buttons */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn {
+            background: rgba(0, 255, 204, 0.12);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 14px 18px;
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn:active {
+            background: #00ffcc;
+            color: #0a0a0f;
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: #00ffcc;
+            color: #0a0a0f;
+            border: none;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+        .btn-secondary {
+            border-color: #ffb700;
+            color: #ffb700;
+            background: rgba(255, 183, 0, 0.1);
+        }
+        .btn-secondary:active {
+            background: #ffb700;
+            color: #0a0a0f;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 10px;
+            font-size: 10px;
+            color: #64748b;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="radarCanvas"></canvas>
+
+    <header>
+        <div class="brand">
+            <div class="brand-icon"></div>
+            <div class="brand-title">GOD'S EYE <span>MOBILE</span></div>
+        </div>
+        <div class="status-badge" id="webglStatus">WebGL 2.0 ACTIVE</div>
+    </header>
+
+    <main>
+        <div class="telemetry-card">
+            <div class="telemetry-row">
+                <span class="telemetry-label">SYSTEM ARCH:</span>
+                <span class="telemetry-value" id="systemArch">Android / Arm64</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">GPU RENDERER:</span>
+                <span class="telemetry-value" id="gpuInfo">Detecting...</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">GPS COORDINATES:</span>
+                <span class="telemetry-value" id="gpsInfo">Awaiting GPS Lock...</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">CESIUM ION ENGINE:</span>
+                <span class="telemetry-value" id="cesiumStatus">Ready</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="connectLocalDev()">
+                CONNECT LOCAL DEV (10.0.2.2:5173)
+            </button>
+            <button class="btn" onclick="openTacticalSettings()">
+                CONFIGURE ENDPOINT & TOKENS
+            </button>
+            <button class="btn btn-secondary" onclick="enterCustomUrl()">
+                CONNECT REMOTE INSTANCE (URL)
+            </button>
+        </div>
+    </main>
+
+    <footer>
+        GOD'S EYE VIEW MOBILE v1.0 • OPEN-SOURCE SPATIAL INTELLIGENCE CONSOLE
+    </footer>
+
+    <script>
+        // Check WebGL Capabilities
+        const canvas = document.getElementById('radarCanvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                document.getElementById('gpuInfo').textContent = renderer.substring(0, 28);
+            } else {
+                document.getElementById('gpuInfo').textContent = 'Hardware Accelerated';
+            }
+        } else {
+            document.getElementById('webglStatus').textContent = 'SOFTWARE RENDER';
+            document.getElementById('webglStatus').style.color = '#ff3366';
+        }
+
+        // Radar Globe Particle Animation
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = [];
+        const numParticles = 60;
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8,
+                size: Math.random() * 2 + 1
+            });
+        }
+
+        let angle = 0;
+        function renderRadar() {
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            const cx = width / 2;
+            const cy = height * 0.42;
+            const radius = Math.min(width, height) * 0.35;
+
+            // Draw Radar Concentric Rings
+            ctx.strokeStyle = 'rgba(0, 255, 204, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.66, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.33, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Radar Sweep line
+            angle += 0.02;
+            const sx = cx + Math.cos(angle) * radius;
+            const sy = cy + Math.sin(angle) * radius;
+            ctx.strokeStyle = 'rgba(0, 255, 204, 0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(sx, sy);
+            ctx.stroke();
+
+            // Draw Connected Particles
+            for (let i = 0; i < numParticles; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.fillStyle = '#00ffcc';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(renderRadar);
+        }
+        renderRadar();
+
+        // Native Geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(4);
+                    const lon = pos.coords.longitude.toFixed(4);
+                    document.getElementById('gpsInfo').textContent = `${lat}°, ${lon}°`;
+                },
+                (err) => {
+                    document.getElementById('gpsInfo').textContent = 'Permission Required';
+                }
+            );
+        }
+
+        // Bridge Actions
+        function openTacticalSettings() {
+            if (window.GodsEyeNative && window.GodsEyeNative.openSettings) {
+                window.GodsEyeNative.openSettings();
+            } else {
+                alert('Tactical settings are accessible via Android app native menu.');
+            }
+        }
+
+        function connectLocalDev() {
+            if (window.GodsEyeNative && window.GodsEyeNative.triggerHaptic) {
+                window.GodsEyeNative.triggerHaptic(40);
+            }
+            window.location.href = 'http://10.0.2.2:5173';
+        }
+
+        function enterCustomUrl() {
+            const url = prompt('Enter God\'s Eye View Instance URL (e.g., https://your-domain.vercel.app):');
+            if (url && url.startsWith('http')) {
+                window.location.href = url;
+            }
+        }
+    </script>
+</body>
+</html>

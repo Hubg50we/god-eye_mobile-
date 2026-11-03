@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">God\'s Eye View</string>
+    <string name="toggle_fullscreen">Toggle Fullscreen</string>
+    <string name="refresh_globe">Refresh Tactical Uplink</string>
+    <string name="tactical_settings">Tactical Settings</string>
+    <string name="tactical_settings_title">TACTICAL CONSOLE CONFIG</string>
+    <string name="server_endpoint_url">Host Endpoint (e.g. http://10.0.2.2:5173)</string>
+    <string name="server_url_hint">Leave blank to use bundled offline tactical assets, or enter your local dev server or cloud deployed URL.</string>
+    <string name="cesium_ion_token">Cesium Ion Access Token (Optional)</string>
+    <string name="google_maps_api_key">Google 3D Tiles API Key (Optional)</string>
+    <string name="save">SAVE CONFIG</string>
+    <string name="cancel">ABORT</string>
+</resources>

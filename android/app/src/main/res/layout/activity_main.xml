@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tactical_bg">
+
+    <!-- Primary 3D Earth Globe WebGL Container -->
+    <FrameLayout
+        android:id="@+id/webViewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/tactical_bg" />
+
+        <!-- Neon Tactical Progress Indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_gravity="top"
+            android:indeterminate="false"
+            android:max="100"
+            android:progressTint="@color/tactical_cyan"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- Fullscreen Video / CCTV container -->
+    <FrameLayout
+        android:id="@+id/customViewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:visibility="gone" />
+
+    <!-- Tactical Quick Action Overlay Bar (Floating right margin) -->
+    <LinearLayout
+        android:id="@+id/quickActionBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabFullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/toggle_fullscreen"
+            app:backgroundTint="@color/tactical_card"
+            app:borderWidth="1dp"
+            app:fabSize="mini"
+            app:rippleColor="@color/tactical_cyan"
+            app:srcCompat="@drawable/ic_fullscreen"
+            app:tint="@color/tactical_cyan" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/refresh_globe"
+            app:backgroundTint="@color/tactical_card"
+            app:borderWidth="1dp"
+            app:fabSize="mini"
+            app:rippleColor="@color/tactical_cyan"
+            app:srcCompat="@drawable/ic_refresh"
+            app:tint="@color/tactical_cyan" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/tactical_settings"
+            app:backgroundTint="@color/tactical_card"
+            app:borderWidth="1dp"
+            app:fabSize="mini"
+            app:rippleColor="@color/tactical_amber"
+            app:srcCompat="@drawable/ic_settings"
+            app:tint="@color/tactical_amber" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
