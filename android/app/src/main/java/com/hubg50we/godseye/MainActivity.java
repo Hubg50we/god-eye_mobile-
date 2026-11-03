@@ -174,7 +174,12 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK && data != null) {
                 ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 if (matches != null && !matches.isEmpty()) {
-                    String spokenText = matches.get(0).replace("'", "\\'");
+                    String spokenText = matches.get(0)
+                        .replace("\\", "\\\\")
+                        .replace("'", "\\'")
+                        .replace("\"", "\\\"")
+                        .replace("\n", " ")
+                        .replace("\r", "");
                     if (webView != null) {
                         webView.evaluateJavascript("if (window.onNativeSpeechResult) window.onNativeSpeechResult('" + spokenText + "');", null);
                     }
@@ -332,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public String getAppVersion() {
-            return "1.8.0";
+            return "1.8.1";
         }
     }
 }

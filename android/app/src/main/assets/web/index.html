@@ -669,7 +669,7 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">CESIUM ION · OPENJARVIS AGENT OS v1.8.0</div>
+                <div class="brand-sub">CESIUM ION · OPENJARVIS AGENT OS v1.8.1</div>
             </div>
         </div>
         <div class="header-actions">
@@ -1011,6 +1011,7 @@
             if (state.category === 'ALL' || state.category === 'AIR') activeList.push(...state.flights);
             if (state.category === 'ALL' || state.category === 'SEISMIC') activeList.push(...state.quakes);
             if (state.category === 'ALL' || state.category === 'SPACE') activeList.push(...state.satellites);
+            if (state.category === 'ALL' || state.category === 'FIRE') activeList.push(...state.wildfires);
 
             for (const asset of activeList) {
                 const lon = Number(asset.lon);
@@ -1321,19 +1322,20 @@
                 document.getElementById('webgl-container').style.display = 'none';
                 document.getElementById('cesiumContainer').style.display = 'block';
                 activeEngine = 'cesium';
-                initCesiumGlobe();
-                if (cesiumViewer) {
-                    cesiumViewer.resize();
-                    updateCesiumAssets();
-                }
+                initCesiumGlobe().then(() => {
+                    if (cesiumViewer) {
+                        cesiumViewer.resize();
+                        updateCesiumAssets();
+                    }
+                }).catch(err => console.warn("Cesium switch error:", err));
                 showToast("Cesium Ion 3D Photorealistic Engine Activated");
             } else {
                 document.getElementById('cesiumContainer').style.display = 'none';
                 document.getElementById('webgl-container').style.display = 'block';
                 const wasCesium = (activeEngine === 'cesium');
                 activeEngine = 'three';
-                if (wasCesium) {
-                    requestAnimationFrame(animateThree);
+                if (wasCesium && threeAnimFrameId === null) {
+                    threeAnimFrameId = requestAnimationFrame(animateThree);
                 }
 
                 if (mode === 'three_sat') {
@@ -1594,9 +1596,14 @@
             if (cesiumViewer) updateCesiumAssets();
         }
 
+        let threeAnimFrameId = null;
+
         function animateThree() {
-            if (activeEngine !== 'three') return; // Pause Three.js loop when Cesium is visible to save battery/GPU!
-            requestAnimationFrame(animateThree);
+            if (activeEngine !== 'three') {
+                threeAnimFrameId = null;
+                return;
+            }
+            threeAnimFrameId = requestAnimationFrame(animateThree);
 
             curLon += (targetLon - curLon) * 0.08;
             curLat += (targetLat - curLat) * 0.08;
@@ -1803,6 +1810,20 @@
         // ==========================================
         // 7. PUBLIC DATA FEEDS & STATE
         // ==========================================
+        
+        // Safe parsing & escaping utilities
+        function safeJsonParse(val, fallback) {
+            if (!val) return fallback;
+            try { return JSON.parse(val); } catch (e) { return fallback; }
+        }
+
+        function sanitizeHtml(str) {
+            if (!str) return '';
+            const temp = document.createElement('div');
+            temp.textContent = String(str);
+            return temp.innerHTML;
+        }
+
         const state = {
             category: 'ALL',
             selectedAsset: null,
@@ -1837,19 +1858,91 @@
         function loadCachedTelemetry() {
             try {
                 const q = localStorage.getItem('gev_cache_quakes');
-                if (q) state.quakes = JSON.parse(q);
+                if (q) state.quakes = safeJsonParse(q, []);
                 const s = localStorage.getItem('gev_cache_satellites');
-                if (s) state.satellites = JSON.parse(s);
+                if (s) state.satellites = safeJsonParse(s, []);
                 const f = localStorage.getItem('gev_cache_flights');
-                if (f) state.flights = JSON.parse(f);
+                if (f) state.flights = safeJsonParse(f, []);
+                const w = localStorage.getItem('gev_cache_wildfires');
+                if (w) state.wildfires = safeJsonParse(w, []);
 
                 if (state.quakes.length > 0) document.getElementById('countQuake').textContent = state.quakes.length;
                 if (state.satellites.length > 0) document.getElementById('countSat').textContent = state.satellites.length;
                 if (state.flights.length > 0) document.getElementById('countAir').textContent = state.flights.length;
+                const fireEl = document.getElementById('countFire');
+                if (fireEl && state.wildfires.length > 0) fireEl.textContent = state.wildfires.length;
+
                 updateTotalCount();
                 update3DAssetMeshes();
             } catch (e) {
                 console.warn("[CACHE] Telemetry cache load error:", e);
+            }
+        }
+
+        
+        // Fetch NASA EONET Active Wildfires & Thermal Hotspots
+        async function fetchWildfires() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch('https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=open&limit=30', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (data.events && Array.isArray(data.events)) {
+                    state.wildfires = data.events.map(e => {
+                        const lastGeo = e.geometry && e.geometry.length > 0 ? e.geometry[e.geometry.length - 1] : null;
+                        const lon = lastGeo && lastGeo.coordinates ? Number(lastGeo.coordinates[0]) : 0;
+                        const lat = lastGeo && lastGeo.coordinates ? Number(lastGeo.coordinates[1]) : 0;
+                        const acres = lastGeo && lastGeo.magnitudeValue ? Math.round(lastGeo.magnitudeValue) : 500;
+                        return {
+                            id: e.id,
+                            type: 'FIRE',
+                            title: e.title,
+                            lat: lat,
+                            lon: lon,
+                            acres: acres,
+                            date: lastGeo ? lastGeo.date : (e.closed || ''),
+                            military: false
+                        };
+                    }).filter(f => f.lat !== 0 && f.lon !== 0 && !isNaN(f.lat) && !isNaN(f.lon));
+
+                    localStorage.setItem('gev_cache_wildfires', JSON.stringify(state.wildfires.slice(0, 20)));
+                    const countEl = document.getElementById('countFire');
+                    if (countEl) countEl.textContent = state.wildfires.length;
+                    updateTotalCount();
+                    update3DAssetMeshes();
+                }
+            } catch (err) {
+                console.warn("[NASA EONET] Wildfire telemetry deferred:", err);
+            }
+        }
+
+        // Fetch NOAA SWPC Space Weather Planetary K-Index
+        async function fetchSpaceWeather() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 1) {
+                    const latest = data[data.length - 1];
+                    const kp = Number(latest[1]) || 2.0;
+                    state.spaceWeather = {
+                        kp: kp,
+                        time: latest[0],
+                        status: kp >= 5 ? 'GEOMAGNETIC STORM (G1+)' : (kp >= 4 ? 'ACTIVE UNSETTLED' : 'QUIET NOMINAL')
+                    };
+                    const kpEl = document.getElementById('kpVal');
+                    if (kpEl) {
+                        kpEl.textContent = kp.toFixed(1);
+                        kpEl.style.color = kp >= 5 ? 'var(--red)' : (kp >= 4 ? 'var(--amber)' : 'var(--cyan)');
+                    }
+                }
+            } catch (err) {
+                console.warn("[NOAA SWPC] Space weather deferred:", err);
             }
         }
 
@@ -1858,20 +1951,20 @@
                 const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson');
                 const data = await res.json();
                 state.quakes = (data.features || []).map(f => {
-                    const coords = f.geometry.coordinates;
-                    const mag = f.properties.mag || 0;
+                    const coords = (f.geometry && f.geometry.coordinates) ? f.geometry.coordinates : [0, 0, 10];
+                    const mag = (f.properties && typeof f.properties.mag === 'number') ? f.properties.mag : 0;
                     return {
-                        id: f.id,
-                        title: f.properties.place || 'Seismic Event',
+                        id: f.id || ('quake_' + Math.random()),
+                        title: (f.properties && f.properties.place) || 'Seismic Rupture',
                         type: 'SEISMIC',
-                        lat: coords[1],
-                        lon: coords[0],
-                        depth: coords[2] || 10,
+                        lat: Number(coords[1]) || 0,
+                        lon: Number(coords[0]) || 0,
+                        depth: Math.round(Number(coords[2]) || 10),
                         mag: mag,
-                        time: new Date(f.properties.time).toLocaleTimeString(),
-                        tsunami: f.properties.tsunami || 0
+                        time: (f.properties && f.properties.time) ? new Date(f.properties.time).toLocaleTimeString() : '',
+                        tsunami: (f.properties && f.properties.tsunami) || 0
                     };
-                });
+                }).filter(q => q.lat !== 0 && q.lon !== 0 && !isNaN(q.lat) && !isNaN(q.lon));
                 localStorage.setItem('gev_cache_quakes', JSON.stringify(state.quakes));
                 document.getElementById('countQuake').textContent = state.quakes.length;
                 document.getElementById('quakeSummary').textContent = `${state.quakes.length} events (USGS Live)`;
@@ -1990,8 +2083,11 @@
         }
 
         function updateTotalCount() {
-            const total = state.quakes.length + state.flights.length + state.satellites.length;
-            document.getElementById('countAll').textContent = total;
+            const total = state.quakes.length + state.flights.length + state.satellites.length + state.wildfires.length;
+            const allEl = document.getElementById('countAll');
+            if (allEl) allEl.textContent = total;
+            const fireEl = document.getElementById('countFire');
+            if (fireEl) fireEl.textContent = state.wildfires.length;
         }
 
         // ==========================================
@@ -2063,6 +2159,21 @@
 
                 sitrep = `REAL 3D EARTH EVALUATION: 3D orbital mesh confirmed in Low Earth Orbit (LEO). Operating at ${asset.alt} km altitude and ${asset.velocity} km/h velocity. Conjunction trajectory is clear.`;
                 updateThreatDisplay(result.threatIndex);
+            } else if (asset.type === 'FIRE') {
+                const acres = Number(asset.acres) || 500;
+                kinematics = `Est. ${acres.toLocaleString()} Acres · Thermal Anomaly`;
+                features[0] = Math.min(1.0, acres / 10000.0);
+                features[1] = 0.8;
+                features[2] = (asset.lat + 90) / 180.0;
+                features[3] = (asset.lon + 180) / 360.0;
+                features[4] = Math.min(1.0, acres / 5000.0);
+                features[5] = 0.5;
+
+                const result = localAI.classifyAssetThreat(features);
+                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
+
+                sitrep = `NASA EONET THERMAL EVALUATION: Active wildfire burn perimeter detected. Estimated burn area spans ${acres.toLocaleString()} acres. Satellite MODIS/VIIRS sensors confirm active flame front.`;
+                updateThreatDisplay(Math.max(30, Math.min(95, Math.round(result.threatIndex * 1.2))));
             }
 
             document.getElementById('targetKinematics').textContent = kinematics;
@@ -2105,8 +2216,7 @@
 
         function closeAssistant() {
             document.getElementById('assistantModal').style.display = 'none';
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            isWaveActive = false;
+            stopAllSpeech();
         }
 
         function toggleAssistantFullscreen() {
@@ -2119,7 +2229,8 @@
             const box = document.getElementById('chatHistory');
             const div = document.createElement('div');
             div.className = `chat-bubble ${sender}`;
-            div.innerHTML = `<strong>${sender === 'agent' ? 'AEGIS Assistant' : 'YOU'}:</strong> ${text}`;
+            const safeText = (sender === 'user') ? sanitizeHtml(text) : text;
+            div.innerHTML = `<strong>${sender === 'agent' ? 'JARVIS' : 'YOU'}:</strong> ${safeText}`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -2129,6 +2240,8 @@
         // ==========================================
 
         function stopAllSpeech() {
+            if (speakTimeoutId) { clearTimeout(speakTimeoutId); speakTimeoutId = null; }
+            isWaveActive = false;
             if (window.GodsEyeNative && typeof window.GodsEyeNative.stopSpeaking === 'function') {
                 window.GodsEyeNative.stopSpeaking();
             }
@@ -2143,17 +2256,22 @@
             document.getElementById('assistantStateText').textContent = "Voice speech stopped / silenced.";
         }
 
+        let speakTimeoutId = null;
+
         function speakAssistant(text) {
+            if (!text || state.soundMuted) return;
+            if (speakTimeoutId) clearTimeout(speakTimeoutId);
+
             isWaveActive = true;
             document.getElementById('assistantStateText').textContent = 'Speaking...';
 
             // 1. Native Android TTS Priority
             if (window.GodsEyeNative && typeof window.GodsEyeNative.speakText === 'function') {
                 window.GodsEyeNative.speakText(text);
-                const estDuration = Math.min(Math.max(text.length * 68, 1500), 9000);
-                setTimeout(() => {
+                const estDuration = Math.min(Math.max(text.length * 68, 1500), 10000);
+                speakTimeoutId = setTimeout(() => {
                     isWaveActive = false;
-                    document.getElementById('assistantStateText').textContent = 'Ready.';
+                    document.getElementById('assistantStateText').textContent = 'OpenJarvis: Operational & Ready.';
                 }, estDuration);
                 triggerHaptic(25);
                 return;
@@ -2211,6 +2329,7 @@
 
         let recognition = null;
         function toggleVoiceRecognition() {
+            stopAllSpeech(); // Prevent TTS echo into microphone
             playSciFiBeep('confirm');
             triggerHaptic(30);
             const micBtn = document.getElementById('micBtn');
@@ -2312,6 +2431,7 @@
 
         function cancelActiveTask() {
             stopAllSpeech();
+            if (activeTask) activeTask.cancelled = true;
             if (!activeTask) return;
             playSciFiBeep('alert');
             triggerHaptic(35);
@@ -2417,7 +2537,17 @@
             addChatMessage('agent', `Autonomous Mission Plan (${steps.length} steps): ${planSummary}`);
             speakAssistant(`Executing ${steps.length}-step plan.`);
 
+            activeTask = {
+                id: 'compound_' + Date.now(),
+                name: `Compound Plan (${steps.length} steps)`,
+                cancelled: false
+            };
+
             for (let i = 0; i < steps.length; i++) {
+                if (activeTask && activeTask.cancelled) {
+                    addChatMessage('agent', "Mission plan aborted by user command.");
+                    break;
+                }
                 updateTaskUI(`Step ${i+1}/${steps.length}: ${steps[i]}`);
                 await executeSingleAction(steps[i], false);
                 if (i < steps.length - 1) {
@@ -3137,11 +3267,15 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
             fetchUSGSQuakes();
             fetchISSOrbit();
             fetchLiveFlights();
+            fetchWildfires();
+            fetchSpaceWeather();
 
             setInterval(() => {
                 fetchUSGSQuakes();
                 fetchISSOrbit();
                 fetchLiveFlights();
+                fetchWildfires();
+                fetchSpaceWeather();
             }, 45000);
         });
     </script>
