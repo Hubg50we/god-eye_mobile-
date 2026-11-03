@@ -32,6 +32,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.pm.ApplicationInfo;
+import android.hardware.camera2.CameraManager;
+import android.provider.MediaStore;
+import android.provider.Settings;
+import java.util.List;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -336,8 +342,118 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public boolean openApp(String appName) {
+            if (appName == null || appName.trim().isEmpty()) return false;
+            final String target = appName.trim().toLowerCase();
+
+            runOnUiThread(() -> {
+                Intent launchIntent = null;
+                try {
+                    PackageManager pm = getPackageManager();
+
+                    // 1. Priority Aliases (YouTube, Maps, Camera, Chrome, Spotify, WhatsApp, Settings)
+                    if (target.equals("youtube") || target.equals("yt")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.google.android.youtube");
+                        if (launchIntent == null) {
+                            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com"));
+                        }
+                    } else if (target.equals("maps") || target.equals("google maps")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.google.android.apps.maps");
+                        if (launchIntent == null) {
+                            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="));
+                        }
+                    } else if (target.equals("camera")) {
+                        launchIntent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
+                    } else if (target.equals("chrome") || target.equals("browser")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.android.chrome");
+                        if (launchIntent == null) {
+                            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"));
+                        }
+                    } else if (target.equals("spotify") || target.equals("music")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.spotify.music");
+                    } else if (target.equals("whatsapp")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.whatsapp");
+                    } else if (target.equals("calculator")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.google.android.calculator");
+                        if (launchIntent == null) {
+                            launchIntent = pm.getLaunchIntentForPackage("com.android.calculator2");
+                        }
+                    } else if (target.equals("settings")) {
+                        launchIntent = new Intent(Settings.ACTION_SETTINGS);
+                    } else if (target.equals("gmail") || target.equals("email")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.google.android.gm");
+                    } else if (target.equals("play store") || target.equals("store")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.android.vending");
+                    } else if (target.equals("photos") || target.equals("gallery")) {
+                        launchIntent = pm.getLaunchIntentForPackage("com.google.android.apps.photos");
+                    } else {
+                        // Dynamic package look up or installed label match
+                        launchIntent = pm.getLaunchIntentForPackage(target);
+                        if (launchIntent == null) {
+                            List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+                            for (ApplicationInfo ai : apps) {
+                                String label = pm.getApplicationLabel(ai).toString().toLowerCase();
+                                if (label.contains(target) || ai.packageName.toLowerCase().contains(target)) {
+                                    launchIntent = pm.getLaunchIntentForPackage(ai.packageName);
+                                    if (launchIntent != null) break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(launchIntent);
+                        Toast.makeText(context, "J.A.R.V.I.S.: Opening " + appName, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Intent fallback = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=" + Uri.encode(appName)));
+                        fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(fallback);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(context, "Could not open " + appName + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean toggleFlashlight(boolean enable) {
+            runOnUiThread(() -> {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        CameraManager camManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                        if (camManager != null && camManager.getCameraIdList().length > 0) {
+                            String cameraId = camManager.getCameraIdList()[0];
+                            camManager.setTorchMode(cameraId, enable);
+                            Toast.makeText(context, "Flashlight " + (enable ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(context, "Flashlight error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean makeCall(String number) {
+            if (number == null || number.trim().isEmpty()) return false;
+            runOnUiThread(() -> {
+                try {
+                    Intent callIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + number.trim()));
+                    callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(callIntent);
+                } catch (Exception e) {
+                    Toast.makeText(context, "Dialer error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
         public String getAppVersion() {
-            return "2.2.0";
+            return "2.3.0";
         }
     }
 }

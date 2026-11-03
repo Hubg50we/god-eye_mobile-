@@ -788,7 +788,7 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">CESIUM ION · J.A.R.V.I.S. CONVERSATIONAL OS v2.2.0</div>
+                <div class="brand-sub">CESIUM ION · J.A.R.V.I.S. MOBILE OS CONTROL v2.3.0</div>
             </div>
         </div>
         <div class="header-actions">
@@ -936,6 +936,10 @@
             </div>
 
             <div class="chip-row">
+                <div class="query-chip" style="background:rgba(239,68,68,0.25); border-color:#ef4444; color:#fca5a5;" onclick="executeAssistantCommand('Open YouTube')">▶️ Open YouTube</div>
+                <div class="query-chip" style="background:rgba(59,130,246,0.25); border-color:#3b82f6; color:#93c5fd;" onclick="executeAssistantCommand('Open Google Maps')">🗺️ Open Maps</div>
+                <div class="query-chip" style="background:rgba(34,197,94,0.25); border-color:#22c55e; color:#86efac;" onclick="executeAssistantCommand('Open Camera')">📷 Open Camera</div>
+                <div class="query-chip" style="background:rgba(234,179,8,0.25); border-color:#eab308; color:#fde047;" onclick="executeAssistantCommand('Turn on flashlight')">🔦 Flashlight</div>
                 <div class="query-chip" style="background:rgba(239,68,68,0.2); border-color:#ef4444; color:#fca5a5;" onclick="executeAssistantCommand('Initiate Protocol House Party')">🛡️ Protocol House Party</div>
                 <div class="query-chip" style="background:rgba(59,130,246,0.2); border-color:#3b82f6; color:#93c5fd;" onclick="executeAssistantCommand('Initiate Protocol Sentry')">👁️ Protocol Sentry</div>
                 <div class="query-chip" style="background:rgba(234,179,8,0.2); border-color:#eab308; color:#fde047;" onclick="executeAssistantCommand('Initiate Protocol Veronica')">⚡ Protocol Veronica</div>
@@ -3308,6 +3312,67 @@
             }
         );
 
+        
+        jarvisTools.register(
+            "open_mobile_app",
+            "Launch an application on the user's mobile device (e.g. 'youtube', 'yt', 'maps', 'camera', 'chrome', 'spotify', 'whatsapp', 'calculator', 'settings') or any package name.",
+            {
+                type: "object",
+                properties: { app_name: { type: "string" } },
+                required: ["app_name"]
+            },
+            async (args) => {
+                const app = args.app_name || 'youtube';
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.openApp === 'function') {
+                    window.GodsEyeNative.openApp(app);
+                    return `Dispatched native Android intent to launch ${app}`;
+                } else {
+                    if (app.toLowerCase() === 'youtube' || app.toLowerCase() === 'yt') {
+                        window.open('https://www.youtube.com', '_blank');
+                    } else if (app.toLowerCase().includes('map')) {
+                        window.open('https://maps.google.com', '_blank');
+                    } else {
+                        window.open(`https://www.google.com/search?q=${encodeURIComponent(app)}`, '_blank');
+                    }
+                    return `Browser fallback: opened ${app}`;
+                }
+            }
+        );
+
+        jarvisTools.register(
+            "control_flashlight",
+            "Turn the mobile device hardware flashlight torch on or off.",
+            {
+                type: "object",
+                properties: { enable: { type: "boolean" } },
+                required: ["enable"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.toggleFlashlight === 'function') {
+                    window.GodsEyeNative.toggleFlashlight(args.enable);
+                    return `Hardware flashlight turned ${args.enable ? 'ON' : 'OFF'}`;
+                }
+                return "Flashlight requires native Android device";
+            }
+        );
+
+        jarvisTools.register(
+            "dial_phone_number",
+            "Open phone dialer with a specified telephone number.",
+            {
+                type: "object",
+                properties: { phone_number: { type: "string" } },
+                required: ["phone_number"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.makeCall === 'function') {
+                    window.GodsEyeNative.makeCall(args.phone_number);
+                    return `Dialer opened for ${args.phone_number}`;
+                }
+                return `Dialer fallback: tel:${args.phone_number}`;
+            }
+        );
+
         jarvisTools.register(
             "run_protocol",
             "Execute an Iron Man J.A.R.V.I.S. tactical defense protocol ('house_party', 'clean_slate', 'sentry', 'veronica').",
@@ -3591,7 +3656,36 @@
                 let observation = "";
                 let reply = "";
 
-                // 1. Morning Digest
+                // 0. Mobile Device Full Control (Open YouTube, Maps, Camera, Flashlight, Calls)
+                if (/(?:open|launch|start|run)\s+(?:the\s+)?(youtube|yt|maps|google maps|camera|chrome|browser|spotify|music|whatsapp|calculator|settings|gmail|email|play store|store|photos|gallery|[a-zA-Z0-9_\.-]+)/i.test(lower)) {
+                    const match = lower.match(/(?:open|launch|start|run)\s+(?:the\s+)?(youtube|yt|maps|google maps|camera|chrome|browser|spotify|music|whatsapp|calculator|settings|gmail|email|play store|store|photos|gallery|[a-zA-Z0-9_\.-]+)/i);
+                    const appTarget = match[1].trim();
+                    thought = `User commanded device OS intent to launch application "${appTarget}". Dispatched to Android PackageManager bridge.`;
+                    actionName = "open_mobile_app";
+                    actionArgs = { app_name: appTarget };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Certainly, Sir. Opening ${appTarget.toUpperCase()} on your mobile device now.`;
+                } else if (lower.includes('flashlight on') || lower.includes('turn on flashlight') || lower.includes('torch on')) {
+                    thought = "User commanded device hardware torch ON.";
+                    actionName = "control_flashlight";
+                    actionArgs = { enable: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Hardware flashlight engaged, Sir.";
+                } else if (lower.includes('flashlight off') || lower.includes('turn off flashlight') || lower.includes('torch off')) {
+                    thought = "User commanded device hardware torch OFF.";
+                    actionName = "control_flashlight";
+                    actionArgs = { enable: false };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Hardware flashlight disengaged, Sir.";
+                } else if (/(?:call|dial)\s+([0-9\+\-\s]+)/i.test(lower)) {
+                    const match = lower.match(/(?:call|dial)\s+([0-9\+\-\s]+)/i);
+                    const phoneNum = match[1].trim();
+                    thought = `User requested phone dialer for number: ${phoneNum}.`;
+                    actionName = "dial_phone_number";
+                    actionArgs = { phone_number: phoneNum };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Opening phone dialer for ${phoneNum}, Sir.`;
+                } else // 1. Morning Digest
                 if (lower.includes('morning digest') || lower.includes('daily digest') || lower.includes('tactical digest')) {
                     thought = "User requested OpenJarvis Morning Digest. Launching multi-phase space, seismic, fire, and airspace briefing.";
                     actionName = "start_background_operative";
