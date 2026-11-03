@@ -1289,6 +1289,66 @@
             touch-action: manipulation;
         }
 
+    
+        /* Floating Tactical Action Ribbon (Quick Access 1-Thumb Controls) */
+        #tacticalActionDock {
+            position: fixed;
+            bottom: calc(16px + var(--sab));
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(10, 16, 26, 0.88);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 8px 14px;
+            border-radius: 30px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.25);
+            z-index: 999;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            touch-action: manipulation;
+        }
+        .dock-btn {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+        .dock-btn:active {
+            transform: scale(0.92);
+            background: rgba(56, 189, 248, 0.25);
+            border-color: #38bdf8;
+        }
+        .dock-btn.active {
+            background: rgba(56, 189, 248, 0.3);
+            border-color: #38bdf8;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+        }
+        @media (max-width: 480px) {
+            #tacticalActionDock {
+                gap: 6px;
+                padding: 6px 10px;
+                max-width: 95vw;
+                overflow-x: auto;
+            }
+            .dock-btn {
+                padding: 6px 9px;
+                font-size: 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -5470,7 +5530,25 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                 let observation = "";
                 let reply = "";
 
-                                                                                                                // Device Performance & Universal Optimization Voice Intents
+                                                                                                                                // Hands-Free Wake-Word Voice Intents
+                if (lower.includes("wake word") || lower.includes("hands free") || lower.includes("hands-free") || lower.includes("listen for jarvis")) {
+                    if (lower.includes("stop") || lower.includes("disable") || lower.includes("off")) {
+                        stopHandsFreeWakeWord();
+                        return { thought: "User requested disabling hands-free wake word.", action: "stopHandsFreeWakeWord", reply: "Hands-free wake word detection disabled." };
+                    } else {
+                        startHandsFreeWakeWord();
+                        return { thought: "User requested activating hands-free wake word.", action: "startHandsFreeWakeWord", reply: "Hands-free wake word active. You may address me anytime by saying 'Hey Jarvis'." };
+                    }
+                }
+
+                // Stark Soundboard & Sound Synthesizer Voice Intents
+                if (lower.includes("repulsor") || lower.includes("sound effect") || lower.includes("sonar") || lower.includes("shield")) {
+                    const soundType = lower.includes("sonar") ? "sonar" : (lower.includes("shield") ? "shield" : "repulsor");
+                    playStarkSound(soundType);
+                    return { thought: "User requested Stark audio synthesis.", action: "playStarkSound", actionArgs: { soundType }, reply: `Synthesizing ${soundType} acoustic pulse.` };
+                }
+
+                // Device Performance & Universal Optimization Voice Intents
                 if (lower.includes("optimize") || lower.includes("performance") || lower.includes("boost") || lower.includes("speed up") || lower.includes("device profile") || lower.includes("fps") || lower.includes("lag")) {
                     const res = await this.toolRegistry.execute("optimize_device_performance", { target_mode: lower.includes("power") || lower.includes("battery") ? "powersave" : "auto" });
                     return {
@@ -6497,5 +6575,28 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
         });
 
     </script>
+
+    <!-- Floating Tactical Action Dock (Quick-Thumb Access) -->
+    <div id="tacticalActionDock">
+        <button class="dock-btn" onclick="openAssistant(); playStarkSound('repulsor');">
+            <span>⚡</span> JARVIS
+        </button>
+        <button class="dock-btn" onclick="flipVisionCamera(); playStarkSound('lock');">
+            <span>📷</span> VISOR
+        </button>
+        <button class="dock-btn" onclick="simulateBallisticMissile(35.6762, 139.6503, 21.3069, -157.8583, 'TOKYO -> HAWAII'); playStarkSound('target_lock');">
+            <span>🚀</span> MISSILE
+        </button>
+        <button class="dock-btn" id="dockSolarBtn" onclick="toggleSolarLighting(); playStarkSound('sonar');">
+            <span>☀️</span> SOLAR
+        </button>
+        <button class="dock-btn" onclick="trackNextSatellite(); playStarkSound('sonar');">
+            <span>🛰️</span> ORBIT
+        </button>
+        <button class="dock-btn" onclick="executeSingleAction('optimize device'); playStarkSound('power_up');">
+            <span>⚡</span> BOOST
+        </button>
+    </div>
+
 </body>
 </html>

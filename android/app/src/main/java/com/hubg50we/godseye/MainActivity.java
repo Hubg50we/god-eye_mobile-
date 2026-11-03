@@ -47,6 +47,7 @@ import android.os.StatFs;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.os.PowerManager;
+import android.net.ConnectivityManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.content.res.Configuration;
@@ -432,6 +433,38 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception ignored) {}
                 }
             });
+        }
+
+        @JavascriptInterface
+                @JavascriptInterface
+        public String getThermalStatus() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    if (pm != null) {
+                        int status = pm.getCurrentThermalStatus();
+                        String str = "NOMINAL";
+                        if (status == PowerManager.THERMAL_STATUS_LIGHT) str = "LIGHT";
+                        else if (status == PowerManager.THERMAL_STATUS_MODERATE) str = "MODERATE";
+                        else if (status == PowerManager.THERMAL_STATUS_SEVERE) str = "SEVERE";
+                        else if (status == PowerManager.THERMAL_STATUS_CRITICAL) str = "CRITICAL";
+                        else if (status == PowerManager.THERMAL_STATUS_EMERGENCY) str = "EMERGENCY";
+                        return "{\"status\":\"" + str + "\",\"code\":" + status + "}";
+                    }
+                } catch (Exception ignored) {}
+            }
+            return "{\"status\":\"NOMINAL\",\"code\":0}";
+        }
+
+        @JavascriptInterface
+        public boolean isMeteredConnection() {
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    return cm.isActiveNetworkMetered();
+                }
+            } catch (Exception ignored) {}
+            return false;
         }
 
         @JavascriptInterface

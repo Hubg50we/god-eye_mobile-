@@ -209,6 +209,15 @@ God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic,
 - **Open Any App**: *"Open YouTube"*, *"Open Camera"*, *"Open Maps"*, *"Open Chrome"*, *"Open Settings"*.
 - **Hardware Peripherals**: *"Turn on flashlight"*, *"Turn off flashlight"*, *"Call 911"*, *"Set volume to 80%"*.
 
+
+### 9. 🚀 Hyper-Optimization & Stark Master Capabilities (v3.4.0)
+- **🎙️ Hands-Free Background Wake-Word ("Hey Jarvis" / "Friday" / "Edith")**: Passive acoustic listener wakes up the assistant hands-free with repulsor power-up audio.
+- **🔊 Zero-Latency Web Audio Procedural Synthesizer**: Movie-authentic Mark 85 repulsor blast charges, dual-frequency target locks, sub-bass power-ups, and orbital sonar pings generated procedurally via Web Audio API oscillators.
+- **🛰️ Extended NORAD Satellite Constellation Fleet**: Real-time 3D orbital tracking of Tiangong Space Station (CSS), Hubble Space Telescope (HST), and the Starlink Constellation.
+- **🌡️ Battery Thermal & Overheat Safety Sentinel**: Actively monitors Android hardware thermal status (`PowerManager.getCurrentThermalStatus()`) and automatically throttles graphics to protect internal battery health when overheating.
+- **🗜️ WebGL Texture & Geometry Garbage Collector**: Continuous background memory compaction cleans orphaned geometries, keeping RAM consumption under 150MB.
+- **⚡ Quick-Thumb Floating Tactical Action Ribbon**: Sleek, glassmorphic HUD dock anchored at the bottom for instant 1-tap thumb access to Jarvis, Optical Visor, Ballistic Simulator, Solar Lighting, and Satellite tracking on any screen.
+
 ### 8. 🌐 Universal Cross-Device Optimization & Adaptive Engine (v3.3.0)
 - **Automatic Hardware Profiling**: Detects CPU cores, RAM, refresh rate, and power save state (`low`, `medium`, `high`, `flagship`).
 - **Dynamic 3D Adaptive Scaling**:
