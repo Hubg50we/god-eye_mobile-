@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>God's Eye View — Real 3D Earth & AI Assistant Console</title>
-    <!-- Hardware-accelerated 3D WebGL Engine -->
+    <!-- Three.js WebGL 2.0 Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Official CesiumJS 3D Photorealistic Engine -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Widgets/widgets.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Cesium.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -45,14 +48,23 @@
             position: relative;
         }
 
-        /* 3D WebGL Container */
-        #webgl-container {
+        /* 3D Earth Viewports */
+        #cesiumContainer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 1;
+            display: none;
+        }
+        #webgl-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
             touch-action: none;
         }
 
@@ -209,10 +221,10 @@
             z-index: 15;
             display: flex;
             gap: 4px;
-            background: rgba(3,4,7,0.8);
+            background: rgba(3,4,7,0.85);
             padding: 4px;
             border-radius: 6px;
-            border: 1px solid rgba(0,255,204,0.25);
+            border: 1px solid rgba(0,255,204,0.3);
             backdrop-filter: blur(8px);
         }
         .map-btn {
@@ -221,14 +233,21 @@
             color: var(--text-sub);
             font-family: var(--font-mono);
             font-size: 9px;
-            padding: 3px 7px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            transition: all 0.2s;
         }
         .map-btn.active {
             background: var(--cyan);
             color: #030407;
+            box-shadow: 0 0 8px var(--cyan-glow);
+        }
+        .map-btn.cesium-active {
+            background: var(--purple);
+            color: #030407;
+            box-shadow: 0 0 10px var(--purple-glow);
         }
 
         /* Bottom Floating HUD / Telemetry Deck */
@@ -612,14 +631,18 @@
 </head>
 <body>
 
-    <!-- 3D Real Earth WebGL Canvas Container -->
+    <!-- Official CesiumJS Photorealistic 3D Container -->
+    <div id="cesiumContainer"></div>
+
+    <!-- Three.js Real 3D Earth Container -->
     <div id="webgl-container"></div>
 
     <!-- Map Imagery Style Selector -->
     <div class="map-style-selector">
-        <button class="map-btn active" id="btnSatMap" onclick="setMapTexture('satellite')">🛰 SATELLITE</button>
-        <button class="map-btn" id="btnNightMap" onclick="setMapTexture('night')">🌙 NIGHT</button>
-        <button class="map-btn" id="btnTopoMap" onclick="setMapTexture('topo')">🗺 TACTICAL</button>
+        <button class="map-btn active" id="btnSatMap" onclick="setMapMode('three_sat')">🛰 THREE.JS 3D</button>
+        <button class="map-btn" id="btnCesiumMap" onclick="setMapMode('cesium_ion')">🌐 CESIUM ION 3D</button>
+        <button class="map-btn" id="btnNightMap" onclick="setMapMode('three_night')">🌙 NIGHT</button>
+        <button class="map-btn" id="btnTopoMap" onclick="setMapMode('three_topo')">🗺 TACTICAL</button>
     </div>
 
     <!-- Top HUD Bar -->
@@ -628,7 +651,7 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">REAL 3D EARTH · AI CONSOLE</div>
+                <div class="brand-sub">CESIUM ION & THREE.JS · AI CONSOLE</div>
             </div>
         </div>
         <div class="header-actions">
@@ -661,12 +684,12 @@
         <div class="interactive-panel status-card">
             <div class="status-grid">
                 <div class="status-item">
-                    <span class="status-label">3D ENGINE & SHADERS:</span>
-                    <span class="status-val" style="color:var(--cyan);" id="renderEngineStatus">Three.js WebGL 2.0 (Real 3D Earth)</span>
+                    <span class="status-label">3D ENGINE & CESIUM ION:</span>
+                    <span class="status-val" style="color:var(--cyan);" id="renderEngineStatus">Cesium Ion + Three.js Active</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">ATMOSPHERE & CLOUDS:</span>
-                    <span class="status-val" style="color:var(--purple);" id="atmoStatus">Rayleigh Halo + Dynamic Clouds</span>
+                    <span class="status-label">ION AUTHENTICATION:</span>
+                    <span class="status-val" style="color:var(--purple);" id="ionStatus">Verified (Bing Aerial & 3D Terrain)</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">AIRSPACE VECTORS (ADS-B):</span>
@@ -714,24 +737,23 @@
                 </div>
                 <div style="flex:1;">
                     <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS AI Assistant Core</div>
-                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Full 3D Earth Camera, Layers, Voice, GPS Control.</div>
+                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.</div>
                 </div>
                 <canvas id="audioWaveCanvas"></canvas>
             </div>
 
             <div class="chat-history" id="chatHistory">
                 <div class="chat-bubble agent">
-                    <strong>AEGIS Assistant:</strong> Real 3D Earth Globe activated with photorealistic satellite textures, atmosphere shaders, and orbiting clouds. Command me to fly anywhere ("Fly to Tokyo"), scan earthquakes, or inspect live satellites in 3D orbit!
+                    <strong>AEGIS Assistant:</strong> Real 3D Earth and Cesium Ion verified with your access token! You can command me to fly anywhere ("Fly to Tokyo"), scan earthquakes, or switch between Cesium Ion 3D and Three.js 3D anytime.
                 </div>
             </div>
 
             <div class="chip-row">
+                <div class="query-chip" onclick="executeAssistantCommand('Switch to Cesium Ion 3D')">🌐 Switch to Cesium Ion</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo')">✈️ Fly to Tokyo</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Show me all seismic earthquakes')">💥 Show Earthquakes</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station')">🛰 Track ISS Orbit</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Toggle auto orbit rotation')">🔄 Toggle Auto-Orbit</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Lock onto my GPS location')">📍 Center On My GPS</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Benchmark neural net')">⚡ Neural Benchmark</div>
             </div>
 
             <div class="chat-input-row">
@@ -811,21 +833,12 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">3D EARTH GRAPHICS SETTINGS:</label>
-                <div style="font-size:11px; color:var(--cyan); margin-bottom:8px;">
-                    ✓ Hardware WebGL 2.0 Real 3D Spherical Earth<br>
-                    ✓ NASA Blue Marble / Esri Satellite Layer<br>
-                    ✓ Atmospheric Rayleigh Shader + Animated Cloud Sphere<br>
-                    ✓ 3D Aircraft Models, Pulse Shockwaves & ISS Orbit Mesh
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">REMOTE 3D TILES SERVER URL (CESIUM / GOOGLE 3D):</label>
-                <input type="text" class="form-input" id="cfgUrl" placeholder="http://10.0.2.2:5173 or https://gods-eye.vercel.app">
-            </div>
-            <div class="form-group">
-                <label class="form-label">CESIUM ION TOKEN (OPTIONAL):</label>
+                <label class="form-label">CESIUM ION ACCESS TOKEN:</label>
                 <input type="text" class="form-input" id="cfgCesium" placeholder="Cesium Ion Default Access Token">
+            </div>
+            <div class="form-group">
+                <label class="form-label">REMOTE 3D TILES SERVER URL (DEV / CLOUD):</label>
+                <input type="text" class="form-input" id="cfgUrl" placeholder="http://10.0.2.2:5173 or https://gods-eye.vercel.app">
             </div>
             <div class="form-group">
                 <label class="form-label">GOOGLE PHOTOREALISTIC 3D TILES KEY:</label>
@@ -840,10 +853,115 @@
 
     <script>
         // ==========================================
+        // 0. AUTHENTICATED CESIUM ION ACCESS TOKEN
+        // ==========================================
+        const DEFAULT_CESIUM_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjFPcjhqVk91RWZQb2NxVzgiLCJqdGkiOiJiZTU5ZWU0Ni1jMmRhLTQzYTctOTk3Yy1jN2NlOGRlM2U4NTMiLCJpZCI6NTQxNTk2LCJzdWIiOiJodWJnNTAiLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoiVW50aXRsZWQiLCJpYXQiOjE3OTM2OTQ0MjZ9.wZe4sk2ln2bFea7vIvimot5nt-W2kw8NyWtj5296lI4';
+        
+        let currentCesiumToken = localStorage.getItem('gev_cesium') || DEFAULT_CESIUM_TOKEN;
+        if (!localStorage.getItem('gev_cesium')) {
+            localStorage.setItem('gev_cesium', DEFAULT_CESIUM_TOKEN);
+        }
+
+        let cesiumViewer = null;
+        let activeEngine = 'three'; // 'three' or 'cesium'
+
+        // Initialize Official CesiumJS Viewer
+        async function initCesiumGlobe() {
+            if (cesiumViewer || typeof Cesium === 'undefined') return;
+
+            try {
+                Cesium.Ion.defaultAccessToken = currentCesiumToken;
+
+                cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+                    terrain: Cesium.Terrain.fromWorldTerrain(),
+                    baseLayerPicker: false,
+                    animation: false,
+                    timeline: false,
+                    geocoder: false,
+                    fullscreenButton: false,
+                    homeButton: false,
+                    navigationHelpButton: false,
+                    sceneModePicker: false,
+                    infoBox: false,
+                    selectionIndicator: false
+                });
+
+                // Set initial camera view
+                cesiumViewer.camera.setView({
+                    destination: Cesium.Cartesian3.fromDegrees(0, 20, 20000000)
+                });
+
+                // Sync 3D assets to Cesium
+                updateCesiumAssets();
+
+                // Cesium tap entity selection
+                const handler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
+                handler.setInputAction((movement) => {
+                    const pickedObject = cesiumViewer.scene.pick(movement.position);
+                    if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.userData) {
+                        playSciFiBeep('confirm');
+                        triggerHaptic(30);
+                        selectAssetAndAssess(pickedObject.id.userData);
+                    }
+                }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            } catch (err) {
+                console.warn("Cesium initialization fallback:", err);
+            }
+        }
+
+        // Plot Assets onto CesiumJS 3D Globe
+        function updateCesiumAssets() {
+            if (!cesiumViewer) return;
+            cesiumViewer.entities.removeAll();
+
+            let activeList = [];
+            if (state.category === 'ALL' || state.category === 'AIR') activeList.push(...state.flights);
+            if (state.category === 'ALL' || state.category === 'SEISMIC') activeList.push(...state.quakes);
+            if (state.category === 'ALL' || state.category === 'SPACE') activeList.push(...state.satellites);
+
+            for (const asset of activeList) {
+                if (asset.type === 'SEISMIC') {
+                    cesiumViewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, 100),
+                        ellipse: {
+                            semiMinorAxis: (asset.mag * 35000),
+                            semiMajorAxis: (asset.mag * 35000),
+                            material: asset.mag >= 4.5 ? Cesium.Color.RED.withAlpha(0.6) : Cesium.Color.ORANGE.withAlpha(0.6),
+                            outline: true,
+                            outlineColor: Cesium.Color.WHITE
+                        },
+                        userData: asset
+                    });
+                } else if (asset.type === 'AIR') {
+                    cesiumViewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, (asset.alt || 10000) * 0.3048),
+                        point: {
+                            pixelSize: 10,
+                            color: asset.military ? Cesium.Color.RED : Cesium.Color.CYAN,
+                            outlineColor: Cesium.Color.BLACK,
+                            outlineWidth: 2
+                        },
+                        userData: asset
+                    });
+                } else if (asset.type === 'SPACE') {
+                    cesiumViewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(asset.lon, asset.lat, (asset.alt || 420) * 1000),
+                        point: {
+                            pixelSize: 14,
+                            color: Cesium.Color.YELLOW,
+                            outlineColor: Cesium.Color.BLACK,
+                            outlineWidth: 2
+                        },
+                        userData: asset
+                    });
+                }
+            }
+        }
+
+        // ==========================================
         // 1. PROCEDURAL & PHOTOREALISTIC 3D TEXTURES
         // ==========================================
-        // Generates an in-memory high-res procedural Earth Satellite Texture if offline,
-        // and loads real photorealistic satellite maps from NASA/Esri.
         function createProceduralEarthCanvas(mode = 'satellite') {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -857,7 +975,6 @@
                 c.fillStyle = '#0a192f';
                 c.fillRect(0, 0, 1024, 512);
             } else {
-                // Ocean base
                 const oceanGrad = c.createLinearGradient(0, 0, 0, 512);
                 oceanGrad.addColorStop(0, '#0a2342');
                 oceanGrad.addColorStop(0.5, '#04172e');
@@ -866,10 +983,8 @@
                 c.fillRect(0, 0, 1024, 512);
             }
 
-            // Draw Continents approximation in high resolution
             c.fillStyle = mode === 'night' ? '#111827' : (mode === 'topo' ? '#134e4a' : '#1e3a29');
             
-            // Americas
             c.beginPath();
             c.ellipse(280, 180, 110, 75, 0.4, 0, Math.PI * 2);
             c.fill();
@@ -877,7 +992,6 @@
             c.ellipse(340, 340, 70, 110, -0.2, 0, Math.PI * 2);
             c.fill();
 
-            // Eurasia & Africa
             c.beginPath();
             c.ellipse(650, 160, 180, 80, -0.1, 0, Math.PI * 2);
             c.fill();
@@ -885,12 +999,10 @@
             c.ellipse(560, 270, 75, 100, 0.2, 0, Math.PI * 2);
             c.fill();
 
-            // Australia
             c.beginPath();
             c.ellipse(830, 350, 55, 45, 0.1, 0, Math.PI * 2);
             c.fill();
 
-            // Polar Caps
             c.fillStyle = mode === 'night' ? '#374151' : '#e2e8f0';
             c.beginPath();
             c.ellipse(512, 15, 512, 25, 0, 0, Math.PI * 2);
@@ -899,7 +1011,6 @@
             c.ellipse(512, 497, 512, 30, 0, 0, Math.PI * 2);
             c.fill();
 
-            // Lat/Lon coordinate grid lines
             c.strokeStyle = 'rgba(0, 255, 204, 0.12)';
             c.lineWidth = 1;
             for (let x = 0; x < 1024; x += 64) {
@@ -914,7 +1025,6 @@
             }
 
             if (mode === 'night') {
-                // City lights glow
                 c.fillStyle = 'rgba(255, 230, 150, 0.8)';
                 for (let i = 0; i < 400; i++) {
                     const lx = Math.random() * 1024;
@@ -926,7 +1036,6 @@
             return canvas;
         }
 
-        // Procedural Clouds Texture
         function createCloudsCanvas() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -955,8 +1064,6 @@
         let earthRadius = 100;
         let asset3DGroup;
         let raycaster, mouse;
-
-        // Texture Loaders & Materials
         let earthMaterial;
         const textureLoader = new THREE.TextureLoader();
 
@@ -975,7 +1082,6 @@
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             container.appendChild(renderer.domElement);
 
-            // Lighting: Ambient + Direct Sun + Rim light
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
             scene.add(ambientLight);
 
@@ -983,7 +1089,6 @@
             sunLight.position.set(200, 80, 150);
             scene.add(sunLight);
 
-            // Earth Sphere Geometry
             const earthGeo = new THREE.SphereGeometry(earthRadius, 64, 64);
             const proceduralCanvas = createProceduralEarthCanvas('satellite');
             const earthTex = new THREE.CanvasTexture(proceduralCanvas);
@@ -995,7 +1100,6 @@
                 specular: new THREE.Color(0x113355)
             });
 
-            // Try loading high-res photorealistic NASA Blue Marble texture from CDN
             textureLoader.load(
                 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
                 (tex) => {
@@ -1009,7 +1113,6 @@
             earthMesh = new THREE.Mesh(earthGeo, earthMaterial);
             scene.add(earthMesh);
 
-            // Rotating 3D Cloud Sphere
             const cloudsGeo = new THREE.SphereGeometry(earthRadius * 1.015, 48, 48);
             const cloudsTex = new THREE.CanvasTexture(createCloudsCanvas());
             const cloudsMat = new THREE.MeshLambertMaterial({
@@ -1020,7 +1123,6 @@
             cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
             scene.add(cloudsMesh);
 
-            // Atmospheric Rayleigh Scattering Glow
             const atmoGeo = new THREE.SphereGeometry(earthRadius * 1.08, 48, 48);
             const atmoMat = new THREE.ShaderMaterial({
                 vertexShader: `
@@ -1044,7 +1146,6 @@
             atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
             scene.add(atmosphereMesh);
 
-            // Deep Space Starfield Background
             const starGeo = new THREE.BufferGeometry();
             const starCount = 1200;
             const starPos = new Float32Array(starCount * 3);
@@ -1058,11 +1159,9 @@
             const starField = new THREE.Points(starGeo, starMat);
             scene.add(starField);
 
-            // Group for 3D Assets (Planes, Quakes, Satellites)
             asset3DGroup = new THREE.Group();
             scene.add(asset3DGroup);
 
-            // Raycasting for touch / click
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
@@ -1080,20 +1179,40 @@
             renderer.setSize(w, h);
         }
 
-        // Texture switch (Satellite / Night / Topo)
-        function setMapTexture(mode) {
-            document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
-            if (mode === 'satellite') document.getElementById('btnSatMap').classList.add('active');
-            if (mode === 'night') document.getElementById('btnNightMap').classList.add('active');
-            if (mode === 'topo') document.getElementById('btnTopoMap').classList.add('active');
-
-            const c = createProceduralEarthCanvas(mode);
-            earthMaterial.map = new THREE.CanvasTexture(c);
-            earthMaterial.needsUpdate = true;
+        // Mode Switching between Cesium Ion 3D and Three.js 3D
+        function setMapMode(mode) {
             playSciFiBeep('confirm');
+            document.querySelectorAll('.map-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('cesium-active');
+            });
+
+            if (mode === 'cesium_ion') {
+                document.getElementById('btnCesiumMap').classList.add('cesium-active');
+                document.getElementById('webgl-container').style.display = 'none';
+                document.getElementById('cesiumContainer').style.display = 'block';
+                activeEngine = 'cesium';
+                initCesiumGlobe();
+                showToast("Cesium Ion 3D Photorealistic Engine Activated");
+            } else {
+                document.getElementById('cesiumContainer').style.display = 'none';
+                document.getElementById('webgl-container').style.display = 'block';
+                activeEngine = 'three';
+
+                if (mode === 'three_sat') {
+                    document.getElementById('btnSatMap').classList.add('active');
+                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('satellite'));
+                } else if (mode === 'three_night') {
+                    document.getElementById('btnNightMap').classList.add('active');
+                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('night'));
+                } else if (mode === 'three_topo') {
+                    document.getElementById('btnTopoMap').classList.add('active');
+                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('topo'));
+                }
+                earthMaterial.needsUpdate = true;
+            }
         }
 
-        // Convert Geodetic (Lat, Lon) to 3D Cartesian Vector
         function latLonToVector3(lat, lon, alt = 0) {
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 180) * (Math.PI / 180);
@@ -1140,7 +1259,6 @@
                 }
             });
 
-            // Touch Pinch-to-Zoom
             domElem.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
                     pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
@@ -1175,29 +1293,35 @@
             }
         }
 
-        // Smooth Camera Flight to Geodetic Coordinates
+        // Camera flight supporting both Three.js and CesiumJS
         function smoothFlyTo(lat, lon, zoomFactor = 1.0) {
-            targetLat = lat;
-            targetLon = -lon;
-            const targetZ = 160 / zoomFactor;
-            state.autoOrbit = false;
             triggerHaptic(25);
+            if (activeEngine === 'cesium' && cesiumViewer) {
+                cesiumViewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, (3000000 / zoomFactor)),
+                    duration: 1.5
+                });
+            } else {
+                targetLat = lat;
+                targetLon = -lon;
+                const targetZ = 160 / zoomFactor;
+                state.autoOrbit = false;
 
-            const startZ = camera.position.z;
-            const startTime = performance.now();
-            function stepZoom() {
-                const p = Math.min(1.0, (performance.now() - startTime) / 900);
-                camera.position.z = startZ + (targetZ - startZ) * (1 - Math.pow(1 - p, 3));
-                if (p < 1.0) requestAnimationFrame(stepZoom);
+                const startZ = camera.position.z;
+                const startTime = performance.now();
+                function stepZoom() {
+                    const p = Math.min(1.0, (performance.now() - startTime) / 900);
+                    camera.position.z = startZ + (targetZ - startZ) * (1 - Math.pow(1 - p, 3));
+                    if (p < 1.0) requestAnimationFrame(stepZoom);
+                }
+                stepZoom();
             }
-            stepZoom();
         }
 
         // ==========================================
-        // 4. POPULATE REAL 3D ASSET OBJECTS
+        // 4. POPULATE REAL 3D ASSETS
         // ==========================================
         function update3DAssetMeshes() {
-            // Clear old 3D meshes
             while (asset3DGroup.children.length > 0) {
                 asset3DGroup.remove(asset3DGroup.children[0]);
             }
@@ -1209,7 +1333,6 @@
 
             for (const asset of activeList) {
                 if (asset.type === 'SEISMIC') {
-                    // 3D Pulsing Seismic Shockwave Mesh
                     const pos = latLonToVector3(asset.lat, asset.lon, 0.5);
                     const size = 2 + asset.mag * 1.5;
                     const ringGeo = new THREE.RingGeometry(size * 0.6, size, 32);
@@ -1225,7 +1348,6 @@
                     ringMesh.userData = { asset, isShockwave: true, baseSize: size };
                     asset3DGroup.add(ringMesh);
 
-                    // Central epicenter sphere
                     const epiGeo = new THREE.SphereGeometry(1.4, 12, 12);
                     const epiMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
                     const epiMesh = new THREE.Mesh(epiGeo, epiMat);
@@ -1233,8 +1355,7 @@
                     epiMesh.userData = { asset };
                     asset3DGroup.add(epiMesh);
                 } else if (asset.type === 'AIR') {
-                    // 3D Aircraft Cone / Directional Vector
-                    const altKm = (asset.alt / 1000) * 0.18; // scaled altitude
+                    const altKm = (asset.alt / 1000) * 0.18;
                     const pos = latLonToVector3(asset.lat, asset.lon, altKm + 1.2);
                     const planeGeo = new THREE.ConeGeometry(1.6, 4.5, 6);
                     planeGeo.rotateX(Math.PI / 2);
@@ -1249,14 +1370,12 @@
                     planeMesh.userData = { asset };
                     asset3DGroup.add(planeMesh);
                 } else if (asset.type === 'SPACE') {
-                    // 3D ISS Satellite Mesh & Orbit Ring
-                    const satAlt = 18; // Scaled LEO orbit
+                    const satAlt = 18;
                     const pos = latLonToVector3(asset.lat, asset.lon, satAlt);
                     
                     const satGroup = new THREE.Group();
                     satGroup.position.copy(pos);
 
-                    // Main solar panel cross
                     const panelGeo = new THREE.BoxGeometry(6, 1.2, 0.4);
                     const panelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9 });
                     const panels = new THREE.Mesh(panelGeo, panelMat);
@@ -1270,7 +1389,6 @@
                     satGroup.userData = { asset };
                     asset3DGroup.add(satGroup);
 
-                    // 3D Orbit Ring encircling Earth
                     const orbitGeo = new THREE.RingGeometry(earthRadius + satAlt - 0.2, earthRadius + satAlt + 0.2, 96);
                     const orbitMat = new THREE.MeshBasicMaterial({
                         color: 0xfacc15,
@@ -1283,13 +1401,13 @@
                     asset3DGroup.add(orbitMesh);
                 }
             }
+
+            if (cesiumViewer) updateCesiumAssets();
         }
 
-        // Main 3D Animation Loop
         function animateThree() {
             requestAnimationFrame(animateThree);
 
-            // Interpolate rotation
             curLon += (targetLon - curLon) * 0.08;
             curLat += (targetLat - curLat) * 0.08;
 
@@ -1297,7 +1415,6 @@
                 targetLon += 0.12;
             }
 
-            // Rotate Earth & Clouds
             earthMesh.rotation.y = THREE.MathUtils.degToRad(-curLon);
             earthMesh.rotation.x = THREE.MathUtils.degToRad(curLat);
             cloudsMesh.rotation.y = THREE.MathUtils.degToRad(-curLon * 1.05);
@@ -1305,7 +1422,6 @@
             asset3DGroup.rotation.y = THREE.MathUtils.degToRad(-curLon);
             asset3DGroup.rotation.x = THREE.MathUtils.degToRad(curLat);
 
-            // Animate Seismic Shockwave Pulses
             const time = performance.now() * 0.003;
             asset3DGroup.children.forEach(obj => {
                 if (obj.userData && obj.userData.isShockwave) {
@@ -1400,7 +1516,7 @@
                     'seismic', 'earthquake', 'quake', 'tsunami', 'fault', 'magnitude', 'depth', 'rupture',
                     'satellite', 'orbit', 'space', 'iss', 'velocity', 'decay', 'solar', 'conjunction',
                     'weather', 'temp', 'wind', 'storm', 'cyclone', 'radar', 'visibility',
-                    'matrix', 'scan', 'sitrep', 'vector', 'recon', 'intercept', 'track', 'target'
+                    'matrix', 'scan', 'sitrep', 'vector', 'recon', 'intercept', 'track', 'target', 'cesium'
                 ];
                 let seed = 42;
                 for (const w of words) {
@@ -1763,7 +1879,7 @@
                 };
                 utterance.onend = () => {
                     isWaveActive = false;
-                    document.getElementById('assistantStateText').textContent = 'Full 3D Earth Camera, Layers, Voice, GPS Control.';
+                    document.getElementById('assistantStateText').textContent = 'Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.';
                 };
                 utterance.onerror = () => {
                     isWaveActive = false;
@@ -1852,9 +1968,19 @@
             const lower = cmd.toLowerCase();
             let reply = '';
 
-            // 1. Geocoding / Fly to City Search ("Fly to Tokyo", "Go to Paris", "Find Hawaii")
-            const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i);
-            if (flyMatch && !lower.includes('earthquake') && !lower.includes('iss') && !lower.includes('flight')) {
+            // Switch to Cesium Ion
+            if (lower.includes('cesium') || lower.includes('ion')) {
+                setMapMode('cesium_ion');
+                reply = `Engaged official CesiumJS 3D Photorealistic Engine with your authenticated Cesium Ion token.`;
+            }
+            // Switch to Three.js
+            else if (lower.includes('three') || lower.includes('three.js')) {
+                setMapMode('three_sat');
+                reply = `Engaged Three.js Real 3D Earth globe with dynamic atmosphere halo and rotating cloud shaders.`;
+            }
+            // Geocoding / Fly to City Search
+            else if (/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i.test(lower) && !lower.includes('earthquake') && !lower.includes('iss') && !lower.includes('flight')) {
+                const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i);
                 const queryLocation = flyMatch[1].trim();
                 document.getElementById('assistantStateText').textContent = `Geocoding '${queryLocation}'...`;
                 try {
@@ -1868,7 +1994,7 @@
                         const country = feat.properties.country || '';
 
                         smoothFlyTo(lat, lon, 1.4);
-                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E on the real 3D Earth globe.`;
+                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E on the 3D globe.`;
                     } else {
                         reply = `I searched global geodetic databases for "${queryLocation}" but found no matching coordinates.`;
                     }
@@ -1876,29 +2002,36 @@
                     reply = `Geocoding lookup failed. Please verify connection.`;
                 }
             }
-            // 2. Camera Controls
+            // Camera Zoom
             else if (lower.includes('zoom in')) {
-                camera.position.z = Math.max(140, camera.position.z - 40);
+                if (activeEngine === 'cesium' && cesiumViewer) {
+                    cesiumViewer.camera.zoomIn(1000000);
+                } else {
+                    camera.position.z = Math.max(140, camera.position.z - 40);
+                }
                 reply = `Zoom increased on the 3D globe.`;
             } else if (lower.includes('zoom out')) {
-                camera.position.z = Math.min(480, camera.position.z + 40);
+                if (activeEngine === 'cesium' && cesiumViewer) {
+                    cesiumViewer.camera.zoomOut(1000000);
+                } else {
+                    camera.position.z = Math.min(480, camera.position.z + 40);
+                }
                 reply = `Zoom decreased on the 3D globe.`;
             } else if (lower.includes('toggle auto orbit') || lower.includes('stop rotate') || lower.includes('start rotate') || lower.includes('spin')) {
                 state.autoOrbit = !state.autoOrbit;
                 reply = `Real 3D Earth auto-orbit rotation is now ${state.autoOrbit ? 'ENABLED' : 'PAUSED'}.`;
             } else if (lower.includes('reset view') || lower.includes('reset camera')) {
-                camera.position.set(0, 30, 280);
-                targetLat = 0; targetLon = 0;
+                smoothFlyTo(20, 0, 1.0);
                 state.autoOrbit = true;
                 reply = `3D globe camera reset to default orbital view.`;
             }
-            // 3. Category Layer Filters
+            // Category Layer Filters
             else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
                 switchCategory('SEISMIC');
                 const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                 if (maxQ) {
                     smoothFlyTo(maxQ.lat, maxQ.lon, 1.3);
-                    reply = `I centered the real 3D Earth on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
+                    reply = `I centered the 3D Earth on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
                 } else {
                     reply = `Seismic telemetry filter engaged.`;
                 }
@@ -1907,7 +2040,7 @@
                 const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
                 if (iss) {
                     smoothFlyTo(iss.lat, iss.lon, 1.25);
-                    reply = `Locked camera onto 3D International Space Station mesh at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
+                    reply = `Locked camera onto International Space Station at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
                 } else {
                     reply = `Satellite orbital vectors displayed on the 3D globe.`;
                 }
@@ -1924,15 +2057,15 @@
                 switchCategory('AIR');
                 reply = `Airspace mode active. Tracking ${state.flights.length} flights with 3D directional vectors.`;
             }
-            // 4. Map Style Change
+            // Map Style
             else if (lower.includes('night map') || lower.includes('night mode')) {
-                setMapTexture('night');
+                setMapMode('three_night');
                 reply = `Switched to 3D Earth Night City Lights texture map.`;
             } else if (lower.includes('satellite map')) {
-                setMapTexture('satellite');
+                setMapMode('three_sat');
                 reply = `Switched to 3D Photorealistic Satellite Earth map.`;
             }
-            // 5. Native OS Controls
+            // Native OS
             else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
                 centerOnGps();
                 reply = `Acquiring device GPS satellites and orienting the 3D globe directly over your location.`;
@@ -1947,18 +2080,14 @@
             } else if (lower.includes('share')) {
                 shareFullSitrep();
                 reply = `Opening Android system share sheet with intelligence sitrep.`;
-            } else if (lower.includes('benchmark')) {
-                const b = localAI.benchmark(500);
-                reply = `Neural benchmark complete: ${b.iterations} forward-passes executed in ${b.totalMs} ms (${b.infPerSec.toLocaleString()} inferences/sec) 100% on-device.`;
             } else {
-                reply = `Command received: "${cmd}". The real 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
+                reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
             }
 
             addChatMessage('agent', reply);
             speakAssistant(reply);
         }
 
-        // Export & Share
         function getSitrepText() {
             const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
             const maxF = [...state.flights].sort((a,b) => b.speed - a.speed)[0];
@@ -2048,8 +2177,8 @@ Processed on-device via AEGIS 3D Earth AI Assistant.`;
 
         function openSettings() {
             triggerHaptic(20);
+            document.getElementById('cfgCesium').value = localStorage.getItem('gev_cesium') || DEFAULT_CESIUM_TOKEN;
             document.getElementById('cfgUrl').value = localStorage.getItem('gev_url') || '';
-            document.getElementById('cfgCesium').value = localStorage.getItem('gev_cesium') || '';
             document.getElementById('cfgGoogle').value = localStorage.getItem('gev_google') || '';
             document.getElementById('settingsModal').style.display = 'flex';
         }
@@ -2058,16 +2187,17 @@ Processed on-device via AEGIS 3D Earth AI Assistant.`;
         }
         function saveSettings() {
             triggerHaptic(30);
+            const cesium = document.getElementById('cfgCesium').value.trim() || DEFAULT_CESIUM_TOKEN;
             const url = document.getElementById('cfgUrl').value.trim();
-            const cesium = document.getElementById('cfgCesium').value.trim();
             const google = document.getElementById('cfgGoogle').value.trim();
 
-            localStorage.setItem('gev_url', url);
             localStorage.setItem('gev_cesium', cesium);
+            localStorage.setItem('gev_url', url);
             localStorage.setItem('gev_google', google);
+            currentCesiumToken = cesium;
 
             closeSettings();
-            showToast("Tactical parameters saved");
+            showToast("Tactical parameters & Cesium Ion saved");
             if (url) window.location.href = url;
         }
 

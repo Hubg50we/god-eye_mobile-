@@ -8,19 +8,21 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.5.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.5.0/godseye-android.apk)
+### 📥 [Direct Download APK (v1.6.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.6.0/godseye-android.apk)
 
 ---
 
-## 🌍 Real 3D Earth Map Engine (Everything Included)
+## 🌍 Dual 3D Earth Map Engine (Cesium Ion & Three.js)
 
-God's Eye View Mobile features a complete **Photorealistic 3D Earth WebGL Engine**:
-* **🛰️ Real High-Res Earth Textures**: Photorealistic NASA Blue Marble & Esri satellite imagery with ocean specular reflections, day/night city lights, and tactical contours.
+God's Eye View Mobile features a complete **Dual Photorealistic 3D Earth Engine**:
+* **🌐 Official CesiumJS & Cesium Ion 3D Streaming**: Integrated authenticated Cesium Ion Photorealistic World Elevation, Bing Maps Aerial high-resolution satellite streaming, and 3D globe coordinates.
+* **🛰️ High-Performance Three.js WebGL 2.0 Engine**: Real spherical 3D Earth with NASA Blue Marble & Esri satellite imagery, specular ocean reflections, day/night city lights, and tactical contours.
 * **✨ Atmospheric Rayleigh Scattering & 3D Clouds**: Custom WebGL atmosphere rim shader enveloping the planet and an independently rotating semi-transparent 3D cloud layer.
 * **✈️ Real 3D Aircraft & Kinematic Meshes**: Directional aircraft models flying at accurate scaled altitudes with live velocity heading vectors.
 * **💥 Volumetric 3D Seismic Shockwaves**: Pulsing 3D rings erupting from USGS earthquake hypocenters across global fault lines.
 * **🛰️ 3D Space Station (ISS) & Orbital Rings**: Full 3D modeled satellite orbiting above the Earth with an inclination trajectory ring.
 * **🌌 Cosmic Deep Space**: Dynamic starfield and celestial illumination from directional solar lighting.
+* **🗺️ One-Touch Engine Switcher**: Toggle seamlessly between `[🛰 THREE.JS 3D]`, `[🌐 CESIUM ION 3D]`, `[🌙 NIGHT]`, and `[🗺 TACTICAL]`.
 
 ---
 

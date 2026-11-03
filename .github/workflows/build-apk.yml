@@ -87,7 +87,7 @@ jobs:
             - **Package**: `com.hubg50we.godseye`
             - **Version**: `v${{ env.VERSION_NAME }}` (Build `${{ env.VERSION_CODE }}`)
             - **Platform**: Android 7.0+ (Universal ARM & x86)
-            - **Features**: Interactive 3D Tactical Particle Globe, Live USGS Earthquakes, Live ADS-B Aircraft Tracking, ISS Satellite Telemetry, Hardware-Accelerated WebGL 2.0 WebView.
+            - **Features**: Dual 3D Earth Engine (Cesium Ion & Three.js), Photorealistic World Terrain, Bing Maps Aerial, On-Device AI Assistant (AEGIS), Live USGS Earthquakes, ADS-B Flight Tracking, ISS Orbit, Hardware-Accelerated WebGL 2.0.
           files: |
             release_bin/godseye-android.apk
             release_bin/godseye-android-v${{ env.VERSION_NAME }}.apk
