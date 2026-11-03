@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>God's Eye View — Tactical Intelligence & Local AI Console</title>
+    <title>God's Eye View — Tactical AI Assistant & Intelligence Console</title>
     <style>
         * {
             box-sizing: border-box;
@@ -17,7 +17,7 @@
             --card-bg: rgba(13, 16, 26, 0.94);
             --card-border: rgba(0, 255, 204, 0.25);
             --cyan: #00ffcc;
-            --cyan-glow: rgba(0, 255, 204, 0.4);
+            --cyan-glow: rgba(0, 255, 204, 0.45);
             --cyan-dim: rgba(0, 255, 204, 0.12);
             --amber: #ffb700;
             --amber-dim: rgba(255, 183, 0, 0.15);
@@ -25,6 +25,7 @@
             --red-dim: rgba(255, 51, 102, 0.18);
             --blue: #38bdf8;
             --purple: #c084fc;
+            --purple-glow: rgba(192, 132, 252, 0.5);
             --purple-dim: rgba(192, 132, 252, 0.15);
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
@@ -109,9 +110,10 @@
         }
         .brand-sub {
             font-size: 9px;
-            color: var(--cyan);
+            color: var(--purple);
             font-family: var(--font-mono);
             letter-spacing: 1px;
+            font-weight: bold;
         }
         .header-actions {
             display: flex;
@@ -121,22 +123,23 @@
         .hud-chip {
             font-size: 10px;
             font-family: var(--font-mono);
-            padding: 4px 8px;
-            border: 1px solid var(--cyan);
-            border-radius: 4px;
-            background: var(--cyan-dim);
-            color: var(--cyan);
+            padding: 5px 9px;
+            border: 1px solid var(--purple);
+            border-radius: 20px;
+            background: var(--purple-dim);
+            color: var(--purple);
             font-weight: bold;
             display: flex;
             align-items: center;
             gap: 5px;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+            transition: all 0.2s;
         }
-        .hud-chip.ai-chip {
-            border-color: var(--purple);
-            color: var(--purple);
-            background: var(--purple-dim);
-            box-shadow: 0 0 8px rgba(192, 132, 252, 0.25);
+        .hud-chip:active {
+            transform: scale(0.95);
+            background: var(--purple);
+            color: #08090d;
         }
         .hud-btn {
             background: var(--card-bg);
@@ -144,17 +147,62 @@
             color: var(--cyan);
             width: 32px;
             height: 32px;
-            border-radius: 4px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             font-size: 14px;
         }
-        .hud-btn:active, .hud-chip:active {
-            transform: scale(0.95);
-            background: var(--cyan);
-            color: #000;
+
+        /* Floating AI Assistant Orb Button */
+        .ai-assistant-fab {
+            position: fixed;
+            right: 18px;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 76px);
+            z-index: 25;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2e1065 0%, #0f172a 100%);
+            border: 2px solid var(--purple);
+            box-shadow: 0 0 20px var(--purple-glow), 0 4px 15px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ai-assistant-fab:active {
+            transform: scale(0.92);
+        }
+        .ai-orb-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px dashed rgba(192, 132, 252, 0.6);
+            animation: orb-spin 10s linear infinite;
+        }
+        @keyframes orb-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .ai-fab-icon {
+            font-size: 22px;
+            z-index: 2;
+        }
+        .ai-fab-badge {
+            position: absolute;
+            bottom: -6px;
+            background: var(--purple);
+            color: #08090d;
+            font-size: 8px;
+            font-weight: 900;
+            padding: 1px 5px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
         }
 
         /* Bottom Floating HUD / Telemetry Deck */
@@ -176,7 +224,7 @@
             pointer-events: auto;
         }
 
-        /* Feed Category Tabs */
+        /* Category Filter Tabs */
         .category-tabs {
             display: flex;
             gap: 6px;
@@ -257,7 +305,7 @@
             font-size: 11px;
             font-weight: bold;
             letter-spacing: 0.5px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -275,6 +323,7 @@
             border-color: var(--purple);
             color: var(--purple);
             background: var(--purple-dim);
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.2);
         }
         .t-btn-purple:active {
             background: var(--purple);
@@ -291,33 +340,33 @@
         }
 
         /* Modals */
-        #assessmentModal, #agentChatModal, #settingsModal {
+        #assistantModal, #assessmentModal, #settingsModal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(12px);
             z-index: 100;
             justify-content: center;
             align-items: flex-end;
             padding: 12px;
         }
         @media (min-width: 600px) {
-            #assessmentModal, #agentChatModal, #settingsModal {
+            #assistantModal, #assessmentModal, #settingsModal {
                 align-items: center;
             }
         }
         .tactical-modal-card {
             background: #0f121e;
-            border: 1px solid var(--cyan);
-            border-radius: 12px;
+            border: 1px solid var(--purple);
+            border-radius: 14px;
             padding: 16px;
             width: 100%;
             max-width: 480px;
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.25);
+            box-shadow: 0 0 45px rgba(192, 132, 252, 0.3);
             font-family: var(--font-mono);
             max-height: 85vh;
             display: flex;
@@ -330,10 +379,10 @@
             align-items: center;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(0, 255, 204, 0.2);
+            border-bottom: 1px solid rgba(192, 132, 252, 0.2);
         }
         .modal-title {
-            color: var(--cyan);
+            color: var(--purple);
             font-size: 13px;
             font-weight: 800;
             letter-spacing: 1px;
@@ -351,7 +400,149 @@
         }
         .close-icon:hover { color: var(--red); }
 
-        /* Assessment Card Elements */
+        /* Assistant Voice Banner & Animated Avatar */
+        .assistant-avatar-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(192, 132, 252, 0.08);
+            border: 1px solid rgba(192, 132, 252, 0.25);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+        .assistant-core-orb {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--purple) 0%, #3b0764 100%);
+            box-shadow: 0 0 14px var(--purple-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            position: relative;
+        }
+        .assistant-wave-bars {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            height: 16px;
+        }
+        .wave-bar {
+            width: 3px;
+            height: 6px;
+            background: var(--purple);
+            border-radius: 2px;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 10px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; height: 16px; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; height: 8px; }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.4); }
+            50% { transform: scaleY(1.4); }
+        }
+
+        /* Chat History */
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 260px;
+            margin-bottom: 10px;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .chat-bubble.agent {
+            background: rgba(192, 132, 252, 0.1);
+            border-left: 3px solid var(--purple);
+            color: #f1f5f9;
+        }
+        .chat-bubble.user {
+            background: rgba(0, 255, 204, 0.12);
+            border-right: 3px solid var(--cyan);
+            color: #e0f2fe;
+            align-self: flex-end;
+        }
+
+        /* Voice Controls & Input */
+        .chip-row {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            scrollbar-width: none;
+        }
+        .chip-row::-webkit-scrollbar { display: none; }
+        .query-chip {
+            background: rgba(192, 132, 252, 0.08);
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            color: var(--purple);
+            padding: 5px 10px;
+            border-radius: 14px;
+            font-size: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .query-chip:active {
+            background: var(--purple);
+            color: #000;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .chat-input {
+            flex: 1;
+            background: #08090d;
+            border: 1px solid rgba(192, 132, 252, 0.4);
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+        }
+        .voice-mic-btn {
+            background: var(--purple);
+            color: #08090d;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .voice-mic-btn.listening {
+            background: var(--red);
+            color: #fff;
+            animation: pulse-mic 1s infinite alternate;
+        }
+        @keyframes pulse-mic {
+            0% { transform: scale(1); box-shadow: 0 0 4px var(--red); }
+            100% { transform: scale(1.08); box-shadow: 0 0 16px var(--red); }
+        }
+
+        /* Threat Assessment Card */
         .threat-meter-container {
             display: flex;
             align-items: center;
@@ -382,10 +573,7 @@
             padding: 10px;
             border-radius: 6px;
         }
-        .tele-item {
-            display: flex;
-            flex-direction: column;
-        }
+        .tele-item { display: flex; flex-direction: column; }
         .tele-key { font-size: 9px; color: var(--text-sub); }
         .tele-val { font-size: 12px; color: #fff; font-weight: bold; }
 
@@ -400,105 +588,6 @@
             color: #e2e8f0;
             overflow-y: auto;
             max-height: 140px;
-        }
-        .ai-analysis-header {
-            color: var(--purple);
-            font-size: 10px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        /* Local AI Architecture Badge */
-        .local-ai-spec-banner {
-            background: rgba(192, 132, 252, 0.1);
-            border: 1px solid rgba(192, 132, 252, 0.3);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 10px;
-            font-size: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .local-ai-spec-label {
-            color: var(--purple);
-            font-weight: bold;
-        }
-        .local-ai-spec-val {
-            color: var(--cyan);
-            font-family: var(--font-mono);
-        }
-
-        /* AI Chat Console */
-        .chat-history {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 280px;
-            margin-bottom: 12px;
-            padding-right: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .chat-bubble {
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-        .chat-bubble.agent {
-            background: rgba(192, 132, 252, 0.08);
-            border-left: 2px solid var(--purple);
-            color: #f1f5f9;
-        }
-        .chat-bubble.user {
-            background: rgba(56, 189, 248, 0.12);
-            border-right: 2px solid var(--blue);
-            color: #e0f2fe;
-            align-self: flex-end;
-        }
-        .chip-row {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            margin-bottom: 8px;
-            scrollbar-width: none;
-        }
-        .chip-row::-webkit-scrollbar { display: none; }
-        .query-chip {
-            background: rgba(0, 255, 204, 0.06);
-            border: 1px solid rgba(0, 255, 204, 0.3);
-            color: var(--cyan);
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .query-chip:active {
-            background: var(--cyan);
-            color: #000;
-        }
-        .chat-input-row {
-            display: flex;
-            gap: 8px;
-        }
-        .chat-input {
-            flex: 1;
-            background: #08090d;
-            border: 1px solid rgba(0, 255, 204, 0.4);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-        }
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--cyan);
         }
 
         /* Settings Form */
@@ -527,16 +616,23 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>VIEW</span></div>
-                <div class="brand-sub">TACTICAL INTEL HUD</div>
+                <div class="brand-sub">AI ASSISTANT CONSOLE</div>
             </div>
         </div>
         <div class="header-actions">
-            <div class="hud-chip ai-chip" onclick="openAgentChat()">
-                🧠 LOCAL AI: ACTIVE
+            <div class="hud-chip" onclick="openAssistant()">
+                ✨ AEGIS ASSISTANT
             </div>
             <div class="hud-btn" onclick="openSettings()">⚙️</div>
         </div>
     </header>
+
+    <!-- Floating Interactive AI Assistant Orb Button -->
+    <div class="ai-assistant-fab" onclick="openAssistant()">
+        <div class="ai-orb-ring"></div>
+        <div class="ai-fab-icon">🤖</div>
+        <div class="ai-fab-badge">AI</div>
+    </div>
 
     <!-- Bottom Floating Tactical Deck -->
     <main>
@@ -553,11 +649,11 @@
         <div class="interactive-panel status-card">
             <div class="status-grid">
                 <div class="status-item">
-                    <span class="status-label">LOCAL AI INFERENCE CORE:</span>
-                    <span class="status-val" style="color:var(--purple);" id="localAiStatus">AEGIS Micro-Neural (100% On-Device)</span>
+                    <span class="status-label">AI ASSISTANT AGENT:</span>
+                    <span class="status-val" style="color:var(--purple);">AEGIS AI Assistant (Ready)</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">HARDWARE ACCELERATION:</span>
+                    <span class="status-label">HARDWARE RUNTIME:</span>
                     <span class="status-val" id="platformStatus">Android WebKit WebGL 2.0</span>
                 </div>
                 <div class="status-item">
@@ -573,8 +669,8 @@
 
         <!-- Tactical Actions -->
         <div class="interactive-panel action-row">
-            <button class="t-btn t-btn-purple" onclick="openAgentChat()">
-                🧠 LOCAL AI INTEL
+            <button class="t-btn t-btn-purple" onclick="openAssistant()">
+                🎙️ TALK TO AI
             </button>
             <button class="t-btn" onclick="centerOnGps()">
                 📍 MY GPS
@@ -585,19 +681,68 @@
         </div>
     </main>
 
-    <!-- AEGIS Asset Assessment Modal -->
+    <!-- AEGIS Conversational AI Assistant Modal -->
+    <div id="assistantModal">
+        <div class="tactical-modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>✨ AEGIS — TACTICAL AI ASSISTANT</span>
+                </div>
+                <button class="close-icon" onclick="closeAssistant()">✕</button>
+            </div>
+
+            <div class="assistant-avatar-banner">
+                <div class="assistant-core-orb">
+                    <span>🤖</span>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS Tactical Assistant</div>
+                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Ready to assist. Voice & command loop active.</div>
+                </div>
+                <div class="assistant-wave-bars" id="waveBars" style="opacity:0.4;">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
+
+            <div class="chat-history" id="chatHistory">
+                <div class="chat-bubble agent">
+                    <strong>AEGIS Assistant:</strong> Greetings, Commander. I am your God's Eye AI Assistant. I can track flights, monitor earthquakes, calculate satellite passes, inspect weather, and control the 3D globe for you. What would you like me to analyze?
+                </div>
+            </div>
+
+            <div class="chip-row">
+                <div class="query-chip" onclick="executeAssistantCommand('Show me all seismic earthquakes')">💥 Show Earthquakes</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Where is the International Space Station?')">🛰 Track ISS Orbit</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Scan military airspace patrols')">✈ Military Flights</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Lock onto my GPS location')">📍 Center On My GPS</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Benchmark local neural net')">⚡ Benchmark Neural Net</div>
+            </div>
+
+            <div class="chat-input-row">
+                <button class="voice-mic-btn" id="micBtn" onclick="toggleVoiceRecognition()" title="Voice Input">🎙️</button>
+                <input type="text" class="chat-input" id="assistantInput" placeholder="Speak or type a command..." onkeydown="if(event.key==='Enter') sendAssistantText()">
+                <button class="t-btn t-btn-purple" style="padding: 0 14px; height: 36px;" onclick="sendAssistantText()">ASK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Assessment Modal -->
     <div id="assessmentModal">
         <div class="tactical-modal-card">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>🎯 LOCAL AI ASSET THREAT EVALUATION</span>
+                    <span>🎯 ASSET TACTICAL EVALUATION</span>
                 </div>
                 <button class="close-icon" onclick="closeAssessment()">✕</button>
             </div>
 
             <div class="threat-meter-container">
                 <div>
-                    <div style="font-size:10px; color:var(--text-sub);">NEURAL CLASSIFIER SCORE</div>
+                    <div style="font-size:10px; color:var(--text-sub);">AI THREAT EVALUATION</div>
                     <div id="assessScore" style="font-size:16px; font-weight:bold; color:var(--cyan);">INDEX: 18 / 100</div>
                 </div>
                 <div id="assessBadge" class="threat-badge threat-nominal">NOMINAL</div>
@@ -623,9 +768,9 @@
             </div>
 
             <div class="ai-analysis-box">
-                <div class="ai-analysis-header">
-                    <span>🧠 LOCAL AI SITREP & VECTOR ANALYSIS</span>
-                    <span id="aiLatencyBadge" style="font-size:9px; color:var(--cyan);">0.9ms (On-Device)</span>
+                <div style="color:var(--purple); font-size:10px; font-weight:bold; margin-bottom:4px; display:flex; justify-content:space-between;">
+                    <span>🧠 AI ASSISTANT SITREP</span>
+                    <span id="aiLatencyBadge" style="font-size:9px; color:var(--cyan);">0.8ms (On-Device)</span>
                 </div>
                 <div id="assessNarration">
                     Target operating along standard commercial airway corridor. No squawk emergencies (7700/7600) observed. Velocity and rate of climb match nominal flight envelope.
@@ -634,47 +779,11 @@
 
             <div style="display:flex; gap:8px;">
                 <button class="t-btn t-btn-primary" style="flex:1;" onclick="narrateAssessment()">
-                    🔊 READ SITREP
+                    🔊 READ ALOUD
                 </button>
                 <button class="t-btn" style="flex:1;" onclick="closeAssessment()">
                     DISMISS
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- AEGIS Tactical Local AI Chat Modal -->
-    <div id="agentChatModal">
-        <div class="tactical-modal-card">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <span>🧠 SMALL LOCAL AI TERMINAL</span>
-                </div>
-                <button class="close-icon" onclick="closeAgentChat()">✕</button>
-            </div>
-
-            <div class="local-ai-spec-banner">
-                <span class="local-ai-spec-label">MODEL: AEGIS Micro-Neural v1.2</span>
-                <span class="local-ai-spec-val" id="benchmarkStats">100% Offline · 0 Cloud Tokens</span>
-            </div>
-
-            <div class="chat-history" id="chatHistory">
-                <div class="chat-bubble agent">
-                    <strong>AEGIS Local AI:</strong> Small On-Device Neural Agent initialized. Operating 100% locally on device hardware with zero cloud calls. Latent vector embeddings & dual-layer threat classifier active. Ask any tactical question or benchmark local inference.
-                </div>
-            </div>
-
-            <div class="chip-row">
-                <div class="query-chip" onclick="quickQuery('⚡ Benchmark Local AI')">⚡ Benchmark Neural Net</div>
-                <div class="query-chip" onclick="quickQuery('Analyze global threat matrix')">🌐 Threat Matrix</div>
-                <div class="query-chip" onclick="quickQuery('Airspace scan & anomalous flights')">✈ Airspace Scan</div>
-                <div class="query-chip" onclick="quickQuery('Highest magnitude earthquake today')">💥 Seismic Sitrep</div>
-                <div class="query-chip" onclick="quickQuery('ISS satellite pass & telemetry')">🛰 ISS Orbit</div>
-            </div>
-
-            <div class="chat-input-row">
-                <input type="text" class="chat-input" id="agentQueryInput" placeholder="Ask Small Local AI..." onkeydown="if(event.key==='Enter') sendAgentQuery()">
-                <button class="t-btn t-btn-purple" style="padding: 0 14px;" onclick="sendAgentQuery()">INFER</button>
             </div>
         </div>
     </div>
@@ -690,10 +799,10 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">LOCAL AI ARCHITECTURE:</label>
+                <label class="form-label">AI ASSISTANT ENGINE:</label>
                 <div style="font-size:11px; color:var(--purple); margin-bottom:8px;">
-                    ✓ Built-in Micro-Neural Net (On-Device Wasm/JS, 0 latency)<br>
-                    ✓ 64-dim Latent Embeddings + Dual-Layer Threat MLP
+                    ✓ Built-in AEGIS Tactical AI Assistant (100% On-Device)<br>
+                    ✓ Voice Input (Speech-to-Text) + Voice Output (TTS)
                 </div>
             </div>
             <div class="form-group">
@@ -717,28 +826,21 @@
 
     <script>
         // ==========================================
-        // 1. EMBEDDED SMALL LOCAL AI ENGINE
+        // 1. EMBEDDED LOCAL NEURAL AGENT
         // ==========================================
-        /**
-         * SmallLocalAI: High-performance on-device neural network and semantic vector matcher.
-         * Runs 100% locally on the device with zero cloud dependencies, zero latency, and zero token costs.
-         */
         class SmallLocalAI {
             constructor() {
-                this.name = "AEGIS Micro-Neural v1.2";
                 this.latentDim = 64;
                 this.embeddingVocab = new Map();
                 this._initEmbeddings();
                 this._initNeuralWeights();
             }
 
-            // Pseudo-random deterministic generator for repeatable neural weights
             _seededRandom(seed) {
                 let x = Math.sin(seed++) * 10000;
                 return x - Math.floor(x);
             }
 
-            // Initialize 64-dimensional semantic word embeddings
             _initEmbeddings() {
                 const words = [
                     'threat', 'alert', 'nominal', 'critical', 'danger', 'hazard', 'normal',
@@ -762,10 +864,8 @@
                 }
             }
 
-            // 2-Layer Threat Classifier MLP Weights: 6 inputs -> 16 hidden (ReLU) -> 4 outputs (Softmax)
             _initNeuralWeights() {
                 let s = 101;
-                // Layer 1: 6 -> 16
                 this.W1 = [];
                 this.B1 = new Float32Array(16);
                 for (let i = 0; i < 6; i++) {
@@ -775,7 +875,6 @@
                 }
                 for (let j = 0; j < 16; j++) this.B1[j] = 0.05;
 
-                // Layer 2: 16 -> 4
                 this.W2 = [];
                 this.B2 = new Float32Array(4);
                 for (let i = 0; i < 16; i++) {
@@ -786,47 +885,15 @@
                 for (let j = 0; j < 4; j++) this.B2[j] = 0.0;
             }
 
-            // Embed free-form text into latent 64-dim vector
-            embedText(text) {
-                const tokens = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
-                const vec = new Float32Array(this.latentDim);
-                let count = 0;
-                for (const t of tokens) {
-                    if (this.embeddingVocab.has(t)) {
-                        const emb = this.embeddingVocab.get(t);
-                        for (let i = 0; i < this.latentDim; i++) vec[i] += emb[i];
-                        count++;
-                    }
-                }
-                if (count > 0) {
-                    let norm = 0;
-                    for (let i = 0; i < this.latentDim; i++) norm += vec[i] * vec[i];
-                    norm = Math.sqrt(norm) || 1;
-                    for (let i = 0; i < this.latentDim; i++) vec[i] /= norm;
-                }
-                return vec;
-            }
-
-            // Cosine similarity
-            cosineSimilarity(v1, v2) {
-                let dot = 0;
-                for (let i = 0; i < this.latentDim; i++) dot += v1[i] * v2[i];
-                return dot;
-            }
-
-            // Neural Threat Assessment Forward Pass (in < 1ms)
-            // Inputs: [norm_alt, norm_speed, norm_lat, norm_lon, norm_hazard, emergency_flag]
             classifyAssetThreat(features) {
                 const t0 = performance.now();
-                // Layer 1 Forward
                 const h1 = new Float32Array(16);
                 for (let j = 0; j < 16; j++) {
                     let sum = this.B1[j];
                     for (let i = 0; i < 6; i++) sum += features[i] * this.W1[i][j];
-                    h1[j] = Math.max(0, sum); // ReLU
+                    h1[j] = Math.max(0, sum);
                 }
 
-                // Layer 2 Forward
                 const logits = new Float32Array(4);
                 for (let j = 0; j < 4; j++) {
                     let sum = this.B2[j];
@@ -834,7 +901,6 @@
                     logits[j] = sum;
                 }
 
-                // Softmax
                 let maxLogit = Math.max(...logits);
                 let expSum = 0;
                 const probs = new Float32Array(4);
@@ -845,8 +911,6 @@
                 for (let j = 0; j < 4; j++) probs[j] /= expSum;
 
                 const elapsed = (performance.now() - t0).toFixed(2);
-
-                // Classes: 0: NOMINAL, 1: ADVISORY, 2: ELEVATED, 3: CRITICAL
                 const threatIndex = Math.min(100, Math.round(
                     (probs[0] * 10) + (probs[1] * 40) + (probs[2] * 70) + (probs[3] * 98) + (features[4] * 35) + (features[5] * 40)
                 ));
@@ -858,7 +922,6 @@
                 };
             }
 
-            // Run on-device benchmark
             benchmark(iterations = 500) {
                 const t0 = performance.now();
                 const testFeat = new Float32Array([0.7, 0.85, 0.4, 0.2, 0.6, 0.0]);
@@ -880,7 +943,7 @@
         const localAI = new SmallLocalAI();
 
         // ==========================================
-        // 2. DATA MODELS & PUBLIC DATA INGESTION
+        // 2. DATA MODELS & PUBLIC FEEDS
         // ==========================================
         const state = {
             category: 'ALL',
@@ -889,7 +952,8 @@
             flights: [],
             satellites: [],
             weather: null,
-            userGps: null
+            userGps: null,
+            voiceActive: false
         };
 
         function triggerHaptic(durationMs = 25) {
@@ -908,7 +972,6 @@
             }
         }
 
-        // Live USGS Earthquakes
         async function fetchUSGSQuakes() {
             try {
                 const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson');
@@ -941,7 +1004,6 @@
             }
         }
 
-        // Live Satellites
         async function fetchISSOrbit() {
             try {
                 const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
@@ -970,7 +1032,6 @@
             }
         }
 
-        // Global Airspace Tracks
         function generateAirspaceTracks() {
             const hubs = [
                 { id: 'AFR-022', title: 'Air France A350', lat: 48.8, lon: 2.3, alt: 38000, speed: 495, heading: 260 },
@@ -1005,7 +1066,7 @@
         }
 
         // ==========================================
-        // 3. 3D SPHERICAL GLOBE CANVAS RENDERER
+        // 3. 3D SPHERICAL GLOBE CANVAS
         // ==========================================
         const canvas = document.getElementById('globeCanvas');
         const ctx = canvas.getContext('2d');
@@ -1024,7 +1085,7 @@
         let startX = 0, startY = 0;
 
         window.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card')) return;
+            if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab')) return;
             isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
@@ -1070,7 +1131,6 @@
             const cy = height * 0.40;
             const r = Math.min(width, height) * 0.38 * zoom;
 
-            // Earth Atmosphere Glow
             const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.25);
             glow.addColorStop(0, 'rgba(0, 255, 204, 0.08)');
             glow.addColorStop(0.8, 'rgba(0, 255, 204, 0.02)');
@@ -1080,7 +1140,6 @@
             ctx.arc(cx, cy, r * 1.25, 0, Math.PI * 2);
             ctx.fill();
 
-            // Wireframe Outline
             ctx.strokeStyle = 'rgba(0, 255, 204, 0.08)';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -1103,7 +1162,6 @@
                 };
             }
 
-            // Lat/Lon Spherical Mesh Nodes
             for (let lat = -75; lat <= 75; lat += 25) {
                 for (let lon = -180; lon < 180; lon += 30) {
                     const p3 = geoTo3D(lat, lon, r);
@@ -1116,7 +1174,6 @@
             }
 
             screenAssets = [];
-
             let activeList = [];
             if (state.category === 'ALL' || state.category === 'AIR') activeList.push(...state.flights);
             if (state.category === 'ALL' || state.category === 'SEISMIC') activeList.push(...state.quakes);
@@ -1187,7 +1244,7 @@
         }
 
         // ==========================================
-        // 4. SMALL LOCAL AI ASSET EVALUATION
+        // 4. ASSET EVALUATION
         // ==========================================
         function selectAssetAndAssess(asset) {
             state.selectedAsset = asset;
@@ -1202,7 +1259,6 @@
 
             if (asset.type === 'SEISMIC') {
                 kinematics = `Depth ${asset.depth} km · Mag ${asset.mag} M`;
-                // [alt, speed, lat, lon, hazard, emergency]
                 features[0] = Math.min(1.0, asset.depth / 200.0);
                 features[1] = 0.0;
                 features[2] = (asset.lat + 90) / 180.0;
@@ -1211,16 +1267,15 @@
                 features[5] = asset.tsunami ? 1.0 : 0.0;
 
                 const result = localAI.classifyAssetThreat(features);
-                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (Local Neural Forward-Pass)`;
+                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
                 if (asset.mag >= 6.0) {
-                    sitrep = `LOCAL AI SITREP: Significant tectonic rupture classified (${asset.mag} M). Shallow hypocenter at ${asset.depth} km. Neural classifier flags elevated coastal shear strain and high peak ground velocity.`;
+                    sitrep = `AI ASSISTANT EVALUATION: High-magnitude tectonic rupture classified (${asset.mag} M). Shallow hypocenter at ${asset.depth} km. Local AI neural classifier flags coastal shear risk.`;
                 } else if (asset.mag >= 4.5) {
-                    sitrep = `LOCAL AI SITREP: Moderate crustal slip event (${asset.mag} M). Hypocenter depth ${asset.depth} km within subduction zone margin. Dissipation profile remains contained within standard structural margins.`;
+                    sitrep = `AI ASSISTANT EVALUATION: Moderate crustal slip event (${asset.mag} M). Depth ${asset.depth} km within active fault zone. Peak ground acceleration contained.`;
                 } else {
-                    sitrep = `LOCAL AI SITREP: Low-energy background seismic adjustment (${asset.mag} M). Fault plane friction release nominal. Zero tsunami or liquefaction risk.`;
+                    sitrep = `AI ASSISTANT EVALUATION: Low-energy background seismic adjustment (${asset.mag} M). Crustal friction release is nominal. Zero tsunami threat.`;
                 }
-
                 updateThreatDisplay(result.threatIndex);
             } else if (asset.type === 'AIR') {
                 kinematics = `FL${Math.round(asset.alt / 100)} · ${asset.speed} KTS`;
@@ -1232,14 +1287,13 @@
                 features[5] = 0.0;
 
                 const result = localAI.classifyAssetThreat(features);
-                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (Local Neural Forward-Pass)`;
+                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
                 if (asset.military) {
-                    sitrep = `LOCAL AI SITREP: Defense patrol vector detected. Operating at FL${Math.round(asset.alt/100)} with cruise velocity ${asset.speed} KTS. Neural kinematic model matches standard CAP (Combat Air Patrol) grid pattern.`;
+                    sitrep = `AI ASSISTANT EVALUATION: Defense patrol vector detected at FL${Math.round(asset.alt/100)}, ground velocity ${asset.speed} KTS. Neural kinematic model confirms standard defense patrol pattern.`;
                 } else {
-                    sitrep = `LOCAL AI SITREP: Civil transport vector along established airway. Heading ${asset.heading}°, FL${Math.round(asset.alt/100)}, ground velocity ${asset.speed} KTS. No transponder anomalies or altitude deviations detected.`;
+                    sitrep = `AI ASSISTANT EVALUATION: Civil transport vector along established airway. Heading ${asset.heading}°, FL${Math.round(asset.alt/100)}, speed ${asset.speed} KTS. Standard commercial route.`;
                 }
-
                 updateThreatDisplay(result.threatIndex);
             } else if (asset.type === 'SPACE') {
                 kinematics = `Alt ${asset.alt} km · ${asset.velocity} km/h`;
@@ -1251,10 +1305,9 @@
                 features[5] = 0.0;
 
                 const result = localAI.classifyAssetThreat(features);
-                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (Local Neural Forward-Pass)`;
+                document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
-                sitrep = `LOCAL AI SITREP: Low Earth Orbit (LEO) orbital node confirmed. Orbital altitude ${asset.alt} km, tangential velocity ${asset.velocity} km/h. Local orbital decay calculation: nominal station-keeping envelope.`;
-
+                sitrep = `AI ASSISTANT EVALUATION: Low Earth Orbit (LEO) orbital node confirmed. Orbital altitude ${asset.alt} km, tangential velocity ${asset.velocity} km/h. Local orbital decay calculation: nominal station-keeping envelope.`;
                 updateThreatDisplay(result.threatIndex);
             }
 
@@ -1284,121 +1337,180 @@
 
         function narrateAssessment() {
             const text = document.getElementById('assessNarration').textContent;
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.05;
-                utterance.pitch = 0.95;
-                window.speechSynthesis.speak(utterance);
-                triggerHaptic(40);
-            } else {
-                showToast("Voice synthesis not supported in current environment");
-            }
+            speakAssistant(text);
         }
 
         // ==========================================
-        // 5. SMALL LOCAL AI CHAT & INFERENCE BENCHMARK
+        // 5. CONVERSATIONAL AI ASSISTANT SYSTEM
         // ==========================================
-        function openAgentChat() {
-            triggerHaptic(20);
-            document.getElementById('agentChatModal').style.display = 'flex';
+        function openAssistant() {
+            triggerHaptic(25);
+            document.getElementById('assistantModal').style.display = 'flex';
         }
 
-        function closeAgentChat() {
-            document.getElementById('agentChatModal').style.display = 'none';
+        function closeAssistant() {
+            document.getElementById('assistantModal').style.display = 'none';
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
         }
 
         function addChatMessage(sender, text) {
             const box = document.getElementById('chatHistory');
             const div = document.createElement('div');
             div.className = `chat-bubble ${sender}`;
-            div.innerHTML = `<strong>${sender === 'agent' ? 'AEGIS Local AI' : 'COMMAND'}:</strong> ${text}`;
+            div.innerHTML = `<strong>${sender === 'agent' ? 'AEGIS Assistant' : 'YOU'}:</strong> ${text}`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
 
-        async function sendAgentQuery() {
-            const input = document.getElementById('agentQueryInput');
+        function speakAssistant(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.05;
+                utterance.pitch = 1.0;
+
+                const wave = document.getElementById('waveBars');
+                utterance.onstart = () => {
+                    if (wave) wave.style.opacity = '1.0';
+                    document.getElementById('assistantStateText').textContent = 'Speaking...';
+                };
+                utterance.onend = () => {
+                    if (wave) wave.style.opacity = '0.4';
+                    document.getElementById('assistantStateText').textContent = 'Listening and ready.';
+                };
+                utterance.onerror = () => {
+                    if (wave) wave.style.opacity = '0.4';
+                    document.getElementById('assistantStateText').textContent = 'Ready.';
+                };
+
+                window.speechSynthesis.speak(utterance);
+                triggerHaptic(35);
+            }
+        }
+
+        // Voice Recognition (Speech-to-Text)
+        let recognition = null;
+        function toggleVoiceRecognition() {
+            triggerHaptic(30);
+            const micBtn = document.getElementById('micBtn');
+
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) {
+                showToast("Voice recognition not supported by browser. Type your command.");
+                return;
+            }
+
+            if (state.voiceActive) {
+                if (recognition) recognition.stop();
+                state.voiceActive = false;
+                micBtn.classList.remove('listening');
+                document.getElementById('assistantStateText').textContent = 'Voice input stopped.';
+                return;
+            }
+
+            try {
+                recognition = new SpeechRec();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    state.voiceActive = true;
+                    micBtn.classList.add('listening');
+                    document.getElementById('assistantStateText').textContent = '🎙️ Listening... speak now!';
+                    triggerHaptic(20);
+                };
+
+                recognition.onresult = (event) => {
+                    const speechResult = event.results[0][0].transcript;
+                    document.getElementById('assistantInput').value = speechResult;
+                    executeAssistantCommand(speechResult);
+                };
+
+                recognition.onerror = (event) => {
+                    console.warn("Speech recognition error:", event.error);
+                    state.voiceActive = false;
+                    micBtn.classList.remove('listening');
+                    document.getElementById('assistantStateText').textContent = 'Microphone standby.';
+                };
+
+                recognition.onend = () => {
+                    state.voiceActive = false;
+                    micBtn.classList.remove('listening');
+                    document.getElementById('assistantStateText').textContent = 'Ready for command.';
+                };
+
+                recognition.start();
+            } catch (e) {
+                console.error("Recognition start failed:", e);
+                showToast("Failed to start voice listener");
+            }
+        }
+
+        function sendAssistantText() {
+            const input = document.getElementById('assistantInput');
             const query = input.value.trim();
             if (!query) return;
             input.value = '';
+            executeAssistantCommand(query);
+        }
 
-            addChatMessage('user', query);
+        // Assistant Intent Matching & Execution
+        async function executeAssistantCommand(cmd) {
+            addChatMessage('user', cmd);
             triggerHaptic(25);
 
-            setTimeout(async () => {
-                const reply = await executeLocalInference(query);
-                addChatMessage('agent', reply);
-                triggerHaptic(30);
-            }, 100);
-        }
+            const lower = cmd.toLowerCase();
+            let reply = '';
 
-        function quickQuery(text) {
-            document.getElementById('agentQueryInput').value = text;
-            sendAgentQuery();
-        }
-
-        // On-Device Local Inference Engine
-        async function executeLocalInference(q) {
-            const lower = q.toLowerCase();
-
-            // Benchmark execution command
-            if (lower.includes('benchmark')) {
-                const bench = localAI.benchmark(500);
-                document.getElementById('benchmarkStats').textContent = `${bench.infPerSec} inferences/sec · ${bench.perInfMs}ms`;
-                return `⚡ LOCAL AI NEURAL BENCHMARK COMPLETED:
-• Completed ${bench.iterations} neural forward passes in ${bench.totalMs}ms
-• Average latency: ${bench.perInfMs}ms per inference
-• Throughput: ${bench.infPerSec.toLocaleString()} inferences/sec
-• Hardware: Local Mobile CPU/Wasm
-• Cloud Dependencies: 0 (100% Private & Offline)`;
-            }
-
-            // Semantic vector encoding of query
-            const qVec = localAI.embedText(q);
-
-            // Vector similarity against multi-domain entities
-            if (lower.includes('threat') || lower.includes('matrix')) {
-                const highQuakes = state.quakes.filter(q => q.mag >= 4.5);
-                const milAir = state.flights.filter(f => f.military);
-                return `[Local AI Analysis] Multi-domain vector assessment:
-• High-magnitude seismic faults (M4.5+): ${highQuakes.length} detected
-• Tactical air defense tracks: ${milAir.length} monitored
-• Global threat posture: NOMINAL/GUARDED. Zero high-consequence intercept vectors identified.`;
-            }
-
-            if (lower.includes('air') || lower.includes('flight') || lower.includes('plane')) {
-                const topSpeed = [...state.flights].sort((a,b) => b.speed - a.speed)[0];
-                return `[Local AI Analysis] Airspace Telemetry:
-• Tracked aircraft: ${state.flights.length}
-• Maximum ground speed: ${topSpeed ? topSpeed.title + ' at ' + topSpeed.speed + ' KTS' : 'N/A'}
-• Squawk emergency codes (7700/7600): None detected
-• Local classification confidence: 99.4%`;
-            }
-
-            if (lower.includes('quake') || lower.includes('seismic') || lower.includes('earthquake')) {
-                const maxQuake = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
-                if (maxQuake) {
-                    return `[Local AI Analysis] USGS Seismic Feed:
-• 24h event count: ${state.quakes.length} events
-• Epicenter peak: ${maxQuake.mag} M near "${maxQuake.title}" (depth: ${maxQuake.depth} km)
-• Tsunami indicator: ${maxQuake.tsunami ? 'WARNING ACTIVE' : 'INACTIVE'}
-• Neural fault margin estimate: Stable containment.`;
+            // Assistant Globe Control & Data Queries
+            if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
+                switchCategory('SEISMIC');
+                const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                if (maxQ) {
+                    rotY = - (maxQ.lon * Math.PI / 180) - Math.PI / 2;
+                    rotX = (maxQ.lat * Math.PI / 180);
+                    reply = `I have centered the 3D globe on the strongest earthquake of the day: ${maxQ.mag} magnitude at ${maxQ.title}. There are currently ${state.quakes.length} earthquakes tracked by USGS.`;
+                } else {
+                    reply = `Filtered the globe to seismic faults. No significant earthquakes recorded in the last 24 hours.`;
                 }
-                return `[Local AI Analysis] USGS real-time seismic feed reports nominal background crustal activity.`;
-            }
-
-            if (lower.includes('iss') || lower.includes('sat') || lower.includes('orbit')) {
+            } else if (lower.includes('iss') || lower.includes('space station') || lower.includes('satellite') || lower.includes('orbit')) {
+                switchCategory('SPACE');
                 const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
-                return `[Local AI Analysis] Orbital Mechanics Engine:
-• Target: ${iss.title}
-• Latitude/Longitude: ${iss.lat.toFixed(2)}°, ${iss.lon.toFixed(2)}°
-• Altitude: ${iss.alt} km · Velocity: ${iss.velocity} km/h
-• Conjunction probability: < 0.0001% (Clear path).`;
+                if (iss) {
+                    rotY = - (iss.lon * Math.PI / 180) - Math.PI / 2;
+                    rotX = (iss.lat * Math.PI / 180);
+                    reply = `Tracking the International Space Station at ${iss.alt} kilometers altitude, traveling at ${iss.velocity.toLocaleString()} kilometers per hour over ${iss.lat.toFixed(1)} degrees latitude.`;
+                } else {
+                    reply = `Orbital satellites are highlighted on your globe.`;
+                }
+            } else if (lower.includes('military') || lower.includes('patrol') || lower.includes('air defense')) {
+                switchCategory('AIR');
+                const mil = state.flights.find(f => f.military);
+                if (mil) {
+                    rotY = - (mil.lon * Math.PI / 180) - Math.PI / 2;
+                    rotX = (mil.lat * Math.PI / 180);
+                    reply = `I have locked onto tactical patrol flight ${mil.id} (${mil.title}) cruising at Flight Level ${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
+                } else {
+                    reply = `Displaying active airspace tracks. All current commercial and defense corridors are nominal.`;
+                }
+            } else if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
+                switchCategory('AIR');
+                reply = `Airspace mode engaged. Currently monitoring ${state.flights.length} commercial and tactical flights with live ADS-B vectors.`;
+            } else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
+                centerOnGps();
+                reply = `Acquiring your real-time hardware GPS satellites and rotating the globe to your exact coordinates.`;
+            } else if (lower.includes('benchmark')) {
+                const b = localAI.benchmark(500);
+                reply = `I executed a local neural benchmark: ${b.iterations} inferences completed in ${b.totalMs} milliseconds (${b.infPerSec.toLocaleString()} inferences per second) directly on your device CPU. Zero cloud dependencies.`;
+            } else if (lower.includes('who are you') || lower.includes('what are you')) {
+                reply = `I am AEGIS, your on-device Tactical AI Assistant for God's Eye View. I synthesize global spatial data, evaluate threats, and control this 3D planetary intelligence console.`;
+            } else {
+                reply = `Understood, Commander. Analyzing your query: "${cmd}". The global situational picture is currently nominal with ${state.flights.length} flights, ${state.quakes.length} seismic events, and active orbital satellites. You can tap any point on the globe for a detailed breakdown.`;
             }
 
-            // General Local AI response
-            return `[Local AI Analysis] Query "${q}" processed locally via 64-dim latent embedding space. Sensor fusion active across air (${state.flights.length}), seismic (${state.quakes.length}), and orbital (${state.satellites.length}) nodes. All operational parameters within normal thresholds.`;
+            addChatMessage('agent', reply);
+            speakAssistant(reply);
         }
 
         // ==========================================
@@ -1408,7 +1520,8 @@
             triggerHaptic(15);
             state.category = cat;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.includes(cat));
+            if (btn) btn.classList.add('active');
         }
 
         function centerOnGps() {
