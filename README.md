@@ -1,11 +1,14 @@
 # 🛰️ God's Eye View — Android Mobile
 
 [![Build Android Mobile APK](https://github.com/Hubg50we/god-eye_mobile-/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Hubg50we/god-eye_mobile-/actions/workflows/build-apk.yml)
+[![Latest APK Release](https://img.shields.io/github/v/release/Hubg50we/god-eye_mobile-?color=brightgreen&label=Download%20APK)](https://github.com/Hubg50we/god-eye_mobile-/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
-[![Platform: Android](https://img.shields.io/badge/Platform-Android_8.0+-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android_7.0+-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
 [![Cesium](https://img.shields.io/badge/CesiumJS-WebGL_2.0-blue.svg)](https://cesium.com)
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
+
+### 📥 [Direct Download APK (v1.0.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.0.0/godseye-android.apk)
 
 ---
 
