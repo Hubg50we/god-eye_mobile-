@@ -1191,6 +1191,37 @@
             padding: 6px 8px;
         }
 
+    
+        /* ==============================================================
+           STARK AI PERSONA TRIAD THEMES: FRIDAY & EDITH
+           ============================================================== */
+
+        body.persona-friday {
+            --cyan: #ef4444;
+            --cyan-glow: rgba(239, 68, 68, 0.45);
+            --purple: #f59e0b;
+            --purple-glow: rgba(245, 158, 11, 0.4);
+        }
+        body.persona-friday .ai-fab-ring-outer { border-color: rgba(239, 68, 68, 0.85); }
+        body.persona-friday .ai-fab-ring-inner { border-color: rgba(245, 158, 11, 0.95); }
+        body.persona-friday .ai-fab-core { background: radial-gradient(circle, #ffffff 15%, #ef4444 65%, #991b1b 100%); }
+        body.persona-friday .ai-fab-badge { background: #ef4444 !important; color: #fff !important; }
+        body.persona-friday .jarvis-arc-reactor .reactor-core { background: radial-gradient(circle, #ffffff 20%, #ef4444 65%, #991b1b 100%) !important; }
+        body.persona-friday .jarvis-arc-reactor .ring-outer { border-color: #ef4444 !important; }
+
+        body.persona-edith {
+            --cyan: #10b981;
+            --cyan-glow: rgba(16, 185, 129, 0.45);
+            --purple: #06b6d4;
+            --purple-glow: rgba(6, 182, 212, 0.4);
+        }
+        body.persona-edith .ai-fab-ring-outer { border-color: rgba(16, 185, 129, 0.85); }
+        body.persona-edith .ai-fab-ring-inner { border-color: rgba(6, 182, 212, 0.95); }
+        body.persona-edith .ai-fab-core { background: radial-gradient(circle, #ffffff 15%, #10b981 65%, #065f46 100%); }
+        body.persona-edith .ai-fab-badge { background: #10b981 !important; color: #000 !important; }
+        body.persona-edith .jarvis-arc-reactor .reactor-core { background: radial-gradient(circle, #ffffff 20%, #10b981 65%, #065f46 100%) !important; }
+        body.persona-edith .jarvis-arc-reactor .ring-outer { border-color: #10b981 !important; }
+
     </style>
 </head>
 <body>
@@ -3455,6 +3486,109 @@
         // ==============================================================
         
         // ==============================================================
+        
+        // ==============================================================
+        // 14. STARK AI PERSONA TRIAD & GLOBAL UNDERSEA INFRASTRUCTURE
+        // ==============================================================
+
+        let currentPersona = localStorage.getItem('gev_persona') || 'jarvis';
+
+        function setAIPersona(personaName) {
+            currentPersona = personaName.toLowerCase();
+            localStorage.setItem('gev_persona', currentPersona);
+            document.body.classList.remove('persona-friday', 'persona-edith');
+
+            const titleEl = document.querySelector('.modal-title span');
+            const badgeEl = document.querySelector('.ai-fab-badge');
+            const subTitle = document.getElementById('assistantStateText');
+
+            if (currentPersona === 'friday') {
+                document.body.classList.add('persona-friday');
+                if (titleEl) titleEl.textContent = "✨ F.R.I.D.A.Y. — COMBAT TACTICAL OPERATING SYSTEM";
+                if (badgeEl) badgeEl.textContent = "F.R.I.D.A.Y.";
+                if (subTitle) subTitle.textContent = "Combat AI Online. Ready, Boss.";
+                playSciFiBeep('alert');
+                triggerHaptic(40);
+                speakAssistant("F.R.I.D.A.Y. online and ready. What do you need, Boss?");
+                return "Switched AI persona to F.R.I.D.A.Y. (Combat Tactical OS)";
+            } else if (currentPersona === 'edith') {
+                document.body.classList.add('persona-edith');
+                if (titleEl) titleEl.textContent = "✨ E.D.I.T.H. — ORBITAL DRONE TACTICAL DEFENSE";
+                if (badgeEl) badgeEl.textContent = "E.D.I.T.H.";
+                if (subTitle) subTitle.textContent = "Even Dead, I'm The Hero. Orbital Arrays Synced.";
+                playSciFiBeep('confirm');
+                triggerHaptic(40);
+                speakAssistant("E.D.I.T.H. security protocol engaged. Orbital drone network standing by.");
+                return "Switched AI persona to E.D.I.T.H. (Orbital Drone Tactical Network)";
+            } else {
+                currentPersona = 'jarvis';
+                if (titleEl) titleEl.textContent = "✨ J.A.R.V.I.S. — FULLY AUTONOMOUS DEFENSE AGENT";
+                if (badgeEl) badgeEl.textContent = "J.A.R.V.I.S.";
+                if (subTitle) subTitle.textContent = "Online & Standing By, Sir.";
+                playSciFiBeep('confirm');
+                triggerHaptic(30);
+                speakAssistant("J.A.R.V.I.S. core restored. At your service, Sir.");
+                return "Restored J.A.R.V.I.S. primary operating persona";
+            }
+        }
+
+        // Global Undersea Fiber-Optic Cables & Tectonic Fault Lines
+        let underseaCablesActive = false;
+        let cableEntities = [];
+
+        const UNDERSEA_CABLE_ROUTES = [
+            // Trans-Atlantic (New York to London/Paris)
+            [[-74.0, 40.7], [-45.0, 48.0], [-10.0, 50.0], [0.0, 51.5]],
+            // Trans-Pacific 1 (San Francisco to Tokyo)
+            [[-122.4, 37.8], [-157.8, 21.3], [180.0, 28.0], [140.0, 35.5]],
+            // Trans-Pacific 2 (Los Angeles to Sydney via Hawaii/Fiji)
+            [[-118.2, 34.0], [-157.8, 21.3], [178.4, -18.1], [151.2, -33.8]],
+            // Europe to Asia (London to Mumbai via Suez)
+            [[0.0, 51.5], [-9.0, 38.7], [14.5, 35.9], [32.5, 30.0], [43.5, 12.5], [72.8, 19.0]],
+            // Asia to Australia (Singapore to Perth)
+            [[103.8, 1.3], [115.8, -31.9]],
+            // South America to Europe (Fortaleza to Lisbon)
+            [[-38.5, -3.7], [-23.5, 15.0], [-9.0, 38.7]],
+            // Pacific Ring of Fire (Tectonic Boundary)
+            [[140.0, 35.5], [145.0, 15.0], [125.0, 5.0], [120.0, -8.0], [165.0, -22.0], [175.0, -40.0]],
+            // Mid-Atlantic Ridge (Tectonic Boundary)
+            [[-28.0, 72.0], [-30.0, 50.0], [-38.0, 30.0], [-30.0, 0.0], [-15.0, -35.0], [-10.0, -55.0]]
+        ];
+
+        function toggleUnderseaCables(forceState) {
+            underseaCablesActive = forceState !== undefined ? forceState : !underseaCablesActive;
+            if (!cesiumViewer) return "Cesium viewer unavailable";
+
+            // Clean old entities
+            cableEntities.forEach(e => cesiumViewer.entities.remove(e));
+            cableEntities = [];
+
+            if (underseaCablesActive) {
+                UNDERSEA_CABLE_ROUTES.forEach((route, idx) => {
+                    const isTectonic = idx >= 6;
+                    const positions = route.map(pt => Cesium.Cartesian3.fromDegrees(pt[0], pt[1], 100));
+                    const cable = cesiumViewer.entities.add({
+                        name: isTectonic ? "TECTONIC_FAULT_LINE" : "UNDERSEA_FIBER_CABLE",
+                        polyline: {
+                            positions: positions,
+                            width: isTectonic ? 3.0 : 2.0,
+                            material: new Cesium.PolylineDashMaterialProperty({
+                                color: isTectonic ? Cesium.Color.fromCssColorString('#f59e0b') : Cesium.Color.fromCssColorString('#00f0ff'),
+                                dashLength: isTectonic ? 20 : 12
+                            })
+                        }
+                    });
+                    cableEntities.push(cable);
+                });
+                triggerHaptic(30);
+                showToast("Undersea Fiber Cables & Tectonic Faults: ONLINE");
+                return "Global undersea fiber cables and tectonic fault lines mapped on 3D Earth";
+            } else {
+                showToast("Undersea Cables & Faults disengaged");
+                return "Undersea cable overlay disengaged";
+            }
+        }
+
         // 13. REAL-TIME ACOUSTIC BARGE-IN & TACTICAL INTERCEPT SYSTEM
         // ==============================================================
 
@@ -4384,6 +4518,32 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
         
         
         
+        
+        jarvisTools.register(
+            "switch_ai_persona",
+            "Switch the operating AI persona to 'friday' (F.R.I.D.A.Y.), 'edith' (E.D.I.T.H.), or 'jarvis' (J.A.R.V.I.S.).",
+            {
+                type: "object",
+                properties: { persona: { type: "string", enum: ["jarvis", "friday", "edith"] } },
+                required: ["persona"]
+            },
+            async (args) => {
+                return setAIPersona(args.persona);
+            }
+        );
+
+        jarvisTools.register(
+            "toggle_undersea_cables",
+            "Toggle global submarine fiber-optic internet cable networks and tectonic plate fault lines on 3D Earth.",
+            {
+                type: "object",
+                properties: { active: { type: "boolean" } }
+            },
+            async (args) => {
+                return toggleUnderseaCables(args.active);
+            }
+        );
+
         jarvisTools.register(
             "calculate_intercept",
             "Calculate supersonic ballistic intercept vector, distance, and time to target for any aircraft or location.",
@@ -4910,10 +5070,7 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                             messages: [
                                 {
                                     role: 'system',
-                                    content: `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), Tony Stark's personal AI operating system. 
-You are addressing the Commander with utmost sophistication, wit, and tactical precision.
-Live Telemetry: Earth 3D Cesium Ion active, Space Weather nominal, Airspace active.
-Provide helpful, brilliant, concise responses in character (2 to 4 sentences maximum).`
+                                    content: (currentPersona === 'friday' ? "You are F.R.I.D.A.Y., Tony Stark's tactical combat AI assistant. You address the user as 'Boss'. Answer concisely in character (2 to 3 sentences max)." : currentPersona === 'edith' ? "You are E.D.I.T.H., orbital drone defense tactical AI. Analytical and precise. Answer concisely in character (2 to 3 sentences max)." : "You are J.A.R.V.I.S., Tony Stark's personal British AI operating system. Sophisticated, witty, and tactical. Answer concisely in character (2 to 3 sentences max).")
                                 },
                                 ...this.memory.history.slice(-4).map(h => ({
                                     role: h.role === 'agent' ? 'assistant' : 'user',
@@ -4999,7 +5156,38 @@ Provide helpful, brilliant, concise responses in character (2 to 4 sentences max
                 let observation = "";
                 let reply = "";
 
-                                                                // 0.000000 Ballistic Intercept Vector
+                                                                                // 0.00000000 Persona Triad Switcher
+                if (/(?:switch\s+to|activate|load)\s+(friday|edith|jarvis)/i.test(lower) || /(?:restore\s+jarvis)/i.test(lower)) {
+                    let targetPersona = 'jarvis';
+                    if (lower.includes('friday')) targetPersona = 'friday';
+                    else if (lower.includes('edith')) targetPersona = 'edith';
+
+                    thought = `User commanded persona migration to ${targetPersona.toUpperCase()}.`;
+                    actionName = "switch_ai_persona";
+                    actionArgs = { persona: targetPersona };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = observation;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.000000000 Undersea Fiber Cables & Tectonic Faults
+                if (/(?:show|display|engage|enable)\s+(?:undersea|submarine|fiber)?\s*(?:cables|fault\s+lines|ring\s+of\s+fire|tectonic)/i.test(lower)) {
+                    thought = "User commanded global undersea fiber cables and tectonic fault mapping.";
+                    actionName = "toggle_undersea_cables";
+                    actionArgs = { active: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Global submarine fiber cables and tectonic fault lines illuminated on the 3D globe, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                } else if (/(?:hide|disable|remove)\s+(?:undersea|submarine)?\s*(?:cables|fault\s+lines)/i.test(lower)) {
+                    thought = "User commanded undersea cable layer shutdown.";
+                    actionName = "toggle_undersea_cables";
+                    actionArgs = { active: false };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Undersea cable layer disengaged, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.000000 Ballistic Intercept Vector
                 if (/(?:intercept|calculate\s+intercept|engage\s+intercept)\s+(?:to\s+)?([a-zA-Z0-9_\s\-]+)/i.test(lower)) {
                     const target = lower.match(/(?:intercept|calculate\s+intercept|engage\s+intercept)\s+(?:to\s+)?([a-zA-Z0-9_\s\-]+)/i)[1].trim();
                     thought = `User requested supersonic intercept vector calculation for ${target}.`;
