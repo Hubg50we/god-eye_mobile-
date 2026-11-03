@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>God's Eye View — Real 3D Earth & AI Assistant Console</title>
     <!-- Three.js WebGL 2.0 Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js WebGL 2.0 Engine (Bundled Offline + CDN Fallback) -->
+    <script src="js/three.min.js"></script>
+    <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
     <!-- Official CesiumJS 3D Photorealistic Engine -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Widgets/widgets.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Cesium.js"></script>
@@ -2279,24 +2281,44 @@
                 specular: new THREE.Color(0x113355)
             });
 
-            // Load NASA photorealistic Blue Marble satellite texture & cache it
+            // Load NASA photorealistic Blue Marble satellite texture (Bundled Offline First)
             textureLoader.load(
-                'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
+                'textures/earth-blue-marble.jpg',
                 (tex) => {
                     cachedSatTexture = tex;
                     earthMaterial.map = tex;
                     earthMaterial.needsUpdate = true;
+                    console.log("[TEXTURES] Loaded bundled high-res Blue Marble texture (0ms offline).");
                 },
                 undefined,
-                () => console.log("Using built-in high-res procedural Earth map.")
+                () => {
+                    textureLoader.load(
+                        'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
+                        (tex) => {
+                            cachedSatTexture = tex;
+                            earthMaterial.map = tex;
+                            earthMaterial.needsUpdate = true;
+                        },
+                        undefined,
+                        () => console.log("Using procedural Earth map fallback.")
+                    );
+                }
             );
 
-            // Pre-cache night texture
+            // Pre-cache night texture (Bundled Offline First)
             textureLoader.load(
-                'https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg',
-                (tex) => { cachedNightTexture = tex; },
+                'textures/earth-night.jpg',
+                (tex) => {
+                    cachedNightTexture = tex;
+                    console.log("[TEXTURES] Loaded bundled high-res Night city lights texture.");
+                },
                 undefined,
-                () => {}
+                () => {
+                    textureLoader.load(
+                        'https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg',
+                        (tex) => { cachedNightTexture = tex; }
+                    );
+                }
             );
 
             // Pre-cache topology texture
@@ -5792,7 +5814,20 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                 let observation = "";
                 let reply = "";
 
-                                                                                                                                                // In-App Update Voice Intents ("update the app", "check for updates", "install update")
+                                                                                                                                                                // Tactical Military Atlas Voice Intents ("show military bases", "fly to Diego Garcia", "nuclear silos")
+                if (lower.includes("military base") || lower.includes("chokepoint") || lower.includes("silo") || lower.includes("ramstein") || lower.includes("diego garcia") || lower.includes("norad") || lower.includes("hormuz") || lower.includes("malacca")) {
+                    const found = flyToMilitaryBase(lower);
+                    if (found) {
+                        return {
+                            thought: "User requested military intelligence waypoint navigation.",
+                            action: "flyToMilitaryBase",
+                            actionArgs: { query: lower },
+                            reply: `Target coordinates locked. Aligning satellite optics with strategic defense site.`
+                        };
+                    }
+                }
+
+                // In-App Update Voice Intents ("update the app", "check for updates", "install update")
                 if (lower.includes("update") || lower.includes("upgrade") || lower.includes("new version")) {
                     AppUpdateManager.executeInstall();
                     return {

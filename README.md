@@ -212,6 +212,17 @@ God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic,
 
 
 
+
+### 12. 📦 Zero-Limit Offline Asset Bundle & Tactical Atlas (v3.7.0)
+- **High-Resolution NASA 3D Earth Maps Bundled Directly in APK**:
+  - `earth-blue-marble.jpg` (1.46 MB photorealistic satellite day map).
+  - `earth-night.jpg` (715 KB city illumination night lights).
+  - `earth-topology.png` (378 KB oceanic specular & elevation relief).
+  - Loads with **0ms latency** completely offline without downloading from CDN.
+- **Embedded Three.js WebGL Engine**: Complete `three.min.js` (603 KB) bundled directly in `assets/web/js/` for 100% offline air-gapped tactical operation.
+- **Strategic Military & Nuclear Defense Atlas**: Integrated database of global chokepoints (Hormuz, Malacca, Suez, Gibraltar, Taiwan Strait), nuclear ICBM wings (Malmstrom, Minot, F.E. Warren), and overseas bases (Ramstein, Diego Garcia, Yokosuka, Kadena, Pine Gap, Thule).
+- **Voice Commands**: *"Show military bases"*, *"Show nuclear silos"*, *"Fly to Diego Garcia"*, *"Show Hormuz"*, *"Lock onto Ramstein"*.
+
 ### 11. 🎬 Hollywood Mark 85 Visual & Micro-Interaction Suite (v3.6.0)
 - **Segmented 10-Coil Arc Reactor Orb**: Movie-authentic Mark 85 electromagnetic stator with 10 copper/gold induction coil segments positioned at 36° intervals, counter-rotating gyroscopic laser rings, and unibeam core with audio-reactive coronal breathing.
 - **Apple Intelligence / Gemini Live Liquid Perimeter**: Seamless conic-gradient chromatic beam flowing around the display bezel with real-time audio-reactive pulse breathing.

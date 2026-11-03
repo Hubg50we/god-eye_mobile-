@@ -1,0 +1,225 @@
+{
+  "version": "1.0.0",
+  "chokepoints": [
+    {
+      "name": "Strait of Hormuz",
+      "lat": 26.56,
+      "lon": 56.25,
+      "type": "NAVAL_CHOKEPOINT",
+      "importance": "CRITICAL",
+      "flow": "21M BPD Oil"
+    },
+    {
+      "name": "Strait of Malacca",
+      "lat": 4.14,
+      "lon": 100.41,
+      "type": "NAVAL_CHOKEPOINT",
+      "importance": "CRITICAL",
+      "flow": "16M BPD Oil / 94k Ships"
+    },
+    {
+      "name": "Suez Canal",
+      "lat": 30.7,
+      "lon": 32.34,
+      "type": "CANAL",
+      "importance": "STRATEGIC",
+      "flow": "12% Global Trade"
+    },
+    {
+      "name": "Panama Canal",
+      "lat": 9.08,
+      "lon": -79.68,
+      "type": "CANAL",
+      "importance": "STRATEGIC",
+      "flow": "6% Global Trade"
+    },
+    {
+      "name": "Bab-el-Mandeb Strait",
+      "lat": 12.58,
+      "lon": 43.33,
+      "type": "NAVAL_CHOKEPOINT",
+      "importance": "HIGH",
+      "flow": "Red Sea Gate"
+    },
+    {
+      "name": "Strait of Gibraltar",
+      "lat": 35.96,
+      "lon": -5.6,
+      "type": "NAVAL_CHOKEPOINT",
+      "importance": "HIGH",
+      "flow": "Mediterranean Entrance"
+    },
+    {
+      "name": "Bosphorus Strait",
+      "lat": 41.11,
+      "lon": 29.07,
+      "type": "STRAIT",
+      "importance": "HIGH",
+      "flow": "Black Sea Access"
+    },
+    {
+      "name": "Taiwan Strait",
+      "lat": 24.5,
+      "lon": 119.5,
+      "type": "DEFENSE_CORRIDOR",
+      "importance": "CRITICAL",
+      "flow": "Pacific Rim Line"
+    }
+  ],
+  "strategic_bases": [
+    {
+      "name": "NORAD Cheyenne Mountain Complex",
+      "lat": 38.74,
+      "lon": -104.84,
+      "country": "USA",
+      "type": "BUNKER_HQ",
+      "elev_m": 2165
+    },
+    {
+      "name": "Naval Station Norfolk",
+      "lat": 36.94,
+      "lon": -76.3,
+      "country": "USA",
+      "type": "NAVAL_BASE",
+      "fleet": "US Atlantic Fleet"
+    },
+    {
+      "name": "Pearl Harbor-Hickam",
+      "lat": 21.35,
+      "lon": -157.94,
+      "country": "USA",
+      "type": "COMBINED_BASE",
+      "fleet": "US Pacific Fleet"
+    },
+    {
+      "name": "Ramstein Air Base",
+      "lat": 49.43,
+      "lon": 7.6,
+      "country": "Germany",
+      "type": "AIR_BASE",
+      "command": "USAFE HQ"
+    },
+    {
+      "name": "Diego Garcia Support Facility",
+      "lat": -7.31,
+      "lon": 72.41,
+      "country": "BIOT",
+      "type": "STRATEGIC_ISLAND",
+      "fleet": "Indian Ocean Node"
+    },
+    {
+      "name": "Yokosuka Naval Base",
+      "lat": 35.29,
+      "lon": 139.67,
+      "country": "Japan",
+      "type": "NAVAL_BASE",
+      "fleet": "US 7th Fleet HQ"
+    },
+    {
+      "name": "Kadena Air Base",
+      "lat": 26.35,
+      "lon": 127.76,
+      "country": "Japan",
+      "type": "AIR_BASE",
+      "role": "Keystone of the Pacific"
+    },
+    {
+      "name": "Al Udeid Air Base",
+      "lat": 25.11,
+      "lon": 51.31,
+      "country": "Qatar",
+      "type": "AIR_BASE",
+      "command": "US CENTCOM Forward"
+    },
+    {
+      "name": "Pine Gap Defense Facility",
+      "lat": -23.79,
+      "lon": 133.73,
+      "country": "Australia",
+      "type": "SIGNALS_INTELLIGENCE",
+      "role": "Satellite Ground Station"
+    },
+    {
+      "name": "RAF Lakenheath",
+      "lat": 52.4,
+      "lon": 0.56,
+      "country": "UK",
+      "type": "AIR_BASE",
+      "squadrons": "48th Fighter Wing (F-35A)"
+    },
+    {
+      "name": "Thule Air Base (Pituffik Space Base)",
+      "lat": 76.53,
+      "lon": -68.7,
+      "country": "Greenland",
+      "type": "RADAR_BMEWS",
+      "role": "Early Warning Radar"
+    },
+    {
+      "name": "Camp Humphreys",
+      "lat": 36.96,
+      "lon": 127.03,
+      "country": "South Korea",
+      "type": "ARMY_SUPERBASE",
+      "command": "USFK HQ"
+    },
+    {
+      "name": "Andersen Air Force Base",
+      "lat": 13.58,
+      "lon": 144.92,
+      "country": "Guam",
+      "type": "STRATEGIC_BOMBER_BASE",
+      "role": "Continuous Bomber Presence"
+    },
+    {
+      "name": "Subic Bay Naval Supply Depot",
+      "lat": 14.82,
+      "lon": 120.27,
+      "country": "Philippines",
+      "type": "DEEP_WATER_PORT",
+      "role": "West Philippine Sea Outpost"
+    }
+  ],
+  "nuclear_command_silos": [
+    {
+      "wing": "341st Missile Wing",
+      "base": "Malmstrom AFB",
+      "lat": 47.5,
+      "lon": -111.18,
+      "icbm": "Minuteman III",
+      "count": 150
+    },
+    {
+      "wing": "91st Missile Wing",
+      "base": "Minot AFB",
+      "lat": 48.41,
+      "lon": -101.35,
+      "icbm": "Minuteman III",
+      "count": 150
+    },
+    {
+      "wing": "90th Missile Wing",
+      "base": "F.E. Warren AFB",
+      "lat": 41.14,
+      "lon": -104.86,
+      "icbm": "Minuteman III",
+      "count": 150
+    },
+    {
+      "wing": "Strategic Submarine Base",
+      "base": "Naval Submarine Base Kings Bay",
+      "lat": 30.79,
+      "lon": -81.56,
+      "slbm": "Trident II D5",
+      "class": "Ohio-class SSBN"
+    },
+    {
+      "wing": "Pacific SSBN Base",
+      "base": "Naval Base Kitsap (Bangor)",
+      "lat": 47.72,
+      "lon": -122.72,
+      "slbm": "Trident II D5",
+      "class": "Ohio-class SSBN"
+    }
+  ]
+}
