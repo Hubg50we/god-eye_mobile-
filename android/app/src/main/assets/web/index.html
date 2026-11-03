@@ -2954,6 +2954,76 @@
         // ==========================================
         
         // ==========================================
+        
+        // Triggered automatically when phone power/home button is pressed (ACTION_ASSIST / Siri / Gemini mode)
+        window.triggerAssistantSummon = function() {
+            triggerHaptic(60);
+            playSciFiBeep('alert');
+            speakAssistant("At your service, Sir. How may I assist you?");
+            if (!state.wakeWordActive) {
+                toggleWakeWordListener();
+            }
+        };
+
+        // Live Wikipedia Knowledge Fetcher (Siri / Gemini Knowledge Graph)
+        async function fetchInstantKnowledge(topic) {
+            try {
+                const clean = topic.trim().replace(/^\s*(?:who\s+is|what\s+is|tell\s+me\s+about|define|explain)\s+/i, '');
+                const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(clean)}`;
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.extract) {
+                        return data.extract;
+                    }
+                }
+            } catch (e) {
+                console.warn("[JARVIS-KNOWLEDGE] Fetch error:", e);
+            }
+            return null;
+        }
+
+        // Live Safe Math Evaluator
+        function evaluateSafeMath(expr) {
+            try {
+                let clean = expr.toLowerCase()
+                    .replace(/times|multiplied\s+by|x/gi, '*')
+                    .replace(/divided\s+by|over/gi, '/')
+                    .replace(/plus|and/gi, '+')
+                    .replace(/minus/gi, '-')
+                    .replace(/to\s+the\s+power\s+of/gi, '**')
+                    .replace(/percent\s+of/gi, '* 0.01 *')
+                    .replace(/square\s+root\s+of/gi, 'Math.sqrt')
+                    .replace(/[^0-9\+\-\*/\(\)\.\^Math\.sqrt\s]/g, '');
+
+                clean = clean.replace(/\^/g, '**');
+                const fn = new Function('return ' + clean);
+                const res = fn();
+                if (typeof res === 'number' && !isNaN(res)) {
+                    return res;
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // World Clock Map
+        const WORLD_CITIES = {
+            'tokyo': 'Asia/Tokyo',
+            'london': 'Europe/London',
+            'paris': 'Europe/Paris',
+            'new york': 'America/New_York',
+            'los angeles': 'America/Los_Angeles',
+            'chicago': 'America/Chicago',
+            'sydney': 'Australia/Sydney',
+            'dubai': 'Asia/Dubai',
+            'singapore': 'Asia/Singapore',
+            'hong kong': 'Asia/Hong_Kong',
+            'berlin': 'Europe/Berlin',
+            'toronto': 'America/Toronto',
+            'delhi': 'Asia/Kolkata',
+            'mumbai': 'Asia/Kolkata'
+        };
+
         // 9. OPENJARVIS ON-DEVICE AUTONOMOUS AGENT RUNTIME
         // Based on open-jarvis/OpenJarvis architecture
         // ==========================================
@@ -3368,6 +3438,67 @@
                 if (window.GodsEyeNative && typeof window.GodsEyeNative.makeCall === 'function') {
                     window.GodsEyeNative.makeCall(args.phone_number);
 
+        
+        jarvisTools.register(
+            "set_timer_alarm",
+            "Set a countdown timer in seconds or an alarm at a specific hour and minute.",
+            {
+                type: "object",
+                properties: {
+                    type: { type: "string", enum: ["timer", "alarm"] },
+                    seconds: { type: "number" },
+                    hour: { type: "number" },
+                    minute: { type: "number" },
+                    label: { type: "string" }
+                },
+                required: ["type"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative) {
+                    if (args.type === "timer" && typeof window.GodsEyeNative.setTimer === 'function') {
+                        window.GodsEyeNative.setTimer(args.seconds || 60, args.label || "Timer");
+                        return `Timer set for ${args.seconds} seconds`;
+                    } else if (args.type === "alarm" && typeof window.GodsEyeNative.setAlarm === 'function') {
+                        window.GodsEyeNative.setAlarm(args.hour || 8, args.minute || 0, args.label || "Alarm");
+                        return `Alarm scheduled for ${args.hour}:${args.minute}`;
+                    }
+                }
+                return `Scheduled ${args.type} (simulated)`;
+            }
+        );
+
+        jarvisTools.register(
+            "search_web",
+            "Search Google or the web for queries.",
+            {
+                type: "object",
+                properties: { query: { type: "string" } },
+                required: ["query"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.searchWeb === 'function') {
+                    window.GodsEyeNative.searchWeb(args.query);
+                    return `Searched web for "${args.query}"`;
+                }
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(args.query)}`, '_blank');
+                return `Opened search for "${args.query}"`;
+            }
+        );
+
+        jarvisTools.register(
+            "instant_knowledge_lookup",
+            "Retrieve verified world facts, biographies, definitions, or science concepts via live knowledge graph.",
+            {
+                type: "object",
+                properties: { query: { type: "string" } },
+                required: ["query"]
+            },
+            async (args) => {
+                const info = await fetchInstantKnowledge(args.query);
+                return info || `No instant knowledge summary found for ${args.query}`;
+            }
+        );
+
         jarvisTools.register(
             "adjust_volume",
             "Adjust mobile device audio volume. Action can be 'up', 'down', 'set', 'mute', or 'unmute'.",
@@ -3757,6 +3888,108 @@
                 let actionArgs = {};
                 let observation = "";
                 let reply = "";
+
+                                // 0.0 Siri & Gemini General Intelligence & Utilities
+                // Math & Calculations
+                if (/(?:what is|calculate|solve|how much is)\s+([0-9\.\s\+\-\*\/\^x]+|\d+\s*(?:times|divided by|plus|minus|percent of|square root of)\s*\d+)/i.test(lower)) {
+                    const mathQuery = lower.replace(/^(?:what is|calculate|solve|how much is)\s+/i, '');
+                    const mathRes = evaluateSafeMath(mathQuery);
+                    if (mathRes !== null) {
+                        thought = `Mathematical calculation requested: "${mathQuery}". Computed result: ${mathRes}.`;
+                        reply = `The result is ${mathRes}, Sir.`;
+                        return { thought, action: "evaluate_math", actionArgs: { query: mathQuery }, observation: String(mathRes), reply };
+                    }
+                }
+
+                // Timers
+                if (/(?:set\s+a\s+timer\s+for|timer\s+for)\s+([0-9]+)\s*(second|minute|hour|sec|min|hr)s?/i.test(lower)) {
+                    const match = lower.match(/(?:set\s+a\s+timer\s+for|timer\s+for)\s+([0-9]+)\s*(second|minute|hour|sec|min|hr)s?/i);
+                    const val = parseInt(match[1], 10);
+                    const unit = match[2];
+                    let seconds = val;
+                    if (unit.startsWith('min')) seconds = val * 60;
+                    else if (unit.startsWith('hour') || unit.startsWith('hr')) seconds = val * 3600;
+
+                    thought = `User requested timer for ${val} ${unit}(s). Dispatched to native Android AlarmClock.`;
+                    actionName = "set_timer_alarm";
+                    actionArgs = { type: "timer", seconds: seconds, label: `${val} ${unit} Timer` };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Timer set for ${val} ${unit}${val > 1 ? 's' : ''}, Sir. Counting down now.`;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // Alarms
+                if (/(?:set\s+(?:an\s+)?alarm\s+(?:for|at))\s+([0-9]{1,2})(?::([0-9]{2}))?\s*(am|pm)?/i.test(lower)) {
+                    const match = lower.match(/(?:set\s+(?:an\s+)?alarm\s+(?:for|at))\s+([0-9]{1,2})(?::([0-9]{2}))?\s*(am|pm)?/i);
+                    let hour = parseInt(match[1], 10);
+                    const minute = match[2] ? parseInt(match[2], 10) : 0;
+                    const ampm = match[3] ? match[3].toLowerCase() : null;
+                    if (ampm === 'pm' && hour < 12) hour += 12;
+                    else if (ampm === 'am' && hour === 12) hour = 0;
+
+                    thought = `User requested alarm set for ${hour}:${minute < 10 ? '0' + minute : minute}.`;
+                    actionName = "set_timer_alarm";
+                    actionArgs = { type: "alarm", hour: hour, minute: minute, label: "J.A.R.V.I.S. Alarm" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Alarm set for ${hour}:${minute < 10 ? '0' + minute : minute}, Sir.`;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // World Clock / Timezone
+                if (/(?:what\s+time\s+is\s+it\s+in|time\s+in)\s+([a-zA-Z\s]+)/i.test(lower)) {
+                    const city = lower.match(/(?:what\s+time\s+is\s+it\s+in|time\s+in)\s+([a-zA-Z\s]+)/i)[1].trim();
+                    const tz = WORLD_CITIES[city];
+                    if (tz) {
+                        const cityTime = new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+                        thought = `Timezone lookup for ${city} (${tz}).`;
+                        reply = `In ${city.toUpperCase()}, it is currently ${cityTime}, Sir.`;
+                        return { thought, action: "world_clock", actionArgs: { city, tz }, observation: cityTime, reply };
+                    }
+                }
+
+                // General Knowledge Queries (Who is, What is, Tell me about, Define)
+                if (/(?:who\s+is|what\s+is|tell\s+me\s+about|define|explain)\s+([a-zA-Z0-9\s\.\-]+)/i.test(lower) && !lower.includes('volume') && !lower.includes('battery') && !lower.includes('weather') && !lower.includes('flight') && !lower.includes('satellite')) {
+                    const query = lower.match(/(?:who\s+is|what\s+is|tell\s+me\s+about|define|explain)\s+([a-zA-Z0-9\s\.\-]+)/i)[1].trim();
+                    thought = `Querying live knowledge graph for "${query}".`;
+                    const summary = await fetchInstantKnowledge(query);
+                    if (summary) {
+                        const trimmedSummary = summary.split('. ').slice(0, 2).join('. ') + '.';
+                        reply = trimmedSummary;
+                        return { thought, action: "instant_knowledge_lookup", actionArgs: { query }, observation: trimmedSummary, reply };
+                    }
+                }
+
+                // Web Search
+                if (/(?:search\s+(?:for|the\s+web\s+for|google\s+for)?|google)\s+([a-zA-Z0-9\s\.\-]+)/i.test(lower)) {
+                    const q = lower.replace(/^(?:search\s+(?:for|the\s+web\s+for|google\s+for)?|google)\s+/i, '').trim();
+                    thought = `Dispatching web search for "${q}".`;
+                    actionName = "search_web";
+                    actionArgs = { query: q };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Searching the web for "${q}", Sir.`;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // Siri/Gemini Conversational Chit-Chat & Personality
+                if (/tell\s+me\s+a\s+joke/i.test(lower)) {
+                    const jokes = [
+                        "There are only 10 types of people in the world: those who understand binary, and those who don't.",
+                        "Why do programmers prefer dark mode? Because light attracts bugs, Sir.",
+                        "I asked the server for a witty joke, but it responded with a 404: humor not found.",
+                        "Artificial intelligence is no match for natural stupidity, Sir."
+                    ];
+                    reply = jokes[Math.floor(Math.random() * jokes.length)];
+                    return { thought: "User requested humor.", action: "chitchat", observation: "Joke returned", reply };
+                } else if (/who\s+created\s+you|who\s+made\s+you/i.test(lower)) {
+                    reply = "I was engineered as J.A.R.V.I.S. (Just A Rather Very Intelligent System)—an autonomous on-device AI operating on real-time neural weights, Sir.";
+                    return { thought: "Identity query.", action: "chitchat", observation: "Identity affirmed", reply };
+                } else if (/how\s+are\s+you|how're\s+you/i.test(lower)) {
+                    reply = "All neural networks, 3D Cesium Ion pipelines, and mobile hardware sensors are operating at peak efficiency, Sir.";
+                    return { thought: "Status query.", action: "chitchat", observation: "Nominal", reply };
+                } else if (/(?:good\s+morning|morning\s+jarvis)/i.test(lower)) {
+                    reply = "Good morning, Sir. All satellite networks and orbital sentinels are online and ready for deployment.";
+                    return { thought: "Greeting.", action: "chitchat", observation: "Greeting returned", reply };
+                }
 
                 // 0.1 Volume & Audio Hardware Mastery
                 if (/(?:volume|sound)\s+(?:to\s+)?([0-9]+)%?/i.test(lower)) {

@@ -36,6 +36,9 @@ import android.content.pm.ApplicationInfo;
 import android.hardware.camera2.CameraManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.provider.AlarmClock;
+import android.app.SearchManager;
+
 import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
@@ -61,6 +64,23 @@ public class MainActivity extends AppCompatActivity {
     private long backPressedTime = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
+    @Override
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleAssistIntent(intent);
+    }
+
+    private void handleAssistIntent(Intent intent) {
+        if (intent != null && (Intent.ACTION_ASSIST.equals(intent.getAction()) || Intent.ACTION_VOICE_COMMAND.equals(intent.getAction()))) {
+            if (webView != null) {
+                webView.evaluateJavascript("if (typeof triggerAssistantSummon === 'function') triggerAssistantSummon();", null);
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,6 +137,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+                        @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.postDelayed(() -> handleAssistIntent(getIntent()), 1000);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file:///")) {
@@ -743,9 +770,85 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+
+        @JavascriptInterface
+        public boolean setTimer(int seconds, String label) {
+            final int sec = Math.max(1, seconds);
+            final String msg = label != null ? label : "J.A.R.V.I.S. Timer";
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(AlarmClock.ACTION_SET_TIMER);
+                    intent.putExtra(AlarmClock.EXTRA_LENGTH, sec);
+                    intent.putExtra(AlarmClock.EXTRA_MESSAGE, msg);
+                    intent.putExtra(AlarmClock.EXTRA_SKIP_UI, false);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    Toast.makeText(context, "Timer set for " + sec + " seconds", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(context, "Timer error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean setAlarm(int hour, int minute, String label) {
+            final int h = Math.max(0, Math.min(23, hour));
+            final int m = Math.max(0, Math.min(59, minute));
+            final String msg = label != null ? label : "J.A.R.V.I.S. Alarm";
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
+                    intent.putExtra(AlarmClock.EXTRA_HOUR, h);
+                    intent.putExtra(AlarmClock.EXTRA_MINUTES, m);
+                    intent.putExtra(AlarmClock.EXTRA_MESSAGE, msg);
+                    intent.putExtra(AlarmClock.EXTRA_SKIP_UI, false);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    Toast.makeText(context, "Alarm set for " + String.format(Locale.US, "%02d:%02d", h, m), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(context, "Alarm error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean searchWeb(String query) {
+            if (query == null || query.trim().isEmpty()) return false;
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+                    intent.putExtra(SearchManager.QUERY, query.trim());
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Intent fallback = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=" + Uri.encode(query)));
+                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(fallback);
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean composeSms(String number, String message) {
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + (number != null ? number.trim() : "")));
+                    if (message != null) intent.putExtra("sms_body", message);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(context, "SMS error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
         @JavascriptInterface
         public String getAppVersion() {
-            return "2.4.0";
+            return "2.5.0";
         }
     }
 }
