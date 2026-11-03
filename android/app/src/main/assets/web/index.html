@@ -762,6 +762,80 @@
             box-shadow: 0 0 14px var(--cyan-glow);
         }
 
+    
+        /* J.A.R.V.I.S. Optical Vision Scanner Modal */
+        .jarvis-vision-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: monospace;
+        }
+        .jarvis-vision-video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.92;
+        }
+        .jarvis-vision-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .jarvis-vision-hud-bar {
+            position: absolute;
+            top: 16px; left: 16px; right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 30, 0.75);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #38bdf8;
+            font-size: 11px;
+            letter-spacing: 1px;
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+        .jarvis-vision-close-btn {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Tactical Cockpit Artificial Horizon Ribbon */
+        .cockpit-ribbon {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: rgba(6, 12, 24, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 20px;
+            padding: 6px 18px;
+            color: #38bdf8;
+            font-size: 10px;
+            font-family: monospace;
+            letter-spacing: 1.5px;
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+            align-items: center;
+            gap: 16px;
+        }
+        .cockpit-item { display: flex; align-items: center; gap: 4px; }
+        .cockpit-val { color: #f8fafc; font-weight: bold; }
+
     </style>
 </head>
 <body>
@@ -2955,6 +3029,213 @@
         
         // ==========================================
         
+        
+        // ==============================================================
+        // 11. ULTIMATE J.A.R.V.I.S. VISION SCANNER & METEOROLOGY ENGINE
+        // ==============================================================
+
+        let visionMediaStream = null;
+        let visionAnimationId = null;
+
+        async function startVisionScanner() {
+            const modal = document.getElementById('jarvisVisionModal');
+            const video = document.getElementById('jarvisVisionVideo');
+            const canvas = document.getElementById('jarvisVisionCanvas');
+            if (!modal || !video || !canvas) return "Vision HUD elements missing";
+
+            try {
+                visionMediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
+                });
+                video.srcObject = visionMediaStream;
+                modal.style.display = 'flex';
+
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const ctx = canvas.getContext('2d');
+
+                let frame = 0;
+                function drawScannerLoop() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const cx = canvas.width / 2;
+                    const cy = canvas.height / 2;
+                    frame++;
+
+                    // 1. Center Reticle & Lock Rings
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 60 + Math.sin(frame * 0.05) * 4, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Rotating segmented crosshairs
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(frame * 0.02);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
+                    ctx.setLineDash([12, 18]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 90, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Crosshair Ticks
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 30, cy); ctx.lineTo(cx - 8, cy);
+                    ctx.moveTo(cx + 8, cy); ctx.lineTo(cx + 30, cy);
+                    ctx.moveTo(cx, cy - 30); ctx.lineTo(cx, cy - 8);
+                    ctx.moveTo(cx, cy + 8); ctx.lineTo(cx, cy + 30);
+                    ctx.stroke();
+
+                    // Corner brackets
+                    const bSize = 80;
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                    ctx.lineWidth = 2;
+                    // Top-left
+                    ctx.strokeRect(30, 80, bSize, bSize);
+                    ctx.strokeRect(canvas.width - 30 - bSize, 80, bSize, bSize);
+                    ctx.strokeRect(30, canvas.height - 30 - bSize, bSize, bSize);
+                    ctx.strokeRect(canvas.width - 30 - bSize, canvas.height - 30 - bSize, bSize, bSize);
+
+                    // HUD telemetry text
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.font = '11px monospace';
+                    ctx.fillText(`OPTICAL FLIR: 60 FPS | LATENCY: 1.2ms`, 40, canvas.height - 40);
+                    ctx.fillText(`TARGET RANGE ESTIMATE: ${(2.4 + Math.sin(frame*0.03)*0.3).toFixed(2)}M`, cx - 80, cy + 120);
+
+                    visionAnimationId = requestAnimationFrame(drawScannerLoop);
+                }
+                drawScannerLoop();
+                playSciFiBeep('alert');
+                triggerHaptic(50);
+                return "Vision optical targeting visor engaged";
+            } catch (err) {
+                console.error("[JARVIS-VISION] Error:", err);
+                return "Failed to access optical sensor: " + err.message;
+            }
+        }
+
+        function stopVisionScanner() {
+            if (visionAnimationId) cancelAnimationFrame(visionAnimationId);
+            if (visionMediaStream) {
+                visionMediaStream.getTracks().forEach(t => t.stop());
+                visionMediaStream = null;
+            }
+            const modal = document.getElementById('jarvisVisionModal');
+            if (modal) modal.style.display = 'none';
+            playSciFiBeep('confirm');
+            triggerHaptic(30);
+            return "Vision optical visor disengaged";
+        }
+
+        // Live Open-Meteo Global Meteorology Engine
+        async function fetchLiveWeather(cityQuery = "") {
+            try {
+                let lat = 40.7128, lon = -74.0060, placeName = "New York";
+
+                if (cityQuery && cityQuery.trim().length > 0) {
+                    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityQuery)}&count=1&language=en&format=json`);
+                    if (geoRes.ok) {
+                        const geoData = await geoRes.json();
+                        if (geoData.results && geoData.results.length > 0) {
+                            lat = geoData.results[0].latitude;
+                            lon = geoData.results[0].longitude;
+                            placeName = `${geoData.results[0].name}, ${geoData.results[0].country || ''}`;
+                        }
+                    }
+                } else if (state.userGps) {
+                    lat = state.userGps.lat;
+                    lon = state.userGps.lon;
+                    placeName = "Current GPS Coordinates";
+                }
+
+                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&wind_speed_unit=mph&temperature_unit=celsius`);
+                if (wRes.ok) {
+                    const wData = await wRes.json();
+                    const c = wData.current;
+                    const wCodes = {
+                        0: "Clear skies", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+                        45: "Fog", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Moderate drizzle",
+                        61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain", 71: "Slight snow",
+                        95: "Thunderstorm"
+                    };
+                    const condition = wCodes[c.weather_code] || "Nominal atmospheric conditions";
+                    return `Meteorological conditions for ${placeName}: ${condition}, ${c.temperature_2m}°C (feels like ${c.apparent_temperature}°C). Humidity: ${c.relative_humidity_2m}%, Winds: ${c.wind_speed_10m} mph, Precipitation: ${c.precipitation} mm.`;
+                }
+            } catch (err) {
+                console.error("[JARVIS-WEATHER] Error:", err);
+            }
+            return "Unable to retrieve meteorological satellite stream at this time.";
+        }
+
+        // Tactical Cockpit Gyroscope & Horizon Ribbon
+        let cockpitActive = false;
+        function toggleCockpitGyro(forceState) {
+            cockpitActive = forceState !== undefined ? forceState : !cockpitActive;
+            const ribbon = document.getElementById('cockpitRibbon');
+            if (ribbon) ribbon.style.display = cockpitActive ? 'flex' : 'none';
+
+            if (cockpitActive) {
+                window.addEventListener('deviceorientation', handleOrientationUpdate);
+                window.addEventListener('devicemotion', handleMotionUpdate);
+                triggerHaptic(40);
+                return "Cockpit horizon ribbon online";
+            } else {
+                window.removeEventListener('deviceorientation', handleOrientationUpdate);
+                window.removeEventListener('devicemotion', handleMotionUpdate);
+                return "Cockpit horizon ribbon offline";
+            }
+        }
+
+        function handleOrientationUpdate(e) {
+            const hdgEl = document.getElementById('cockpitHdg');
+            const pitchEl = document.getElementById('cockpitPitch');
+            const rollEl = document.getElementById('cockpitRoll');
+
+            const alpha = e.alpha !== null ? Math.round(e.alpha) : 0;
+            const beta = e.beta !== null ? e.beta.toFixed(1) : '+00.0';
+            const gamma = e.gamma !== null ? e.gamma.toFixed(1) : '+00.0';
+
+            const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            const card = cardinals[Math.round(alpha / 45) % 8];
+
+            if (hdgEl) hdgEl.textContent = `${String(alpha).padStart(3, '0')}° ${card}`;
+            if (pitchEl) pitchEl.textContent = `${beta >= 0 ? '+' : ''}${beta}°`;
+            if (rollEl) rollEl.textContent = `${gamma >= 0 ? '+' : ''}${gamma}°`;
+        }
+
+        function handleMotionUpdate(e) {
+            const gEl = document.getElementById('cockpitG');
+            if (e.accelerationIncludingGravity && gEl) {
+                const ag = e.accelerationIncludingGravity;
+                const mag = Math.sqrt((ag.x||0)**2 + (ag.y||0)**2 + (ag.z||0)**2) / 9.80665;
+                gEl.textContent = `${mag.toFixed(2)} G`;
+            }
+        }
+
+        // Persistent Tactical Intel Notes
+        function saveIntelNote(text) {
+            if (!text) return "Empty note";
+            const notes = JSON.parse(localStorage.getItem('jarvis_intel_notes') || '[]');
+            notes.push({ text: text.trim(), time: new Date().toLocaleTimeString() });
+            localStorage.setItem('jarvis_intel_notes', JSON.stringify(notes));
+            return `Intel note archived: "${text.trim()}"`;
+        }
+
+        function getIntelNotes() {
+            const notes = JSON.parse(localStorage.getItem('jarvis_intel_notes') || '[]');
+            if (notes.length === 0) return "No tactical field notes recorded in local storage.";
+            return notes.map((n, i) => `[${i+1}] ${n.time}: ${n.text}`).join(' | ');
+        }
+
+        function clearIntelNotes() {
+            localStorage.removeItem('jarvis_intel_notes');
+            return "Tactical intel log purged.";
+        }
+
         // Triggered automatically when phone power/home button is pressed (ACTION_ASSIST / Siri / Gemini mode)
         window.triggerAssistantSummon = function() {
             triggerHaptic(60);
@@ -3439,6 +3720,65 @@
                     window.GodsEyeNative.makeCall(args.phone_number);
 
         
+        
+        jarvisTools.register(
+            "toggle_vision_scanner",
+            "Engage or disengage the real-time optical camera targeting visor.",
+            {
+                type: "object",
+                properties: { action: { type: "string", enum: ["start", "stop"] } },
+                required: ["action"]
+            },
+            async (args) => {
+                if (args.action === "start") return await startVisionScanner();
+                return stopVisionScanner();
+            }
+        );
+
+        jarvisTools.register(
+            "get_live_weather",
+            "Fetch real-time global meteorology (temperature, rain, winds, humidity) for any city or current location.",
+            {
+                type: "object",
+                properties: { city: { type: "string" } }
+            },
+            async (args) => {
+                return await fetchLiveWeather(args.city || "");
+            }
+        );
+
+        jarvisTools.register(
+            "toggle_cockpit_gyro",
+            "Engage or disengage real-time device orientation and artificial horizon cockpit ribbon.",
+            {
+                type: "object",
+                properties: { active: { type: "boolean" } },
+                required: ["active"]
+            },
+            async (args) => {
+                return toggleCockpitGyro(args.active);
+            }
+        );
+
+        jarvisTools.register(
+            "manage_intel_notes",
+            "Save, read, or clear persistent tactical intelligence field notes.",
+            {
+                type: "object",
+                properties: {
+                    action: { type: "string", enum: ["save", "read", "clear"] },
+                    text: { type: "string" }
+                },
+                required: ["action"]
+            },
+            async (args) => {
+                if (args.action === "save") return saveIntelNote(args.text);
+                if (args.action === "read") return getIntelNotes();
+                if (args.action === "clear") return clearIntelNotes();
+                return "Unknown intel note action";
+            }
+        );
+
         jarvisTools.register(
             "set_timer_alarm",
             "Set a countdown timer in seconds or an alarm at a specific hour and minute.",
@@ -3889,7 +4229,79 @@
                 let observation = "";
                 let reply = "";
 
-                                // 0.0 Siri & Gemini General Intelligence & Utilities
+                                                // 0.00 Optical Vision Scanner
+                if (/(?:scan\s+environment|analyze\s+target|engage\s+vision|open\s+vision|camera\s+scanner|targeting\s+visor)/i.test(lower)) {
+                    thought = "User commanded optical targeting visor engagement.";
+                    actionName = "toggle_vision_scanner";
+                    actionArgs = { action: "start" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Optical visor engaged, Sir. Analyzing visual spectrum.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                } else if (/(?:close\s+vision|stop\s+scanner|disengage\s+vision|exit\s+camera)/i.test(lower)) {
+                    thought = "User commanded optical visor shutdown.";
+                    actionName = "toggle_vision_scanner";
+                    actionArgs = { action: "stop" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Optical visor disengaged, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.000 Global Meteorology / Weather
+                if (/(?:weather|temperature|forecast|is\s+it\s+raining)\s*(?:in\s+([a-zA-Z\s]+)|here|today|now)?/i.test(lower) && !lower.includes('space weather')) {
+                    const match = lower.match(/(?:weather|temperature|forecast|is\s+it\s+raining)\s*(?:in\s+([a-zA-Z\s]+))?/i);
+                    const city = (match && match[1]) ? match[1].trim() : "";
+                    thought = `User queried live meteorological stream for ${city || 'current location'}.`;
+                    actionName = "get_live_weather";
+                    actionArgs = { city: city };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = observation;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.0000 Cockpit Gyroscope & Horizon
+                if (/(?:engage\s+flight\s+horizon|cockpit\s+mode|show\s+compass|engage\s+gyro)/i.test(lower)) {
+                    thought = "User commanded cockpit artificial horizon ribbon engagement.";
+                    actionName = "toggle_cockpit_gyro";
+                    actionArgs = { active: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Cockpit horizon telemetry online, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                } else if (/(?:disengage\s+flight\s+horizon|exit\s+cockpit|hide\s+compass|turn\s+off\s+gyro)/i.test(lower)) {
+                    thought = "User commanded cockpit horizon ribbon disengagement.";
+                    actionName = "toggle_cockpit_gyro";
+                    actionArgs = { active: false };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Cockpit telemetry disengaged, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.00000 Tactical Intel Field Notes
+                if (/(?:take\s+a\s+note|add\s+note|note\s+down)\s*:\s*(.+)/i.test(lower) || /(?:take\s+a\s+note|remember)\s+(.+)/i.test(lower)) {
+                    const match = lower.match(/(?:take\s+a\s+note|add\s+note|note\s+down)\s*:\s*(.+)/i) || lower.match(/(?:take\s+a\s+note|remember)\s+(.+)/i);
+                    const noteText = match[1].trim();
+                    thought = `User archiving tactical field note: "${noteText}".`;
+                    actionName = "manage_intel_notes";
+                    actionArgs = { action: "save", text: noteText };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Note recorded in secure local memory, Sir: "${noteText}"`;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                } else if (/(?:read\s+my\s+notes|list\s+notes|show\s+notes)/i.test(lower)) {
+                    thought = "User requested retrieval of tactical intel notes.";
+                    actionName = "manage_intel_notes";
+                    actionArgs = { action: "read" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Your archived tactical notes, Sir: ${observation}`;
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                } else if (/(?:clear\s+my\s+notes|purge\s+notes|delete\s+notes)/i.test(lower)) {
+                    thought = "User commanded purge of tactical notes.";
+                    actionName = "manage_intel_notes";
+                    actionArgs = { action: "clear" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Tactical field notes purged, Sir.";
+                    return { thought, action: actionName, actionArgs, observation, reply };
+                }
+
+                // 0.0 Siri & Gemini General Intelligence & Utilities
                 // Math & Calculations
                 if (/(?:what is|calculate|solve|how much is)\s+([0-9\.\s\+\-\*\/\^x]+|\d+\s*(?:times|divided by|plus|minus|percent of|square root of)\s*\d+)/i.test(lower)) {
                     const mathQuery = lower.replace(/^(?:what is|calculate|solve|how much is)\s+/i, '');
