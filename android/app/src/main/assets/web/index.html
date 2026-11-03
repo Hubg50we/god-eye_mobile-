@@ -3367,6 +3367,108 @@
             async (args) => {
                 if (window.GodsEyeNative && typeof window.GodsEyeNative.makeCall === 'function') {
                     window.GodsEyeNative.makeCall(args.phone_number);
+
+        jarvisTools.register(
+            "adjust_volume",
+            "Adjust mobile device audio volume. Action can be 'up', 'down', 'set', 'mute', or 'unmute'.",
+            {
+                type: "object",
+                properties: {
+                    action: { type: "string", enum: ["up", "down", "set", "mute", "unmute"] },
+                    percent: { type: "number", description: "0-100 when action is 'set'" }
+                },
+                required: ["action"]
+            },
+            async (args) => {
+                if (!window.GodsEyeNative) return "Simulated volume adjusted: " + args.action;
+                if (args.action === "up") return window.GodsEyeNative.adjustVolume(1);
+                if (args.action === "down") return window.GodsEyeNative.adjustVolume(-1);
+                if (args.action === "mute") return window.GodsEyeNative.muteAudio(true);
+                if (args.action === "unmute") return window.GodsEyeNative.muteAudio(false);
+                if (args.action === "set") return window.GodsEyeNative.setVolume(args.percent || 50);
+                return "Unknown volume action";
+            }
+        );
+
+        jarvisTools.register(
+            "get_device_telemetry",
+            "Read live mobile battery, temperature, voltage, and hardware system diagnostics (RAM, storage, uptime, model).",
+            {
+                type: "object",
+                properties: {
+                    scope: { type: "string", enum: ["battery", "system", "all"] }
+                }
+            },
+            async (args) => {
+                let report = "";
+                if (window.GodsEyeNative) {
+                    if (args.scope !== "system" && typeof window.GodsEyeNative.getBatteryStatus === 'function') {
+                        try {
+                            const b = JSON.parse(window.GodsEyeNative.getBatteryStatus());
+                            report += `Battery: ${b.level}% (${b.isCharging ? 'Charging' : 'Discharging'}), Temp: ${b.temperatureC}C, Health: ${b.health}. `;
+                        } catch(e) {}
+                    }
+                    if (args.scope !== "battery" && typeof window.GodsEyeNative.getSystemDiagnostics === 'function') {
+                        try {
+                            const s = JSON.parse(window.GodsEyeNative.getSystemDiagnostics());
+                            report += `Device: ${s.deviceModel} (Android ${s.androidVersion}), RAM: ${s.freeRamGB}GB free / ${s.totalRamGB}GB, Storage: ${s.freeStorageGB}GB free / ${s.totalStorageGB}GB, Uptime: ${s.uptimeHours} hrs.`;
+                        } catch(e) {}
+                    }
+                }
+                return report || "Device diagnostics telemetry nominal (simulated).";
+            }
+        );
+
+        jarvisTools.register(
+            "trigger_tactical_haptic",
+            "Trigger custom tactical vibration patterns on device hardware (pulse, double, alert, reactor).",
+            {
+                type: "object",
+                properties: { pattern: { type: "string" } }
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.triggerTacticalHaptic === 'function') {
+                    window.GodsEyeNative.triggerTacticalHaptic(args.pattern || "pulse");
+                    return `Tactical haptic [${args.pattern}] executed`;
+                }
+                return "Haptic simulated";
+            }
+        );
+
+        jarvisTools.register(
+            "open_system_setting",
+            "Open native Android settings screens: 'wifi', 'bluetooth', 'display', 'sound', 'airplane', 'battery', 'apps'.",
+            {
+                type: "object",
+                properties: { setting_type: { type: "string" } },
+                required: ["setting_type"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.openSystemSetting === 'function') {
+                    window.GodsEyeNative.openSystemSetting(args.setting_type);
+                    return `Navigated to ${args.setting_type} settings`;
+                }
+                return `Opened settings for ${args.setting_type} (browser fallback)`;
+            }
+        );
+
+        jarvisTools.register(
+            "toggle_screen_awake",
+            "Keep the mobile screen awake continuously without locking or allow normal timeout.",
+            {
+                type: "object",
+                properties: { awake: { type: "boolean" } },
+                required: ["awake"]
+            },
+            async (args) => {
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenAwake === 'function') {
+                    window.GodsEyeNative.setKeepScreenAwake(!!args.awake);
+                    return `Screen awake state: ${args.awake ? 'LOCKED_ON' : 'NORMAL'}`;
+                }
+                return `Screen awake toggled to ${args.awake}`;
+            }
+        );
+
                     return `Dialer opened for ${args.phone_number}`;
                 }
                 return `Dialer fallback: tel:${args.phone_number}`;
@@ -3656,7 +3758,76 @@
                 let observation = "";
                 let reply = "";
 
-                // 0. Mobile Device Full Control (Open YouTube, Maps, Camera, Flashlight, Calls)
+                // 0.1 Volume & Audio Hardware Mastery
+                if (/(?:volume|sound)\s+(?:to\s+)?([0-9]+)%?/i.test(lower)) {
+                    const pct = parseInt(lower.match(/(?:volume|sound)\s+(?:to\s+)?([0-9]+)%?/i)[1], 10);
+                    thought = `User requested master volume set to ${pct}%. Dispatched to AudioManager.`;
+                    actionName = "adjust_volume";
+                    actionArgs = { action: "set", percent: pct };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Volume adjusted to ${pct}%, Sir.`;
+                } else if (/(?:raise|increase|turn up|louder)\s+(?:the\s+)?(?:volume|sound)|volume up/i.test(lower)) {
+                    thought = "User requested volume increase.";
+                    actionName = "adjust_volume";
+                    actionArgs = { action: "up" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Increasing master volume, Sir.";
+                } else if (/(?:lower|decrease|turn down|quieter)\s+(?:the\s+)?(?:volume|sound)|volume down/i.test(lower)) {
+                    thought = "User requested volume reduction.";
+                    actionName = "adjust_volume";
+                    actionArgs = { action: "down" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Lowering master volume, Sir.";
+                } else if (/mute\s+(?:audio|sound|volume)|silence audio/i.test(lower)) {
+                    thought = "User requested audio mute.";
+                    actionName = "adjust_volume";
+                    actionArgs = { action: "mute" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Audio muted, Sir.";
+                } else if (/unmute\s+(?:audio|sound|volume)/i.test(lower)) {
+                    thought = "User requested audio unmute.";
+                    actionName = "adjust_volume";
+                    actionArgs = { action: "unmute" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Audio unmuted, Sir.";
+                } else if (/(?:battery|power|charge)\s*(?:level|status|health|percentage|report)?/i.test(lower) && !lower.includes('flight')) {
+                    thought = "User requested live battery telemetry.";
+                    actionName = "get_device_telemetry";
+                    actionArgs = { scope: "battery" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Battery diagnostics: ${observation}`;
+                } else if (/(?:system|device|phone|hardware)\s*(?:diagnostic|diagnostics|specs|health|stats|memory|ram|storage)/i.test(lower)) {
+                    thought = "User requested hardware and memory diagnostics.";
+                    actionName = "get_device_telemetry";
+                    actionArgs = { scope: "system" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Hardware diagnostics: ${observation}`;
+                } else if (/(?:open|show)\s+(wifi|wi-fi|bluetooth|display|sound|airplane|battery|apps)\s+(?:settings)?/i.test(lower)) {
+                    const targetSetting = lower.match(/(?:open|show)\s+(wifi|wi-fi|bluetooth|display|sound|airplane|battery|apps)/i)[1];
+                    thought = `User requested navigation to ${targetSetting} system settings.`;
+                    actionName = "open_system_setting";
+                    actionArgs = { setting_type: targetSetting };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Opening Android ${targetSetting.toUpperCase()} settings, Sir.`;
+                } else if (/(?:keep|lock)\s+screen\s+awake/i.test(lower)) {
+                    thought = "User commanded display wake lock.";
+                    actionName = "toggle_screen_awake";
+                    actionArgs = { awake: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Display wake lock engaged. The screen will remain illuminated, Sir.";
+                } else if (/(?:allow|restore)\s+screen\s+(?:sleep|timeout)/i.test(lower)) {
+                    thought = "User restored normal screen sleep.";
+                    actionName = "toggle_screen_awake";
+                    actionArgs = { awake: false };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Normal screen timeout parameters restored, Sir.";
+                } else if (/(?:pulse|vibrate|test haptic|reactor pulse)/i.test(lower)) {
+                    thought = "User requested tactical haptic resonance.";
+                    actionName = "trigger_tactical_haptic";
+                    actionArgs = { pattern: lower.includes('reactor') ? 'reactor' : 'alert' };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Tactical haptic resonance delivered, Sir.";
+                } else                 // 0. Mobile Device Full Control (Open YouTube, Maps, Camera, Flashlight, Calls)
                 if (/(?:open|launch|start|run)\s+(?:the\s+)?(youtube|yt|maps|google maps|camera|chrome|browser|spotify|music|whatsapp|calculator|settings|gmail|email|play store|store|photos|gallery|[a-zA-Z0-9_\.-]+)/i.test(lower)) {
                     const match = lower.match(/(?:open|launch|start|run)\s+(?:the\s+)?(youtube|yt|maps|google maps|camera|chrome|browser|spotify|music|whatsapp|calculator|settings|gmail|email|play store|store|photos|gallery|[a-zA-Z0-9_\.-]+)/i);
                     const appTarget = match[1].trim();

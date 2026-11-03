@@ -36,6 +36,18 @@ import android.content.pm.ApplicationInfo;
 import android.hardware.camera2.CameraManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.media.AudioManager;
+import android.os.BatteryManager;
+import android.content.IntentFilter;
+import android.app.ActivityManager;
+import android.os.StatFs;
+import android.os.Environment;
+import android.os.SystemClock;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import androidx.core.app.NotificationCompat;
+import org.json.JSONObject;
+
 import java.util.List;
 
 import java.util.ArrayList;
@@ -451,9 +463,289 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+
+        @JavascriptInterface
+        public String setVolume(int percent) {
+            final int pct = Math.max(0, Math.min(100, percent));
+            try {
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (am != null) {
+                    int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int targetVol = (int) Math.round((maxVol * pct) / 100.0);
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, AudioManager.FLAG_SHOW_UI);
+                    return "Volume set to " + pct + "% (level " + targetVol + "/" + maxVol + ")";
+                }
+            } catch (Exception e) {
+                return "Volume error: " + e.getMessage();
+            }
+            return "Audio service unavailable";
+        }
+
+        @JavascriptInterface
+        public String adjustVolume(int direction) {
+            try {
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (am != null) {
+                    int dir = direction > 0 ? AudioManager.ADJUST_RAISE : (direction < 0 ? AudioManager.ADJUST_LOWER : AudioManager.ADJUST_SAME);
+                    am.adjustStreamVolume(AudioManager.STREAM_MUSIC, dir, AudioManager.FLAG_SHOW_UI);
+                    int cur = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    int max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int pct = Math.round((cur * 100.0f) / max);
+                    return "Volume adjusted: " + pct + "%";
+                }
+            } catch (Exception e) {
+                return "Adjust error: " + e.getMessage();
+            }
+            return "Volume unchanged";
+        }
+
+        @JavascriptInterface
+        public String muteAudio(boolean mute) {
+            try {
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (am != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        am.adjustStreamVolume(AudioManager.STREAM_MUSIC, mute ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE, AudioManager.FLAG_SHOW_UI);
+                    } else {
+                        am.setStreamMute(AudioManager.STREAM_MUSIC, mute);
+                    }
+                    return mute ? "Audio muted" : "Audio unmuted";
+                }
+            } catch (Exception e) {
+                return "Mute error: " + e.getMessage();
+            }
+            return "Audio state unchanged";
+        }
+
+        @JavascriptInterface
+        public String getBatteryStatus() {
+            try {
+                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent b = registerReceiver(null, ifilter);
+                if (b != null) {
+                    int level = b.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                    int scale = b.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                    int status = b.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                    int temp = b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                    int voltage = b.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+                    int health = b.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+
+                    boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                                         status == BatteryManager.BATTERY_STATUS_FULL;
+                    float pct = (level * 100.0f) / scale;
+                    float tempC = temp / 10.0f;
+                    float voltV = voltage / 1000.0f;
+
+                    String healthStr = "Good";
+                    if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT) healthStr = "Overheat";
+                    else if (health == BatteryManager.BATTERY_HEALTH_DEAD) healthStr = "Dead";
+                    else if (health == BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE) healthStr = "Over Voltage";
+
+                    JSONObject json = new JSONObject();
+                    json.put("level", Math.round(pct));
+                    json.put("isCharging", isCharging);
+                    json.put("temperatureC", tempC);
+                    json.put("voltageV", voltV);
+                    json.put("health", healthStr);
+                    return json.toString();
+                }
+            } catch (Exception e) {
+                return "{\"error\": \"" + e.getMessage() + "\"}";
+            }
+            return "{\"level\": 100, \"isCharging\": false, \"health\": \"Unknown\"}";
+        }
+
+        @JavascriptInterface
+        public String getSystemDiagnostics() {
+            try {
+                ActivityManager actManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+                if (actManager != null) {
+                    actManager.getMemoryInfo(memInfo);
+                }
+
+                StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
+                long blockSize = stat.getBlockSizeLong();
+                long totalBlocks = stat.getBlockCountLong();
+                long availableBlocks = stat.getAvailableBlocksLong();
+
+                double totalStorageGB = (totalBlocks * blockSize) / (1024.0 * 1024.0 * 1024.0);
+                double freeStorageGB = (availableBlocks * blockSize) / (1024.0 * 1024.0 * 1024.0);
+                double totalRamGB = memInfo.totalMem / (1024.0 * 1024.0 * 1024.0);
+                double freeRamGB = memInfo.availMem / (1024.0 * 1024.0 * 1024.0);
+                double uptimeHours = SystemClock.elapsedRealtime() / (1000.0 * 3600.0);
+
+                JSONObject json = new JSONObject();
+                json.put("deviceModel", Build.MANUFACTURER.toUpperCase() + " " + Build.MODEL);
+                json.put("androidVersion", Build.VERSION.RELEASE);
+                json.put("sdkInt", Build.VERSION.SDK_INT);
+                json.put("totalRamGB", Math.round(totalRamGB * 10.0) / 10.0);
+                json.put("freeRamGB", Math.round(freeRamGB * 10.0) / 10.0);
+                json.put("ramUsagePct", Math.round(((memInfo.totalMem - memInfo.availMem) * 100.0) / memInfo.totalMem));
+                json.put("totalStorageGB", Math.round(totalStorageGB * 10.0) / 10.0);
+                json.put("freeStorageGB", Math.round(freeStorageGB * 10.0) / 10.0);
+                json.put("uptimeHours", Math.round(uptimeHours * 10.0) / 10.0);
+                return json.toString();
+            } catch (Exception e) {
+                return "{\"error\": \"" + e.getMessage() + "\"}";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean triggerTacticalHaptic(String pattern) {
+            runOnUiThread(() -> {
+                try {
+                    Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    if (v != null && v.hasVibrator()) {
+                        String p = (pattern == null ? "pulse" : pattern).toLowerCase();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (p.equals("double")) {
+                                long[] timings = {0, 40, 60, 40};
+                                int[] amplitudes = {0, 200, 0, 255};
+                                v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
+                            } else if (p.equals("alert")) {
+                                long[] timings = {0, 80, 50, 150};
+                                int[] amplitudes = {0, 255, 0, 255};
+                                v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
+                            } else if (p.equals("reactor")) {
+                                long[] timings = {0, 30, 40, 30, 40, 50};
+                                int[] amplitudes = {0, 150, 0, 200, 0, 255};
+                                v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
+                            } else {
+                                v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+                            }
+                        } else {
+                            v.vibrate(60);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean openSystemSetting(String settingType) {
+            final String target = settingType == null ? "general" : settingType.toLowerCase().trim();
+            runOnUiThread(() -> {
+                try {
+                    Intent intent;
+                    if (target.contains("wifi") || target.contains("wi-fi")) {
+                        intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                    } else if (target.contains("bluetooth")) {
+                        intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    } else if (target.contains("display") || target.contains("screen") || target.contains("brightness")) {
+                        intent = new Intent(Settings.ACTION_DISPLAY_SETTINGS);
+                    } else if (target.contains("sound") || target.contains("audio") || target.contains("volume")) {
+                        intent = new Intent(Settings.ACTION_SOUND_SETTINGS);
+                    } else if (target.contains("airplane")) {
+                        intent = new Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS);
+                    } else if (target.contains("battery") || target.contains("power")) {
+                        intent = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
+                    } else if (target.contains("app")) {
+                        intent = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
+                    } else {
+                        intent = new Intent(Settings.ACTION_SETTINGS);
+                    }
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(context, "Could not open settings: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean copyToClipboard(String text) {
+            if (text == null) return false;
+            runOnUiThread(() -> {
+                try {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        ClipData clip = ClipData.newPlainText("JARVIS", text);
+                        cm.setPrimaryClip(clip);
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public String readFromClipboard() {
+            try {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null && cm.hasPrimaryClip() && cm.getPrimaryClip().getItemCount() > 0) {
+                    CharSequence text = cm.getPrimaryClip().getItemAt(0).getText();
+                    if (text != null) return text.toString();
+                }
+            } catch (Exception ignored) {}
+            return "";
+        }
+
+        @JavascriptInterface
+        public boolean setKeepScreenAwake(boolean awake) {
+            runOnUiThread(() -> {
+                try {
+                    if (awake) {
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        Toast.makeText(context, "J.A.R.V.I.S.: Screen awake locked", Toast.LENGTH_SHORT).show();
+                    } else {
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        Toast.makeText(context, "J.A.R.V.I.S.: Normal screen sleep restored", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean setScreenBrightness(float brightness) {
+            final float b = Math.max(0.01f, Math.min(1.0f, brightness));
+            runOnUiThread(() -> {
+                try {
+                    WindowManager.LayoutParams lp = getWindow().getAttributes();
+                    lp.screenBrightness = b;
+                    getWindow().setAttributes(lp);
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean postSystemNotification(String title, String message) {
+            runOnUiThread(() -> {
+                try {
+                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    String channelId = "jarvis_sentinel_channel";
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && nm != null) {
+                        NotificationChannel channel = new NotificationChannel(
+                            channelId,
+                            "J.A.R.V.I.S. Sentinel Alerts",
+                            NotificationManager.IMPORTANCE_HIGH
+                        );
+                        channel.setDescription("Tactical alert notifications from J.A.R.V.I.S. OS");
+                        nm.createNotificationChannel(channel);
+                    }
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setContentTitle(title != null ? title : "J.A.R.V.I.S. Tactical Sentinel")
+                        .setContentText(message != null ? message : "Alert dispatched")
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true);
+
+                    if (nm != null) {
+                        nm.notify((int) System.currentTimeMillis(), builder.build());
+                    }
+                } catch (Exception ignored) {}
+            });
+            return true;
+        }
+
         @JavascriptInterface
         public String getAppVersion() {
-            return "2.3.0";
+            return "2.4.0";
         }
     }
 }
