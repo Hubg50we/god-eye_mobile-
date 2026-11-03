@@ -920,7 +920,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public String getAppVersion() {
-            return "2.6.1";
+            return "2.7.0";
         }
     }
 }

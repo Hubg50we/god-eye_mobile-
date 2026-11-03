@@ -4166,19 +4166,94 @@
                 const ollamaModel = localStorage.getItem('gev_ollama_model') || 'llama3.2:3b';
                 const apiKey = localStorage.getItem('gev_llm_key') || '';
 
-                // If remote or local Ollama SLM is configured, attempt connection
+                // If remote or custom Ollama SLM is configured, attempt connection
                 if (ollamaUrl) {
                     try {
                         const remoteResult = await this._queryOllamaLLM(ollamaUrl, ollamaModel, apiKey, userPrompt);
                         if (remoteResult) return remoteResult;
                     } catch (e) {
-                        console.warn("[JARVIS] Ollama endpoint unreachable. Falling back to On-Device ReAct:", e);
+                        console.warn("[JARVIS] Custom Ollama unreachable. Proceeding with Built-in AI:", e);
                     }
                 }
 
-                // Autonomous On-Device ReAct Loop
+                // First pass: Check for direct fast-path hardware/app/tactical control actions
+                const lower = userPrompt.toLowerCase();
+                const isDirectSystemCmd = /(?:open|launch|start|run|close|turn on|turn off|volume|flashlight|battery|system|diagnostic|weather|scan|camera|timer|alarm|haptic|compass|cockpit|flight|quake|satellite|iss|volcano|fleet|flir|nvg|protocol|clear|purge|fly to|locate)/i.test(lower);
+
+                if (isDirectSystemCmd) {
+                    // Execute fast-path hardware/tactical action immediately
+                    return await this._runOnDeviceReAct(userPrompt);
+                }
+
+                // For conversational, reasoning, analytical, knowledge, or creative queries:
+                // Query Built-in Free Frontier Model (dsh-our-free-model zero-config gateway)
+                const frontierReply = await this._queryFrontierAI(userPrompt);
+                if (frontierReply) {
+                    return frontierReply;
+                }
+
+                // Offline fallback: On-Device Local Transformer SLM & Knowledge Graph
                 return await this._runOnDeviceReAct(userPrompt);
             }
+
+            async _queryFrontierAI(prompt) {
+                const preferredModel = localStorage.getItem('gev_ai_model') || 'kilo-auto/free';
+                if (preferredModel === 'local_slm_only') return null;
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8500);
+
+                    const res = await fetch('https://api.kilo.ai/api/gateway/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'application/json',
+                            'user-agent': 'dsh-our-free-model'
+                        },
+                        body: JSON.stringify({
+                            model: preferredModel,
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), Tony Stark's personal AI operating system. 
+You are addressing the Commander with utmost sophistication, wit, and tactical precision.
+Live Telemetry: Earth 3D Cesium Ion active, Space Weather nominal, Airspace active.
+Provide helpful, brilliant, concise responses in character (2 to 4 sentences maximum).`
+                                },
+                                ...this.memory.history.slice(-4).map(h => ({
+                                    role: h.role === 'agent' ? 'assistant' : 'user',
+                                    content: h.content
+                                })),
+                                { role: 'user', content: prompt }
+                            ],
+                            stream: false
+                        }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                            const content = data.choices[0].message.content.trim();
+                            const modelTag = data.model ? data.model.split('/').pop() : 'Frontier Free';
+                            const badge = document.getElementById('slmPerfBadge');
+                            if (badge) badge.textContent = `\U0001f9e0 BUILT-IN FRONTIER AI: ${modelTag} \u2022 100% Free`;
+                            return {
+                                thought: `Processed via Built-in Frontier AI (${modelTag}) from dsh-our-free-model gateway with zero keys.`,
+                                action: "frontier_inference",
+                                actionArgs: { model: modelTag },
+                                observation: "Frontier reasoning successful",
+                                reply: content
+                            };
+                        }
+                    }
+                } catch (err) {
+                    console.warn("[JARVIS-FRONTIER] Free gateway unreachable or offline. Falling back to On-Device SLM:", err.message);
+                }
+                return null;
+            }
+
 
             async _queryOllamaLLM(url, model, apiKey, prompt) {
                 const headers = { 'Content-Type': 'application/json' };
@@ -4687,10 +4762,14 @@
                     const b = jarvisLocalSLM.benchmark(120);
                     reply = `On-Device Transformer SLM Benchmark: Processing at ${b.tokensPerSec.toLocaleString()} tokens/second with ${b.perTokenMs}ms latency per token across ${b.paramCount.toLocaleString()} Float32 parameters. 100% offline neural inference operational, Sir.`;
                 }
-                // General Conversational Fallback
+                // General Conversational Fallback: Query Built-in Frontier AI
                 else {
-                    thought = "User inquiry received. Formulating comprehensive J.A.R.V.I.S. tactical response.";
-                    reply = `Certainly, Sir. I have received your instruction: "${prompt}". The 3D planetary picture is live. You can command me to execute Iron Man protocols, fly to any location, check volcanoes or carrier battle groups, or run the morning tactical digest.`;
+                    const frontierResult = await this._queryFrontierAI(prompt);
+                    if (frontierResult) {
+                        return frontierResult;
+                    }
+                    thought = "User inquiry received. Formulating local on-device J.A.R.V.I.S. response.";
+                    reply = `Certainly, Sir. I have received your instruction: "${prompt}". All planetary surveillance arrays and local neural weights are active. You can command me to execute Iron Man protocols, control mobile hardware, scan the environment, or check global weather.`;
                 }
 
                 return { thought, action: actionName, actionArgs, observation, reply };
