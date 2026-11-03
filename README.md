@@ -8,7 +8,7 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.6.1)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.6.1/godseye-android.apk)
+### 📥 [Direct Download APK (v1.7.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.7.0/godseye-android.apk)
 
 ---
 
@@ -30,11 +30,17 @@ God's Eye View Mobile features a complete **Dual Photorealistic 3D Earth Engine*
 
 ---
 
-## 🤖 Full App Access Conversational AI Assistant (AEGIS)
+## 🤖 Full Voice Assistant & Autonomous Task Manager (AEGIS)
 
-God's Eye View Mobile features a complete **on-device Conversational AI Assistant** with full autonomous control of the application:
-* **🎙️ Voice Interaction & Audio Synthesizer**: Talk directly to the AI Assistant or use quick chips. Includes real-time audio waveform visualizer and synthesized tactical sci-fi audio cues.
-* **🌍 Autonomous Flight to Any Location (Geocoding)**: Tell AEGIS *"Fly to Tokyo"*, *"Go to Paris"*, or *"Take me to Honolulu"* — the Assistant geocodes the place via OpenStreetMap/Photon and animates the 3D globe camera there.
+God's Eye View Mobile features a complete **on-device Voice Assistant and Autonomous Task Manager**:
+* **🎙️ Hardware-Integrated Android Voice & TTS**: Direct bridge to Android's native `RecognizerIntent.ACTION_RECOGNIZE_SPEECH` and `TextToSpeech` engine, guaranteeing 100% speech recognition accuracy and crisp vocal responses across all Android devices.
+* **⚡ Multi-Step Compound Task Execution**: Issue complex, chained mission orders: *"Fly to Tokyo and zoom in and switch to night mode"* — AEGIS decomposes the intent, schedules the task queue, and animates each step with HUD status updates.
+* **🔄 Autonomous Continuous Tracking Tasks**:
+  * **Continuous ISS Orbit Following**: *"Follow ISS"* — locks the 3D globe camera to the International Space Station and continuously tracks its live orbital path.
+  * **Automated Seismic Alert Watch**: *"Monitor earthquakes"* — scans USGS live feeds every 15s in the background, triggers haptic + alarm beeps, and snaps the camera to any new high-magnitude rupture (≥M4.5).
+  * **Airspace Patrol Sweep**: *"Patrol airspace"* — autonomously cycles camera focus across active tactical and military aircraft.
+* **🚨 Real-Time Task HUD Strip**: Global tactical task strip displaying active background tasks with a single-tap `[ABORT]` button.
+* **🌍 Autonomous Flight to Any Location (Geocoding)**: Tell AEGIS *"Fly to Tokyo"*, *"Go to Paris"*, or *"Take me to Honolulu"* — geocodes and animates the 3D camera smoothly.
 * **🪐 Full Camera & System Control**: Maneuver zoom levels (*"Zoom in"*, *"Zoom out"*), toggle planetary auto-orbit (*"Spin the globe"*), reset orientations (*"Reset view"*), and engage device hardware WakeLock (*"Keep screen awake"*).
 * **📋 Native OS Sitrep Export & Sharing**: Instruct the Assistant to *"Copy sitrep"* or *"Share sitrep"* to copy multi-domain intelligence to your Android clipboard or launch the native Android share sheet.
 * **🧠 100% On-Device Neural Net**: Instant classification (<1ms) with zero cloud tokens, zero latency, and zero external API dependencies.

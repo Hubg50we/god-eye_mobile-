@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
+import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.GeolocationPermissions;
@@ -30,9 +32,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
+    private TextToSpeech tts;
+    private static final int SPEECH_REQUEST_CODE = 202;
     private long backPressedTime = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -42,6 +49,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Keep screen awake for tactical operations
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // Initialize Native Android TextToSpeech Engine
+        try {
+            tts = new TextToSpeech(this, status -> {
+                if (status == TextToSpeech.SUCCESS && tts != null) {
+                    tts.setLanguage(Locale.US);
+                    tts.setSpeechRate(1.02f);
+                }
+            });
+        } catch (Exception ignored) {}
 
         // Fullscreen immersive mode
         hideSystemUI();
@@ -140,10 +157,28 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
         if (webView != null) {
             webView.destroy();
         }
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (matches != null && !matches.isEmpty()) {
+                String spokenText = matches.get(0).replace("'", "\\'");
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onNativeSpeechResult) window.onNativeSpeechResult('" + spokenText + "');", null);
+                }
+            }
+        }
     }
 
     private void hideSystemUI() {
@@ -254,8 +289,44 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public void startVoiceListening() {
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
+                    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "AEGIS Tactical Voice Assistant");
+                    startActivityForResult(intent, SPEECH_REQUEST_CODE);
+                } catch (Exception e) {
+                    Toast.makeText(context, "Voice input: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    if (webView != null) {
+                        webView.evaluateJavascript("if (window.onNativeSpeechError) window.onNativeSpeechError('" + e.getMessage().replace("'", "\\'") + "');", null);
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void speakText(String text) {
+            runOnUiThread(() -> {
+                if (tts != null) {
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "GEV_TTS");
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stopSpeaking() {
+            runOnUiThread(() -> {
+                if (tts != null) {
+                    tts.stop();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public String getAppVersion() {
-            return "1.6.1";
+            return "1.7.0";
         }
     }
 }

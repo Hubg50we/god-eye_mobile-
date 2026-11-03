@@ -662,6 +662,13 @@
         </div>
     </header>
 
+    <!-- Global Active Task HUD Strip -->
+    <div id="hudTaskStrip" style="display:none; position:fixed; top:54px; left:50%; transform:translateX(-50%); z-index:30; background:rgba(15,23,42,0.92); border:1px solid var(--purple); border-radius:20px; padding:4px 12px; gap:8px; align-items:center; box-shadow:0 0 14px rgba(168,85,247,0.4); backdrop-filter:blur(8px);">
+        <span class="live-dot" style="background:#a855f7;"></span>
+        <span id="hudTaskText" style="font-family:var(--font-mono); font-size:10px; color:#e9d5ff; font-weight:bold;">TASK: Scanning</span>
+        <button onclick="cancelActiveTask()" style="background:#ef4444; color:#fff; border:none; border-radius:12px; padding:2px 8px; font-size:9px; font-weight:bold; cursor:pointer;">ABORT</button>
+    </div>
+
     <!-- Floating Interactive AI Assistant Orb Button -->
     <div class="ai-assistant-fab" onclick="openAssistant()">
         <div class="ai-orb-ring"></div>
@@ -742,18 +749,28 @@
                 <canvas id="audioWaveCanvas"></canvas>
             </div>
 
+            <!-- Active Task Status Card in Assistant Drawer -->
+            <div id="activeTaskBanner" style="display:none; background:rgba(168,85,247,0.18); border:1px solid var(--purple); border-radius:6px; padding:6px 10px; margin:4px 0; font-size:10px; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="live-dot" style="background:#a855f7;"></span>
+                    <span id="taskStatusDescription" style="color:#e9d5ff; font-weight:bold;">TASK: Idle</span>
+                </div>
+                <button onclick="cancelActiveTask()" style="background:#ef4444; color:#fff; border:none; border-radius:4px; padding:3px 8px; font-size:9px; cursor:pointer; font-weight:bold;">ABORT</button>
+            </div>
+
             <div class="chat-history" id="chatHistory">
                 <div class="chat-bubble agent">
-                    <strong>AEGIS Assistant:</strong> Real 3D Earth and Cesium Ion verified with your access token! You can command me to fly anywhere ("Fly to Tokyo"), scan earthquakes, or switch between Cesium Ion 3D and Three.js 3D anytime.
+                    <strong>AEGIS Assistant:</strong> Real 3D Earth, Voice Input & Autonomous Task Manager active! You can command me to execute single tasks, continuous tracking ("Follow ISS"), background alerts ("Monitor earthquakes"), or multi-step missions ("Fly to Tokyo and zoom in and switch to night mode").
                 </div>
             </div>
 
             <div class="chip-row">
-                <div class="query-chip" onclick="executeAssistantCommand('Switch to Cesium Ion 3D')">🌐 Switch to Cesium Ion</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo')">✈️ Fly to Tokyo</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Show me all seismic earthquakes')">💥 Show Earthquakes</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station')">🛰 Track ISS Orbit</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Lock onto my GPS location')">📍 Center On My GPS</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station and follow it')">🔄 Follow ISS Track</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Monitor earthquakes for high magnitude threats')">🚨 Seismic Alert Watch</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Patrol airspace and sweep flights')">✈️ Airspace Sweep Patrol</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo and zoom in and switch to night mode')">⚡ Multi-Step Mission</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Assess threats and brief me')">🛡️ Executive Threat Sitrep</div>
+                <div class="query-chip" onclick="cancelActiveTask()">⏹ Abort Task</div>
             </div>
 
             <div class="chat-input-row">
@@ -1985,30 +2002,66 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // ==========================================
+        // 9. VOICE & SPEECH ENGINE (NATIVE & WEB)
+        // ==========================================
         function speakAssistant(text) {
+            isWaveActive = true;
+            document.getElementById('assistantStateText').textContent = 'Speaking...';
+
+            // 1. Native Android TTS Priority
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.speakText === 'function') {
+                window.GodsEyeNative.speakText(text);
+                const estDuration = Math.min(Math.max(text.length * 68, 1500), 9000);
+                setTimeout(() => {
+                    isWaveActive = false;
+                    document.getElementById('assistantStateText').textContent = 'Ready.';
+                }, estDuration);
+                triggerHaptic(25);
+                return;
+            }
+
+            // 2. Web SpeechSynthesis Fallback
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.rate = 1.05;
                 utterance.pitch = 1.0;
-
                 utterance.onstart = () => {
                     isWaveActive = true;
                     document.getElementById('assistantStateText').textContent = 'Speaking...';
                 };
                 utterance.onend = () => {
                     isWaveActive = false;
-                    document.getElementById('assistantStateText').textContent = 'Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.';
+                    document.getElementById('assistantStateText').textContent = 'Ready.';
                 };
                 utterance.onerror = () => {
                     isWaveActive = false;
                     document.getElementById('assistantStateText').textContent = 'Ready.';
                 };
-
                 window.speechSynthesis.speak(utterance);
-                triggerHaptic(30);
+                triggerHaptic(25);
             }
         }
+
+        // Native Android Speech Callbacks
+        window.onNativeSpeechResult = function(transcript) {
+            state.voiceActive = false;
+            isWaveActive = false;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.remove('listening');
+            document.getElementById('assistantInput').value = transcript;
+            executeAssistantCommand(transcript);
+        };
+
+        window.onNativeSpeechError = function(errMsg) {
+            state.voiceActive = false;
+            isWaveActive = false;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.remove('listening');
+            document.getElementById('assistantStateText').textContent = 'Voice standby.';
+            showToast("Voice input: " + errMsg);
+        };
 
         let recognition = null;
         function toggleVoiceRecognition() {
@@ -2016,6 +2069,17 @@
             triggerHaptic(30);
             const micBtn = document.getElementById('micBtn');
 
+            // 1. Prioritize Native Android Speech Recognizer (Google Speech)
+            if (window.GodsEyeNative && typeof window.GodsEyeNative.startVoiceListening === 'function') {
+                state.voiceActive = true;
+                isWaveActive = true;
+                micBtn.classList.add('listening');
+                document.getElementById('assistantStateText').textContent = '🎙️ Listening via Google Voice...';
+                window.GodsEyeNative.startVoiceListening();
+                return;
+            }
+
+            // 2. Web Speech API Fallback
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRec) {
                 showToast("Voice recognition not supported by browser. Type your command.");
@@ -2078,26 +2142,192 @@
             executeAssistantCommand(query);
         }
 
-        // Full App Action Dispatcher
+        // ==========================================
+        // 10. AUTONOMOUS TASK MANAGER & SEQUENCER
+        // ==========================================
+        let activeTask = null;
+
+        function updateTaskUI(name) {
+            const banner = document.getElementById('activeTaskBanner');
+            const desc = document.getElementById('taskStatusDescription');
+            const hudStrip = document.getElementById('hudTaskStrip');
+            const hudText = document.getElementById('hudTaskText');
+
+            if (name) {
+                if (banner) banner.style.display = 'flex';
+                if (desc) desc.textContent = `TASK: ${name}`;
+                if (hudStrip) hudStrip.style.display = 'flex';
+                if (hudText) hudText.textContent = `TASK: ${name}`;
+            } else {
+                if (banner) banner.style.display = 'none';
+                if (hudStrip) hudStrip.style.display = 'none';
+            }
+        }
+
+        function cancelActiveTask() {
+            if (!activeTask) return;
+            playSciFiBeep('alert');
+            triggerHaptic(35);
+            if (activeTask.intervalId) clearInterval(activeTask.intervalId);
+            if (activeTask.timeoutId) clearTimeout(activeTask.timeoutId);
+            if (typeof activeTask.onCancel === 'function') activeTask.onCancel();
+
+            const taskName = activeTask.name;
+            activeTask = null;
+            updateTaskUI(null);
+            showToast(`Task '${taskName}' terminated`);
+            addChatMessage('agent', `Task "${taskName}" has been aborted.`);
+            speakAssistant(`Task terminated.`);
+        }
+
+        function startContinuousTrackingTask(entityType, entityId, label) {
+            cancelActiveTask();
+            updateTaskUI(`Tracking ${label}`);
+
+            const interval = setInterval(() => {
+                let target = null;
+                if (entityType === 'SPACE') {
+                    target = state.satellites.find(s => s.id === entityId) || state.satellites[0];
+                } else if (entityType === 'AIR') {
+                    target = state.flights.find(f => f.id === entityId) || state.flights[0];
+                }
+                if (target) {
+                    smoothFlyTo(target.lat, target.lon, 1.35);
+                }
+            }, 3000);
+
+            activeTask = {
+                id: 'tracking_' + Date.now(),
+                name: `Continuous ${label} Tracking`,
+                intervalId: interval,
+                onCancel: () => { state.autoOrbit = false; }
+            };
+            addChatMessage('agent', `Task Started: Continuous 3D camera tracking locked onto ${label}.`);
+            speakAssistant(`Tracking locked onto ${label}.`);
+        }
+
+        function startSeismicMonitorTask() {
+            cancelActiveTask();
+            updateTaskUI("Seismic Alert Watch (≥M4.5)");
+            let knownQuakeCount = state.quakes.length;
+
+            const interval = setInterval(async () => {
+                await fetchUSGSQuakes();
+                if (state.quakes.length > knownQuakeCount) {
+                    const latest = state.quakes[0];
+                    if (latest && latest.mag >= 4.5) {
+                        playSciFiBeep('alert');
+                        triggerHaptic(50);
+                        smoothFlyTo(latest.lat, latest.lon, 1.4);
+                        const alertMsg = `SEISMIC ALERT! New magnitude ${latest.mag} rupture detected near ${latest.title}. Camera locked to epicenter.`;
+                        addChatMessage('agent', alertMsg);
+                        speakAssistant(alertMsg);
+                    }
+                    knownQuakeCount = state.quakes.length;
+                }
+            }, 15000);
+
+            activeTask = {
+                id: 'seismic_watch',
+                name: 'Seismic Alert Watch (≥M4.5)',
+                intervalId: interval
+            };
+            addChatMessage('agent', `Task Started: Continuous seismic surveillance active. Will alert and lock camera on any earthquake ≥ M4.5.`);
+            speakAssistant(`Seismic surveillance task active.`);
+        }
+
+        function startAirspacePatrolTask() {
+            cancelActiveTask();
+            updateTaskUI("Airspace Patrol Sweep");
+            let flightIndex = 0;
+
+            const interval = setInterval(() => {
+                if (!state.flights || state.flights.length === 0) return;
+                const flight = state.flights[flightIndex % state.flights.length];
+                flightIndex++;
+                if (flight) {
+                    smoothFlyTo(flight.lat, flight.lon, 1.35);
+                    updateTaskUI(`Patrol: ${flight.id}`);
+                }
+            }, 5000);
+
+            activeTask = {
+                id: 'airspace_sweep',
+                name: 'Automated Airspace Sweep',
+                intervalId: interval
+            };
+            addChatMessage('agent', `Task Started: Autonomous airspace sweep cycling through tactical aircraft.`);
+            speakAssistant(`Airspace patrol task active.`);
+        }
+
+        // Multi-Step Task Execution Planner
+        async function executeCompoundTaskPlan(steps) {
+            playSciFiBeep('confirm');
+            triggerHaptic(30);
+            updateTaskUI(`Executing Step 1/${steps.length}`);
+
+            const planSummary = steps.map((s, idx) => `[${idx+1}] ${s}`).join(' → ');
+            addChatMessage('agent', `Autonomous Mission Plan (${steps.length} steps): ${planSummary}`);
+            speakAssistant(`Executing ${steps.length}-step plan.`);
+
+            for (let i = 0; i < steps.length; i++) {
+                updateTaskUI(`Step ${i+1}/${steps.length}: ${steps[i]}`);
+                await executeSingleAction(steps[i], false);
+                if (i < steps.length - 1) {
+                    await new Promise(res => setTimeout(res, 1500));
+                }
+            }
+
+            updateTaskUI(null);
+            const doneMsg = `Multi-step mission plan completed successfully.`;
+            addChatMessage('agent', doneMsg);
+            speakAssistant(doneMsg);
+        }
+
+        // Full Action & Task Dispatcher
         async function executeAssistantCommand(cmd) {
             playSciFiBeep('confirm');
             addChatMessage('user', cmd);
             triggerHaptic(25);
 
+            // Check for multi-step compound commands ("... and then ...", "... and ...", "... after that ...")
+            const compoundSteps = cmd.split(/\s+(?:and then|then|and|after that)\s+/i).map(s => s.trim()).filter(s => s.length > 2);
+            if (compoundSteps.length > 1) {
+                executeCompoundTaskPlan(compoundSteps);
+                return;
+            }
+
+            await executeSingleAction(cmd, true);
+        }
+
+        async function executeSingleAction(cmd, shouldSpeak = true) {
             const lower = cmd.toLowerCase();
             let reply = '';
 
-            // Switch to Cesium Ion
+            // 1. Continuous Background Tasks
+            if (lower.includes('track iss') || lower.includes('follow iss') || lower.includes('follow space station')) {
+                startContinuousTrackingTask('SPACE', 'ISS-25544', 'ISS Space Station');
+                return;
+            } else if (lower.includes('monitor earthquake') || lower.includes('watch earthquake') || lower.includes('seismic watch') || lower.includes('quake monitor')) {
+                startSeismicMonitorTask();
+                return;
+            } else if (lower.includes('patrol airspace') || lower.includes('sweep airspace') || lower.includes('sweep flight') || lower.includes('flight patrol')) {
+                startAirspacePatrolTask();
+                return;
+            } else if (lower.includes('stop task') || lower.includes('cancel task') || lower.includes('abort') || lower.includes('stop tracking')) {
+                cancelActiveTask();
+                return;
+            }
+
+            // 2. Map Engine Switch
             if (lower.includes('cesium') || lower.includes('ion')) {
                 setMapMode('cesium_ion');
                 reply = `Engaged official CesiumJS 3D Photorealistic Engine with your authenticated Cesium Ion token.`;
-            }
-            // Switch to Three.js
-            else if (lower.includes('three') || lower.includes('three.js')) {
+            } else if (lower.includes('three') || lower.includes('three.js')) {
                 setMapMode('three_sat');
                 reply = `Engaged Three.js Real 3D Earth globe with dynamic atmosphere halo and rotating cloud shaders.`;
             }
-            // Geocoding / Fly to City Search
+            // 3. Geocoding / Fly to City
             else if (/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i.test(lower) && !lower.includes('earthquake') && !lower.includes('iss') && !lower.includes('flight')) {
                 const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|search for|find)\s+([a-zA-Z\s]+)/i);
                 const queryLocation = flyMatch[1].trim();
@@ -2121,7 +2351,7 @@
                     reply = `Geocoding lookup failed. Please verify connection.`;
                 }
             }
-            // Camera Zoom
+            // 4. Camera Zoom & Motion
             else if (lower.includes('zoom in')) {
                 if (activeEngine === 'cesium' && cesiumViewer) {
                     cesiumViewer.camera.zoomIn(1000000);
@@ -2144,13 +2374,13 @@
                 state.autoOrbit = true;
                 reply = `3D globe camera reset to default orbital view.`;
             }
-            // Category Layer Filters
+            // 5. Category Layer Filters
             else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
                 switchCategory('SEISMIC');
                 const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                 if (maxQ) {
                     smoothFlyTo(maxQ.lat, maxQ.lon, 1.3);
-                    reply = `I centered the 3D Earth on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
+                    reply = `Centered 3D Earth on peak seismic rupture: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
                 } else {
                     reply = `Seismic telemetry filter engaged.`;
                 }
@@ -2176,7 +2406,7 @@
                 switchCategory('AIR');
                 reply = `Airspace mode active. Tracking ${state.flights.length} flights with 3D directional vectors.`;
             }
-            // Map Style
+            // 6. Map Styles
             else if (lower.includes('night map') || lower.includes('night mode')) {
                 setMapMode('three_night');
                 reply = `Switched to 3D Earth Night City Lights texture map.`;
@@ -2184,25 +2414,25 @@
                 setMapMode('three_sat');
                 reply = `Switched to 3D Photorealistic Satellite Earth map.`;
             }
-            // Threat Assessment & Executive Sitrep
+            // 7. Threat Assessment & Sitrep
             else if (lower.includes('threat') || lower.includes('assess') || lower.includes('brief') || lower.includes('sitrep') || lower.includes('status')) {
                 const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                 const highRiskQuakes = state.quakes.filter(q => q.mag >= 4.5).length;
                 const milFlights = state.flights.filter(f => f.military).length;
                 reply = `Executive Sitrep: Tracking ${state.flights.length} flights (${milFlights} tactical/defense), ${state.quakes.length} seismic ruptures (${highRiskQuakes} high-magnitude ≥M4.5), and ${state.satellites.length} orbital satellites. Peak seismic alert: M${maxQ ? maxQ.mag : 'N/A'} at ${maxQ ? maxQ.title : 'None'}. 3D Engine: ${activeEngine.toUpperCase()}. All operational layers nominal.`;
             }
-            // Clear Chat Transcript
+            // 8. Clear Chat
             else if (lower.includes('clear chat') || lower.includes('clear message') || lower === 'clear') {
                 const log = document.getElementById('chatMessages');
                 if (log) log.innerHTML = '';
                 reply = `Tactical communications transcript cleared.`;
             }
-            // Performance & Diagnostics
+            // 9. Diagnostics
             else if (lower.includes('perf') || lower.includes('fps') || lower.includes('diagnostic')) {
                 const b = localAI.benchmark(250);
                 reply = `Diagnostics: Active 3D Engine: ${activeEngine.toUpperCase()}. Neural Engine: ${b.infPerSec.toLocaleString()} ops/sec (${b.totalMs}ms). Total Assets: ${state.flights.length + state.quakes.length + state.satellites.length}. Hardware WebGL 2.0 active.`;
             }
-            // Native OS
+            // 10. Native OS Bridges
             else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
                 centerOnGps();
                 reply = `Acquiring device GPS satellites and orienting the 3D globe directly over your location.`;
@@ -2218,11 +2448,11 @@
                 shareFullSitrep();
                 reply = `Opening Android system share sheet with intelligence sitrep.`;
             } else {
-                reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
+                reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, track entities, or monitor threats.`;
             }
 
             addChatMessage('agent', reply);
-            speakAssistant(reply);
+            if (shouldSpeak) speakAssistant(reply);
         }
 
         function getSitrepText() {
