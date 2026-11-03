@@ -696,6 +696,72 @@
             backdrop-filter: blur(10px);
         }
 
+
+        /* J.A.R.V.I.S. Holographic Arc-Reactor Core */
+        .jarvis-arc-reactor {
+            width: 46px;
+            height: 46px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .reactor-ring {
+            position: absolute;
+            border-radius: 50%;
+        }
+        .ring-outer {
+            width: 44px;
+            height: 44px;
+            border: 1.5px dashed var(--cyan);
+            animation: rotateClockwise 7s linear infinite;
+            box-shadow: 0 0 12px var(--cyan-glow);
+        }
+        .ring-inner {
+            width: 30px;
+            height: 30px;
+            border: 1.5px dotted #38bdf8;
+            animation: rotateCounter 4s linear infinite;
+        }
+        .reactor-core {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 0%, var(--cyan) 60%, #0284c7 100%);
+            box-shadow: 0 0 16px var(--cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #000;
+            font-weight: bold;
+        }
+        @keyframes rotateClockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rotateCounter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+        .dialogue-toggle-btn {
+            background: rgba(0, 255, 204, 0.12);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            border-radius: 6px;
+            padding: 0 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+        .dialogue-toggle-btn.active {
+            background: var(--cyan);
+            color: #030407;
+            box-shadow: 0 0 14px var(--cyan-glow);
+        }
+
     </style>
 </head>
 <body>
@@ -722,7 +788,7 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">CESIUM ION · ON-DEVICE TRANSFORMER SLM v2.1.0</div>
+                <div class="brand-sub">CESIUM ION · J.A.R.V.I.S. CONVERSATIONAL OS v2.2.0</div>
             </div>
         </div>
         <div class="header-actions">
@@ -825,7 +891,7 @@
         <div class="tactical-modal-card" id="assistantModalCard">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>✨ AEGIS / OPENJARVIS — ON-DEVICE REASONING AGENT</span>
+                    <span>✨ J.A.R.V.I.S. — FULLY AUTONOMOUS DEFENSE AGENT</span>
                 </div>
                 <div class="header-btn-group">
                     <button class="icon-btn" onclick="stopAllSpeech()" title="Stop Speech / Silence" style="color:var(--red); border-color:var(--red);">⏹ SILENCE</button>
@@ -837,17 +903,21 @@
             </div>
 
             <div class="assistant-avatar-banner">
-                <div class="assistant-core-orb">
-                    <span>🤖</span>
-                </div>
-                <div style="flex:1;">
-                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">OPENJARVIS Tactical Agent Core</div>
-                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.</div>
-                    <div id="slmPerfBadge" style="font-size:8px; color:var(--cyan); background:rgba(0,255,204,0.1); border:1px solid rgba(0,255,204,0.3); border-radius:4px; padding:2px 6px; display:inline-block; margin-top:2px;">
-                        🧠 ON-DEVICE SLM: 145 tok/s · 6.9ms · 100% Offline
+                <div class="jarvis-arc-reactor">
+                    <div class="reactor-ring ring-outer"></div>
+                    <div class="reactor-ring ring-inner"></div>
+                    <div class="reactor-core">
+                        <span>⚡</span>
                     </div>
                 </div>
-                <canvas id="audioWaveCanvas" width="70" height="24"></canvas>
+                <div style="flex:1; margin-left:8px;">
+                    <div style="font-size:12px; font-weight:800; letter-spacing:1px; color:var(--cyan);">J.A.R.V.I.S. DEFENSE SYSTEM</div>
+                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Online & Standing By, Sir.</div>
+                    <div id="slmPerfBadge" style="font-size:8px; color:var(--cyan); background:rgba(0,255,204,0.1); border:1px solid rgba(0,255,204,0.3); border-radius:4px; padding:2px 6px; display:inline-block; margin-top:2px;">
+                        🧠 ON-DEVICE SLM: 148 tok/s · 6.8ms · 100% Offline
+                    </div>
+                </div>
+                <canvas id="audioWaveCanvas" width="80" height="28"></canvas>
             </div>
 
             <!-- Active Task Status Card in Assistant Drawer -->
@@ -866,6 +936,10 @@
             </div>
 
             <div class="chip-row">
+                <div class="query-chip" style="background:rgba(239,68,68,0.2); border-color:#ef4444; color:#fca5a5;" onclick="executeAssistantCommand('Initiate Protocol House Party')">🛡️ Protocol House Party</div>
+                <div class="query-chip" style="background:rgba(59,130,246,0.2); border-color:#3b82f6; color:#93c5fd;" onclick="executeAssistantCommand('Initiate Protocol Sentry')">👁️ Protocol Sentry</div>
+                <div class="query-chip" style="background:rgba(234,179,8,0.2); border-color:#eab308; color:#fde047;" onclick="executeAssistantCommand('Initiate Protocol Veronica')">⚡ Protocol Veronica</div>
+                <div class="query-chip" style="background:rgba(168,85,247,0.2); border-color:#a855f7; color:#d8b4fe;" onclick="executeAssistantCommand('Protocol Clean Slate')">🧹 Clean Slate</div>
                 <div class="query-chip" style="background:rgba(0,255,204,0.15); border-color:var(--cyan); color:var(--cyan);" onclick="executeAssistantCommand('Benchmark on-device Local SLM')">⚡ Benchmark Local SLM</div>
                 <div class="query-chip" style="background:rgba(234,179,8,0.15); border-color:#eab308; color:#fde047;" onclick="executeAssistantCommand('Run morning tactical digest')">🌅 Morning Digest</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station and follow it')">🛰️ ISS Ground-Track</div>
@@ -884,7 +958,8 @@
 
             <div class="chat-input-row">
                 <button class="voice-mic-btn" id="micBtn" onclick="toggleVoiceRecognition()" title="Voice Input">🎙️</button>
-                <input type="text" class="chat-input" id="assistantInput" placeholder="Command AI: 'Fly to Paris', 'Scan quakes'..." onkeydown="if(event.key==='Enter') sendAssistantText()">
+                <button class="dialogue-toggle-btn" id="dialogueToggleBtn" onclick="toggleContinuousDialogue()" title="Continuous Hands-Free Dialogue Loop">💬 CHAT: OFF</button>
+                <input type="text" class="chat-input" id="assistantInput" placeholder="Speak or type: 'Jarvis fly to Paris', 'Protocol House Party'..." onkeydown="if(event.key==='Enter') sendAssistantText()">
                 <button class="t-btn t-btn-purple" style="padding: 0 14px; height: 38px;" onclick="sendAssistantText()">RUN</button>
             </div>
         </div>
@@ -1633,6 +1708,7 @@
             if (modal.style.display === 'block') {
                 modal.style.display = 'none';
                 state.rangePoints = [];
+            state.continuousDialogue = false;
             } else {
                 modal.style.display = 'block';
                 state.rangePoints = [];
@@ -2557,7 +2633,14 @@
                 const estDuration = Math.min(Math.max(text.length * 68, 1500), 10000);
                 speakTimeoutId = setTimeout(() => {
                     isWaveActive = false;
-                    document.getElementById('assistantStateText').textContent = 'OpenJarvis: Operational & Ready.';
+                    document.getElementById('assistantStateText').textContent = 'J.A.R.V.I.S.: Online & Ready, Sir.';
+                    if (state.continuousDialogue) {
+                        setTimeout(() => {
+                            if (state.continuousDialogue && !state.voiceActive) {
+                                toggleVoiceRecognition();
+                            }
+                        }, 500);
+                    }
                 }, estDuration);
                 triggerHaptic(25);
                 return;
@@ -3226,6 +3309,25 @@
         );
 
         jarvisTools.register(
+            "run_protocol",
+            "Execute an Iron Man J.A.R.V.I.S. tactical defense protocol ('house_party', 'clean_slate', 'sentry', 'veronica').",
+            {
+                type: "object",
+                properties: {
+                    protocol: { type: "string", enum: ["house_party", "clean_slate", "sentry", "veronica"] }
+                },
+                required: ["protocol"]
+            },
+            async (args) => {
+                if (args.protocol === 'house_party') runProtocolHouseParty();
+                else if (args.protocol === 'clean_slate') runProtocolCleanSlate();
+                else if (args.protocol === 'sentry') runProtocolSentry();
+                else if (args.protocol === 'veronica') runProtocolVeronica();
+                return `Executed Protocol ${args.protocol.toUpperCase()}`;
+            }
+        );
+
+        jarvisTools.register(
             "benchmark_local_slm",
             "Benchmark the on-device Transformer Small Language Model (SLM) forward inference pass and latency.",
             { type: "object", properties: {} },
@@ -3301,6 +3403,120 @@
         }
 
         // OpenJarvis ReAct Reasoning Engine (Autonomous Thought -> Action -> Observation Loop)
+        
+        // ==========================================
+        // IRON MAN J.A.R.V.I.S. PROTOCOLS & DIALOGUE
+        // ==========================================
+
+        function toggleContinuousDialogue() {
+            triggerHaptic(30);
+            state.continuousDialogue = !state.continuousDialogue;
+            const btn = document.getElementById('dialogueToggleBtn');
+            if (btn) {
+                if (state.continuousDialogue) {
+                    btn.classList.add('active');
+                    btn.textContent = '💬 CHAT: ACTIVE';
+                    showToast("Continuous hands-free conversation loop active.");
+                    speakAssistant("Continuous dialogue engaged, Sir. I am listening.");
+                } else {
+                    btn.classList.remove('active');
+                    btn.textContent = '💬 CHAT: OFF';
+                    showToast("Continuous dialogue deactivated.");
+                }
+            }
+        }
+
+        // Protocol House Party: Synchronized Multi-Domain Planetary Sweep
+        async function runProtocolHouseParty() {
+            cancelActiveTask();
+            updateTaskUI("PROTOCOL HOUSE PARTY");
+            addChatMessage('agent', "🛡️ <strong>Protocol House Party engaged, Sir.</strong> Synchronizing all defense, orbital, and planetary monitoring systems.");
+            speakAssistant("Protocol House Party engaged, Sir. Synchronizing all defense, orbital, and planetary grids.");
+
+            const stages = [
+                { domain: 'SPACE', msg: "Orbital telemetry online. Tracking International Space Station and polar orbiters.", lat: 20, lon: -40, zoom: 1.15 },
+                { domain: 'AIR', msg: "Airspace defense radar active. Intercepting specialized tactical and patrol vectors.", lat: 35, lon: -115, zoom: 1.35 },
+                { domain: 'NAVAL', msg: "Maritime AIS tracking engaged. All carrier strike groups and naval assets synchronized.", lat: 36, lon: -75, zoom: 1.35 },
+                { domain: 'VOLCANO', msg: "Smithsonian volcanic sensor network active across active subduction zones.", lat: 37.75, lon: 14.99, zoom: 1.4 },
+                { domain: 'SEISMIC', msg: "USGS tectonic fault telemetry nominal. Monitoring global crustal stress.", lat: 35.6, lon: 139.7, zoom: 1.35 },
+                { domain: 'ALL', msg: "All global surveillance layers fully synthesized. God's Eye picture is complete, Sir.", lat: 20, lon: 0, zoom: 1.0 }
+            ];
+
+            for (let i = 0; i < stages.length; i++) {
+                const s = stages[i];
+                window.AegisAppBus.filterCategory(s.domain);
+                smoothFlyTo(s.lat, s.lon, s.zoom);
+                updateTaskUI(`HOUSE PARTY: ${s.domain}`);
+                speakAssistant(s.msg);
+                await new Promise(r => setTimeout(r, 5500));
+            }
+
+            updateTaskUI(null);
+            speakAssistant("All systems synchronized and operating at peak readiness, Sir.");
+        }
+
+        // Protocol Clean Slate: Emergency Reset and Purge
+        function runProtocolCleanSlate() {
+            cancelActiveTask();
+            stopAllSpeech();
+            window.AegisAppBus.filterCategory('ALL');
+            window.AegisAppBus.resetCamera();
+            window.AegisAppBus.clearChat();
+            const msg = "Protocol Clean Slate executed, Sir. Active background operatives purged, orbital camera reset, and communications log cleared.";
+            addChatMessage('agent', msg);
+            speakAssistant(msg);
+        }
+
+        // Protocol Sentry: Autonomous Anomaly Interceptor
+        function runProtocolSentry() {
+            cancelActiveTask();
+            updateTaskUI("PROTOCOL SENTRY: ORBITAL OVERWATCH");
+            let angle = 0;
+
+            const interval = setInterval(() => {
+                angle = (angle + 30) % 360;
+                // Check if any quake >= 5.0
+                const critQuake = state.quakes.find(q => q.mag >= 5.0);
+                if (critQuake) {
+                    smoothFlyTo(critQuake.lat, critQuake.lon, 1.4);
+                    updateTaskUI(`SENTRY: INTERCEPT M${critQuake.mag} ${critQuake.title.slice(0, 18)}`);
+                } else {
+                    smoothFlyTo(15, angle, 1.2);
+                    updateTaskUI(`SENTRY: SCANNING SECTOR ${Math.round(angle)}°`);
+                }
+            }, 6000);
+
+            activeTask = {
+                id: 'sentry_' + Date.now(),
+                name: "Protocol Sentry Overwatch",
+                intervalId: interval,
+                onCancel: () => { state.autoOrbit = true; }
+            };
+
+            const msg = "Protocol Sentry active, Sir. Maintaining autonomous orbital surveillance over planetary margins.";
+            addChatMessage('agent', msg);
+            speakAssistant(msg);
+        }
+
+        // Protocol Veronica: Planetary Defense & Carrier Command
+        function runProtocolVeronica() {
+            cancelActiveTask();
+            updateTaskUI("PROTOCOL VERONICA: DEFENSE ARMED");
+            window.AegisAppBus.filterCategory('NAVAL');
+
+            const carrier = state.naval.find(n => n.class.includes('Carrier')) || state.naval[0];
+            if (carrier) {
+                smoothFlyTo(carrier.lat, carrier.lon, 1.35);
+            }
+
+            const rangeModal = document.getElementById('rangeModal');
+            if (rangeModal) rangeModal.style.display = 'block';
+
+            const msg = "Protocol Veronica armed, Sir. Naval carrier strike groups highlighted and ballistic ranging matrix primed.";
+            addChatMessage('agent', msg);
+            speakAssistant(msg);
+        }
+
         class OpenJarvisReActEngine {
             constructor(memory, registry) {
                 this.memory = memory;
@@ -3518,18 +3734,53 @@
                     const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                     reply = `Tactical Sitrep: Monitoring ${state.flights.length} flights, ${state.quakes.length} quakes (Peak M${maxQ ? maxQ.mag : 'N/A'}), ${state.wildfires.length} fires, and ${state.satellites.length} satellites. Space Weather: Kp ${state.spaceWeather.kp.toFixed(1)}.`;
                 }
+                // Iron Man Protocols
+                if (lower.includes('house party')) {
+                    thought = "User commanded Protocol House Party. Launching global multi-domain synchronization sequence.";
+                    actionName = "run_protocol";
+                    actionArgs = { protocol: "house_party" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Protocol House Party engaged, Sir. Synchronizing all defense, orbital, and planetary monitoring systems.";
+                } else if (lower.includes('clean slate')) {
+                    thought = "User commanded Protocol Clean Slate. Resetting all systems and purging active operatives.";
+                    actionName = "run_protocol";
+                    actionArgs = { protocol: "clean_slate" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Protocol Clean Slate executed, Sir. All systems reset to baseline nominal.";
+                } else if (lower.includes('sentry') || lower.includes('overwatch')) {
+                    thought = "User commanded Protocol Sentry. Initiating autonomous orbital perimeter patrol.";
+                    actionName = "run_protocol";
+                    actionArgs = { protocol: "sentry" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Protocol Sentry engaged, Sir. Continuous orbital overwatch active.";
+                } else if (lower.includes('veronica')) {
+                    thought = "User commanded Protocol Veronica. Arming planetary carrier defense and ballistic ranging.";
+                    actionName = "run_protocol";
+                    actionArgs = { protocol: "veronica" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Protocol Veronica armed, Sir. Naval battle groups synchronized and ranging matrix primed.";
+                }
+                // Conversational Identity & Intelligence
+                else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('what are you')) {
+                    thought = "User inquiring about J.A.R.V.I.S. operational identity.";
+                    reply = "I am J.A.R.V.I.S. — Just A Rather Very Intelligent System. I oversee the God's Eye planetary defense and reconnaissance network, processing real-time airspace, seismic, volcanic, naval, and orbital telemetry on-device. At your service, Sir.";
+                } else if (lower.includes('how are you') || lower.includes('system status')) {
+                    thought = "User checking operational readiness.";
+                    const totalAssets = state.flights.length + state.quakes.length + state.satellites.length + state.wildfires.length + state.volcanoes.length + state.naval.length;
+                    reply = `All systems operating at peak capacity, Sir. Tracking ${totalAssets.toLocaleString()} live entities across global airspace, oceans, and orbit. 3D engine and local neural Transformer SLM nominal.`;
+                }
                 // Benchmark Local SLM
-                if (lower.includes('benchmark') || lower.includes('local slm') || lower.includes('local ai') || lower.includes('test model')) {
+                else if (lower.includes('benchmark') || lower.includes('local slm') || lower.includes('local ai') || lower.includes('test model')) {
                     thought = "User requested performance evaluation of the embedded on-device Transformer SLM.";
                     actionName = "benchmark_local_slm";
                     observation = await this.registry.execute(actionName);
                     const b = jarvisLocalSLM.benchmark(120);
-                    reply = `On-Device Transformer SLM Benchmark: Processing at ${b.tokensPerSec.toLocaleString()} tokens/second with ${b.perTokenMs}ms latency per token across ${b.paramCount.toLocaleString()} Float32 parameters. 100% offline neural inference operational.`;
+                    reply = `On-Device Transformer SLM Benchmark: Processing at ${b.tokensPerSec.toLocaleString()} tokens/second with ${b.perTokenMs}ms latency per token across ${b.paramCount.toLocaleString()} Float32 parameters. 100% offline neural inference operational, Sir.`;
                 }
-                // 10. General fallback
+                // General Conversational Fallback
                 else {
-                    thought = "User inquiry received. Formulating comprehensive tactical response.";
-                    reply = `Command received: "${prompt}". OpenJarvis 3D surveillance core is operational. You can command me to execute ReAct missions, fly anywhere, zoom, run the morning tactical digest, or launch background operatives.`;
+                    thought = "User inquiry received. Formulating comprehensive J.A.R.V.I.S. tactical response.";
+                    reply = `Certainly, Sir. I have received your instruction: "${prompt}". The 3D planetary picture is live. You can command me to execute Iron Man protocols, fly to any location, check volcanoes or carrier battle groups, or run the morning tactical digest.`;
                 }
 
                 return { thought, action: actionName, actionArgs, observation, reply };
