@@ -47,6 +47,8 @@ import android.os.StatFs;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.os.PowerManager;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.net.ConnectivityManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -465,6 +467,62 @@ public class MainActivity extends AppCompatActivity {
                 }
             } catch (Exception ignored) {}
             return false;
+        }
+
+        @JavascriptInterface
+                @JavascriptInterface
+        public String getAppVersion() {
+            try {
+                return "{\"versionName\":\"3.5.0\",\"versionCode\":30}";
+            } catch (Exception e) {
+                return "{\"versionName\":\"3.5.0\",\"versionCode\":30}";
+            }
+        }
+
+        @JavascriptInterface
+        public void triggerAppUpdate(String apkUrl) {
+            runOnUiThread(() -> {
+                final String targetUrl = (apkUrl != null && !apkUrl.trim().isEmpty())
+                        ? apkUrl.trim()
+                        : "https://github.com/Hubg50we/god-eye_mobile-/releases/latest/download/godseye-android.apk";
+
+                try {
+                    DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                    if (dm != null) {
+                        Uri uri = Uri.parse(targetUrl);
+                        DownloadManager.Request request = new DownloadManager.Request(uri);
+                        request.setTitle("J.A.R.V.I.S. Tactical OS Update");
+                        request.setDescription("Downloading latest release APK...");
+                        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "godseye-android-update.apk");
+                        request.setMimeType("application/vnd.android.package-archive");
+                        
+                        BroadcastReceiver onComplete = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context ctxt, Intent intent) {
+                                try {
+                                    Intent installIntent = new Intent(Intent.ACTION_VIEW);
+                                    Uri downloadUri = dm.getUriForDownloadedFile(dm.enqueue(request));
+                                    installIntent.setDataAndType(downloadUri != null ? downloadUri : uri, "application/vnd.android.package-archive");
+                                    installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    startActivity(installIntent);
+                                } catch (Exception ignored) {}
+                                unregisterReceiver(this);
+                            }
+                        };
+                        registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                        dm.enqueue(request);
+                        Toast.makeText(context, "Downloading update in background via DownloadManager...", Toast.LENGTH_LONG).show();
+                    }
+
+                    // Direct browser/installer intent fallback
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(browserIntent);
+                } catch (Exception e) {
+                    Toast.makeText(context, "Update launcher error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @JavascriptInterface

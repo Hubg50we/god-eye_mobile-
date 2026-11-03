@@ -210,6 +210,14 @@ God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic,
 - **Hardware Peripherals**: *"Turn on flashlight"*, *"Turn off flashlight"*, *"Call 911"*, *"Set volume to 80%"*.
 
 
+
+### 10. 🔄 Multi-Channel Autonomous In-App Updater & OTA Engine (v3.5.0)
+- **Automatic GitHub Release Detection**: Queries `api.github.com/repos/Hubg50we/god-eye_mobile-/releases/latest` to check for newer tactical builds on startup.
+- **One-Tap Background Download**: Uses Android's native `DownloadManager` with notification tray progress and `REQUEST_INSTALL_PACKAGES` integration.
+- **Direct Package Installer Launch**: Automatically fires the Android package installer when the download completes for seamless 1-tap installation.
+- **Holographic Update Card**: Displays release notes and version diffs directly on the heads-up display.
+- **Floating Dock Shortcut**: Tap `[🔄 UPDATE]` on the action dock or ask via voice (*"Update the app"*, *"Check for updates"*, *"Install update"*).
+
 ### 9. 🚀 Hyper-Optimization & Stark Master Capabilities (v3.4.0)
 - **🎙️ Hands-Free Background Wake-Word ("Hey Jarvis" / "Friday" / "Edith")**: Passive acoustic listener wakes up the assistant hands-free with repulsor power-up audio.
 - **🔊 Zero-Latency Web Audio Procedural Synthesizer**: Movie-authentic Mark 85 repulsor blast charges, dual-frequency target locks, sub-bass power-ups, and orbital sonar pings generated procedurally via Web Audio API oscillators.

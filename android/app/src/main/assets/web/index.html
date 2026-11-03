@@ -1349,6 +1349,73 @@
             }
         }
 
+    
+        /* Holographic Update Modal & Notification Card */
+        #updateModalCard {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 460px;
+            background: rgba(10, 16, 26, 0.95);
+            border: 1.5px solid #38bdf8;
+            border-radius: 14px;
+            padding: 16px 20px;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+            font-family: var(--font-mono);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            animation: pulseGlow 2s infinite alternate;
+        }
+        .update-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .update-title {
+            color: #38bdf8;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .update-body {
+            color: #e2e8f0;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .update-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-update-install {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.5);
+        }
+        .btn-update-dismiss {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #475569;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -5530,7 +5597,18 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                 let observation = "";
                 let reply = "";
 
-                                                                                                                                // Hands-Free Wake-Word Voice Intents
+                                                                                                                                                // In-App Update Voice Intents ("update the app", "check for updates", "install update")
+                if (lower.includes("update") || lower.includes("upgrade") || lower.includes("new version")) {
+                    AppUpdateManager.executeInstall();
+                    return {
+                        thought: "User requested system update. Initiating multi-channel OTA download and package installer.",
+                        action: "executeAppUpdate",
+                        actionArgs: { targetUrl: AppUpdateManager.latestReleaseUrl },
+                        reply: "Initiating direct system update download. The Android package installer will prompt you to complete the upgrade momentarily."
+                    };
+                }
+
+                // Hands-Free Wake-Word Voice Intents
                 if (lower.includes("wake word") || lower.includes("hands free") || lower.includes("hands-free") || lower.includes("listen for jarvis")) {
                     if (lower.includes("stop") || lower.includes("disable") || lower.includes("off")) {
                         stopHandsFreeWakeWord();
@@ -6596,6 +6674,25 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
         <button class="dock-btn" onclick="executeSingleAction('optimize device'); playStarkSound('power_up');">
             <span>⚡</span> BOOST
         </button>
+        <button class="dock-btn" id="dockUpdateBtn" onclick="checkForAppUpdates(true); playStarkSound('sonar');">
+            <span>🔄</span> UPDATE
+        </button>
+    </div>
+
+
+    <!-- Holographic In-App Update Alert Modal -->
+    <div id="updateModalCard">
+        <div class="update-header">
+            <span class="update-title">⚡ SYSTEM UPGRADE DETECTED</span>
+            <button class="btn-update-dismiss" onclick="document.getElementById('updateModalCard').style.display='none';">✕</button>
+        </div>
+        <div class="update-body" id="updateModalContent">
+            A newer tactical release of J.A.R.V.I.S. is ready for deployment.
+        </div>
+        <div class="update-actions">
+            <button class="btn-update-dismiss" onclick="document.getElementById('updateModalCard').style.display='none';">Dismiss</button>
+            <button class="btn-update-install" onclick="executeAppUpdate();">INSTALL UPDATE</button>
+        </div>
     </div>
 
 </body>
