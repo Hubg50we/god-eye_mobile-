@@ -1,5 +1,6 @@
 package com.godseye.view.mobile
 
+import com.godseye.view.mobile.R
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
