@@ -1061,6 +1061,136 @@
         .cockpit-item { display: flex; align-items: center; gap: 4px; }
         .cockpit-val { color: #f8fafc; font-weight: bold; }
 
+    
+        /* ==============================================================
+           SIRI & GEMINI LIVE GLOW PERIMETER & RICH CARDS
+           ============================================================== */
+
+        .siri-glow-perimeter {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 99997;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .siri-glow-perimeter.active {
+            opacity: 1;
+            animation: siriEdgeGlow 2.8s ease-in-out infinite;
+        }
+
+        @keyframes siriEdgeGlow {
+            0%, 100% {
+                box-shadow: 
+                    inset 0 0 30px rgba(0, 240, 255, 0.7),
+                    inset 0 0 65px rgba(168, 85, 247, 0.5),
+                    inset 0 0 100px rgba(56, 189, 248, 0.3);
+            }
+            50% {
+                box-shadow: 
+                    inset 0 0 45px rgba(236, 72, 153, 0.75),
+                    inset 0 0 80px rgba(59, 130, 246, 0.6),
+                    inset 0 0 130px rgba(0, 240, 255, 0.4);
+            }
+        }
+
+        /* Siri / Gemini Fluid Soundwave Equalizer */
+        .siri-soundwave-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 24px;
+            padding: 0 8px;
+        }
+        .siri-wave-bar {
+            width: 3.5px;
+            height: 6px;
+            border-radius: 4px;
+            background: linear-gradient(180deg, #00f0ff 0%, #a855f7 100%);
+            transition: height 0.1s ease;
+        }
+        .siri-wave-bar.active {
+            animation: waveDance 0.6s ease-in-out infinite alternate;
+        }
+        .siri-wave-bar:nth-child(1) { animation-delay: 0.05s; }
+        .siri-wave-bar:nth-child(2) { animation-delay: 0.15s; }
+        .siri-wave-bar:nth-child(3) { animation-delay: 0.25s; }
+        .siri-wave-bar:nth-child(4) { animation-delay: 0.35s; }
+        .siri-wave-bar:nth-child(5) { animation-delay: 0.20s; }
+        .siri-wave-bar:nth-child(6) { animation-delay: 0.10s; }
+        .siri-wave-bar:nth-child(7) { animation-delay: 0.30s; }
+
+        @keyframes waveDance {
+            0% { height: 6px; opacity: 0.4; }
+            100% { height: 22px; opacity: 1; }
+        }
+
+        /* Rich Siri & Gemini Answer Cards */
+        .gemini-rich-card {
+            background: rgba(10, 22, 44, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin: 6px 0;
+            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.12);
+            font-family: var(--font-mono);
+            backdrop-filter: blur(10px);
+        }
+        .gemini-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #38bdf8;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .gemini-weather-temp {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .gemini-weather-condition {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .gemini-weather-stats {
+            display: flex;
+            gap: 14px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #38bdf8;
+        }
+        .gemini-timer-display {
+            font-size: 28px;
+            font-weight: 900;
+            color: #f59e0b;
+            letter-spacing: 2px;
+            text-align: center;
+            padding: 8px 0;
+        }
+        .gemini-diag-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 10.5px;
+            margin-top: 6px;
+        }
+        .gemini-diag-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 6px;
+            padding: 6px 8px;
+        }
+
     </style>
 </head>
 <body>
@@ -2911,6 +3041,7 @@
         // ==========================================
 
         function stopAllSpeech() {
+            setSiriGlowActive(false);
             if (speakTimeoutId) { clearTimeout(speakTimeoutId); speakTimeoutId = null; }
             isWaveActive = false;
             if (window.GodsEyeNative && typeof window.GodsEyeNative.stopSpeaking === 'function') {
@@ -2941,6 +3072,7 @@
         }
 
         function speakAssistant(text) {
+            setSiriGlowActive(true);
             setReactorAnimationState("speaking");
             setTimeout(() => setReactorAnimationState("idle"), 4000);
             if (!text || state.soundMuted) return;
@@ -3275,6 +3407,122 @@
         
         
         // ==============================================================
+        
+        // ==============================================================
+        // 12. SIRI & GEMINI FULLY WORKING INTERACTION RUNTIME
+        // ==============================================================
+
+        function setSiriGlowActive(active) {
+            const glow = document.getElementById('siriGlowPerimeter');
+            if (glow) {
+                if (active) glow.classList.add('active');
+                else glow.classList.remove('active');
+            }
+            const waveBars = document.querySelectorAll('.siri-wave-bar');
+            waveBars.forEach(b => {
+                if (active) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+
+        // Render Rich Siri / Gemini Interactive Card
+        function renderGeminiRichCard(cardType, payload) {
+            const history = document.getElementById('chatHistory');
+            if (!history) return;
+
+            const card = document.createElement('div');
+            card.className = 'gemini-rich-card';
+
+            if (cardType === 'weather') {
+                card.innerHTML = `
+                    <div class="gemini-card-header">
+                        <span>⛅ METEOROLOGY • ${payload.place || 'LOCAL'}</span>
+                        <span>LIVE SATELLITE</span>
+                    </div>
+                    <div class="gemini-weather-temp">
+                        ${payload.temp}°C
+                        <span style="font-size:12px; font-weight:normal; color:#38bdf8;">(Feels ${payload.feels}°C)</span>
+                    </div>
+                    <div class="gemini-weather-condition">🌤️ ${payload.condition}</div>
+                    <div class="gemini-weather-stats">
+                        <span>💧 Humidity: ${payload.humidity}%</span>
+                        <span>💨 Winds: ${payload.wind} mph</span>
+                        <span>☔ Rain: ${payload.precip} mm</span>
+                    </div>
+                `;
+            } else if (cardType === 'timer') {
+                let left = payload.seconds;
+                const timerId = 'gemini_timer_' + Date.now();
+                card.innerHTML = `
+                    <div class="gemini-card-header">
+                        <span>⏱️ COUNTDOWN TIMER</span>
+                        <span>ACTIVE</span>
+                    </div>
+                    <div class="gemini-timer-display" id="${timerId}">${left}s</div>
+                    <div style="font-size:10px; color:#94a3b8; text-align:center;">${payload.label || 'J.A.R.V.I.S. Timer'}</div>
+                `;
+                const interval = setInterval(() => {
+                    left--;
+                    const el = document.getElementById(timerId);
+                    if (el) {
+                        el.textContent = left > 0 ? `${left}s` : "TIME EXPIRED";
+                        if (left <= 0) {
+                            clearInterval(interval);
+                            playSciFiBeep('alert');
+                            triggerHaptic(80);
+                        }
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+            } else if (cardType === 'system') {
+                card.innerHTML = `
+                    <div class="gemini-card-header">
+                        <span>📱 DEVICE TELEMETRY</span>
+                        <span>${payload.deviceModel || 'ANDROID'}</span>
+                    </div>
+                    <div class="gemini-diag-grid">
+                        <div class="gemini-diag-item">
+                            <div style="color:#94a3b8;">RAM Memory</div>
+                            <div style="color:#38bdf8; font-weight:bold;">${payload.freeRamGB}GB / ${payload.totalRamGB}GB</div>
+                        </div>
+                        <div class="gemini-diag-item">
+                            <div style="color:#94a3b8;">Storage Space</div>
+                            <div style="color:#38bdf8; font-weight:bold;">${payload.freeStorageGB}GB Free</div>
+                        </div>
+                        <div class="gemini-diag-item">
+                            <div style="color:#94a3b8;">Battery Level</div>
+                            <div style="color:#22c55e; font-weight:bold;">${payload.batteryLevel || '100'}% (${payload.isCharging ? 'Charging' : 'Battery'})</div>
+                        </div>
+                        <div class="gemini-diag-item">
+                            <div style="color:#94a3b8;">Android OS</div>
+                            <div style="color:#f8fafc; font-weight:bold;">Release ${payload.androidVersion || '14'}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (cardType === 'math') {
+                card.innerHTML = `
+                    <div class="gemini-card-header">
+                        <span>🧮 MATHEMATICS</span>
+                        <span>COMPUTED</span>
+                    </div>
+                    <div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">${payload.expression}</div>
+                    <div style="font-size:24px; font-weight:900; color:#38bdf8;">= ${payload.result}</div>
+                `;
+            }
+
+            history.appendChild(card);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        // Continuous Hands-Free Duplex Loop
+        function startContinuousDialogueTurn() {
+            if (!state.continuousDialogue) return;
+            setSiriGlowActive(true);
+            triggerHaptic(20);
+            toggleVoiceRecognition();
+        }
+
         // 11. ULTIMATE J.A.R.V.I.S. VISION SCANNER & METEOROLOGY ENGINE
         // ==============================================================
 
@@ -3407,6 +3655,15 @@
                         95: "Thunderstorm"
                     };
                     const condition = wCodes[c.weather_code] || "Nominal atmospheric conditions";
+                    renderGeminiRichCard('weather', {
+                        place: placeName,
+                        temp: c.temperature_2m,
+                        feels: c.apparent_temperature,
+                        condition: condition,
+                        humidity: c.relative_humidity_2m,
+                        wind: c.wind_speed_10m,
+                        precip: c.precipitation
+                    });
                     return `Meteorological conditions for ${placeName}: ${condition}, ${c.temperature_2m}°C (feels like ${c.apparent_temperature}°C). Humidity: ${c.relative_humidity_2m}%, Winds: ${c.wind_speed_10m} mph, Precipitation: ${c.precipitation} mm.`;
                 }
             } catch (err) {
