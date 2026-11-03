@@ -1,13 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tactical Obsidian / Cyber Intelligence Palette -->
-    <color name="tactical_bg">#0A0A0F</color>
-    <color name="tactical_card">#12131C</color>
-    <color name="tactical_cyan">#00FFCC</color>
-    <color name="tactical_cyan_dim">#3300FFCC</color>
-    <color name="tactical_amber">#FFB700</color>
-    <color name="tactical_red">#FF3366</color>
-    <color name="tactical_text">#E2E8F0</color>
-    <color name="tactical_subtext">#94A3B8</color>
-    <color name="black">#000000</color>
-    <color name="white">#FFFFFF</color>
+    <color name="bg_dark">#0A0A0F</color>
+    <color name="cyan_hud">#00FFCC</color>
+    <color name="amber_hud">#FFB700</color>
 </resources>
