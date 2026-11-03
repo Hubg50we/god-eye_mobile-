@@ -697,6 +697,231 @@
         }
 
 
+        
+        /* ==============================================================
+           J.A.R.V.I.S. HOLOGRAPHIC MARK 85 HUD STYLING & ANIMATIONS
+           ============================================================== */
+
+        @keyframes jarvisHoloEntry {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.96);
+                filter: brightness(2) contrast(1.5);
+            }
+            70% {
+                transform: translateY(-2px) scale(1.01);
+                filter: brightness(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: brightness(1) contrast(1);
+            }
+        }
+
+        @keyframes orbRotateCw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes orbRotateCcw {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        @keyframes arcBreathing {
+            0%, 100% {
+                box-shadow: 0 0 16px rgba(0, 240, 255, 0.7), inset 0 0 10px rgba(0, 240, 255, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(0, 240, 255, 0.95), 0 0 45px rgba(245, 158, 11, 0.5), inset 0 0 16px rgba(255, 255, 255, 0.8);
+                transform: scale(1.06);
+            }
+        }
+
+        @keyframes auraRipple {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.65);
+                opacity: 0;
+            }
+        }
+
+        /* Upgraded Floating Holographic Arc-Reactor Orb */
+        .ai-assistant-fab {
+            position: fixed;
+            right: 18px;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 78px);
+            z-index: 30;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 30, 55, 0.95) 0%, rgba(4, 8, 16, 0.98) 100%);
+            border: 1.5px solid rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 14px rgba(0, 240, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(12px);
+        }
+        .ai-assistant-fab:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 35px rgba(0, 240, 255, 0.8);
+        }
+
+        .ai-fab-aura {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            animation: auraRipple 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            pointer-events: none;
+        }
+
+        .ai-fab-ring-outer {
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: 1.5px dashed rgba(0, 240, 255, 0.8);
+            animation: orbRotateCw 6s linear infinite;
+        }
+
+        .ai-fab-ring-inner {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1.5px dotted rgba(245, 158, 11, 0.9);
+            animation: orbRotateCcw 3.5s linear infinite;
+        }
+
+        .ai-fab-core {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 15%, #00f0ff 65%, #0369a1 100%);
+            animation: arcBreathing 2.2s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #030712;
+            font-weight: 900;
+            z-index: 2;
+        }
+
+        /* Upgraded Holographic Assistant Modal Card */
+        .tactical-modal-card {
+            background: radial-gradient(ellipse at 50% 0%, rgba(12, 35, 68, 0.95) 0%, rgba(6, 11, 22, 0.98) 100%) !important;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px) !important;
+            background-size: 20px 20px !important;
+            border: 1.5px solid rgba(0, 240, 255, 0.55) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.25), inset 0 0 24px rgba(0, 240, 255, 0.08) !important;
+            animation: jarvisHoloEntry 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+        }
+
+        /* Cyber Tech Corner Brackets */
+        .tactical-modal-card::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px;
+            width: 18px; height: 18px;
+            border-top: 3px solid #00f0ff;
+            border-left: 3px solid #00f0ff;
+            border-top-left-radius: 16px;
+            pointer-events: none;
+        }
+        .tactical-modal-card::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 18px; height: 18px;
+            border-bottom: 3px solid #00f0ff;
+            border-right: 3px solid #00f0ff;
+            border-bottom-right-radius: 16px;
+            pointer-events: none;
+        }
+
+        /* Upgraded Header Arc-Reactor Core */
+        .jarvis-arc-reactor {
+            width: 54px !important;
+            height: 54px !important;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .jarvis-arc-reactor .ring-outer {
+            width: 50px !important;
+            height: 50px !important;
+            border: 2px dashed rgba(0, 240, 255, 0.85) !important;
+            animation: orbRotateCw 6s linear infinite !important;
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.6) !important;
+        }
+        .jarvis-arc-reactor .ring-inner {
+            width: 36px !important;
+            height: 36px !important;
+            border: 2px dotted rgba(245, 158, 11, 0.95) !important;
+            animation: orbRotateCcw 3.5s linear infinite !important;
+        }
+        .jarvis-arc-reactor .reactor-core {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 20%, #00f0ff 65%, #0284c7 100%) !important;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.9) !important;
+            animation: arcBreathing 2s ease-in-out infinite !important;
+        }
+        .jarvis-arc-reactor.speaking .ring-outer {
+            animation: orbRotateCw 1.8s linear infinite !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 25px #38bdf8 !important;
+        }
+        .jarvis-arc-reactor.listening .ring-outer {
+            animation: orbRotateCw 1.2s linear infinite !important;
+            border-color: #22c55e !important;
+            box-shadow: 0 0 25px #22c55e !important;
+        }
+
+        /* Futuristic Chat History Styling */
+        .chat-bubble.agent {
+            background: rgba(14, 32, 60, 0.6) !important;
+            border: 1px solid rgba(0, 240, 255, 0.3) !important;
+            border-left: 3px solid #00f0ff !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.05) !important;
+            color: #f1f5f9 !important;
+            font-size: 11.5px !important;
+            line-height: 1.55 !important;
+            border-radius: 10px !important;
+        }
+        .chat-bubble.user {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border: 1px solid rgba(148, 163, 184, 0.25) !important;
+            border-right: 3px solid #38bdf8 !important;
+            color: #e2e8f0 !important;
+            font-size: 11.5px !important;
+            border-radius: 10px !important;
+        }
+        .react-step-card {
+            background: rgba(8, 20, 40, 0.75) !important;
+            border: 1px solid rgba(0, 240, 255, 0.35) !important;
+            box-shadow: 0 4px 18px rgba(0, 240, 255, 0.1) !important;
+            border-radius: 8px !important;
+        }
+
         /* J.A.R.V.I.S. Holographic Arc-Reactor Core */
         .jarvis-arc-reactor {
             width: 46px;
@@ -887,10 +1112,15 @@
     </div>
 
     <!-- Floating Interactive AI Assistant Orb Button -->
-    <div class="ai-assistant-fab" onclick="openAssistant()">
-        <div class="ai-orb-ring"></div>
-        <div class="ai-fab-icon">🤖</div>
-        <div class="ai-fab-badge">AI</div>
+        <div class="ai-assistant-fab" onclick="openAssistant()" title="Summon J.A.R.V.I.S. Tactical AI">
+        <div class="ai-fab-aura"></div>
+        <div class="ai-fab-ring-outer"></div>
+        <div class="ai-fab-ring-inner"></div>
+        <div class="ai-fab-core">
+            <span>⚡</span>
+        </div>
+        <div class="ai-fab-badge" style="background:#00f0ff; color:#000; font-weight:900;">J.A.R.V.I.S.</div>
+    </div>
     </div>
 
     <!-- Bottom Floating Tactical Deck -->
@@ -1833,6 +2063,7 @@
                     wakeWordRecognizer.lang = 'en-US';
 
                     wakeWordRecognizer.onresult = (e) => {
+                        setReactorAnimationState("listening");
                         for (let i = e.resultIndex; i < e.results.length; i++) {
                             if (e.results[i].isFinal) {
                                 const transcript = e.results[i][0].transcript.trim();
@@ -2698,7 +2929,20 @@
 
         let speakTimeoutId = null;
 
+        
+        // Reactive Arc-Reactor Animation States (Speaking / Listening)
+        function setReactorAnimationState(stateMode) {
+            const reactors = document.querySelectorAll('.jarvis-arc-reactor');
+            reactors.forEach(r => {
+                r.classList.remove('speaking', 'listening');
+                if (stateMode === 'speaking') r.classList.add('speaking');
+                else if (stateMode === 'listening') r.classList.add('listening');
+            });
+        }
+
         function speakAssistant(text) {
+            setReactorAnimationState("speaking");
+            setTimeout(() => setReactorAnimationState("idle"), 4000);
             if (!text || state.soundMuted) return;
             if (speakTimeoutId) clearTimeout(speakTimeoutId);
 
