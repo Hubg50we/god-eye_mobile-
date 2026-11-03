@@ -8,9 +8,15 @@
     <!-- Three.js WebGL 2.0 Engine (Bundled Offline + CDN Fallback) -->
     <script src="js/three.min.js"></script>
     <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
-    <!-- Official CesiumJS 3D Photorealistic Engine -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Widgets/widgets.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Cesium.js"></script>
+    <!-- Official CesiumJS 3D Photorealistic Engine (Bundled Offline + CDN Fallback) -->
+    <link rel="stylesheet" href="css/widgets.css">
+    <script src="js/Cesium.js"></script>
+    <script>
+        if (typeof Cesium === 'undefined') {
+            document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Widgets/widgets.css">');
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.114.0/Cesium.js"><\/script>');
+        }
+    </script>
     <style>
         * {
             box-sizing: border-box;
@@ -6431,17 +6437,31 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
         window.AegisAppBus = {
             flyTo: (lat, lon, zoom = 1.35) => smoothFlyTo(lat, lon, zoom),
             flyToQuery: async (place) => {
-                const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(place)}&limit=1`);
-                const data = await res.json();
-                if (data.features && data.features.length > 0) {
-                    const feat = data.features[0];
-                    const lon = feat.geometry.coordinates[0];
-                    const lat = feat.geometry.coordinates[1];
-                    const name = feat.properties.name || place;
-                    const country = feat.properties.country || '';
-                    smoothFlyTo(lat, lon, 1.4);
-                    return { success: true, name, country, lat, lon };
+                const target = place.trim().toLowerCase();
+                // 1. Instant Offline Geocoding from Bundled world_cities.json
+                if (window.worldCitiesCache) {
+                    const match = window.worldCitiesCache.find(c => c.city.toLowerCase() === target || c.city.toLowerCase().includes(target));
+                    if (match) {
+                        smoothFlyTo(match.lat, match.lon, 1.4);
+                        return { success: true, name: match.city, country: match.country, lat: match.lat, lon: match.lon };
+                    }
                 }
+                // 2. Online fallback
+                try {
+                    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(place)}&limit=1`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.features && data.features.length > 0) {
+                            const feat = data.features[0];
+                            const lon = feat.geometry.coordinates[0];
+                            const lat = feat.geometry.coordinates[1];
+                            const name = feat.properties.name || place;
+                            const country = feat.properties.country || '';
+                            smoothFlyTo(lat, lon, 1.4);
+                            return { success: true, name, country, lat, lon };
+                        }
+                    }
+                } catch(e) {}
                 return { success: false };
             },
             zoomIn: () => {

@@ -1,0 +1,436 @@
+[
+  {
+    "city": "New York",
+    "country": "USA",
+    "lat": 40.7128,
+    "lon": -74.006,
+    "pop": 8336000
+  },
+  {
+    "city": "Los Angeles",
+    "country": "USA",
+    "lat": 34.0522,
+    "lon": -118.2437,
+    "pop": 3979000
+  },
+  {
+    "city": "Chicago",
+    "country": "USA",
+    "lat": 41.8781,
+    "lon": -87.6298,
+    "pop": 2746000
+  },
+  {
+    "city": "Washington DC",
+    "country": "USA",
+    "lat": 38.9072,
+    "lon": -77.0369,
+    "pop": 689000
+  },
+  {
+    "city": "San Francisco",
+    "country": "USA",
+    "lat": 37.7749,
+    "lon": -122.4194,
+    "pop": 873000
+  },
+  {
+    "city": "Seattle",
+    "country": "USA",
+    "lat": 47.6062,
+    "lon": -122.3321,
+    "pop": 737000
+  },
+  {
+    "city": "Miami",
+    "country": "USA",
+    "lat": 25.7617,
+    "lon": -80.1918,
+    "pop": 442000
+  },
+  {
+    "city": "Toronto",
+    "country": "Canada",
+    "lat": 43.6532,
+    "lon": -79.3832,
+    "pop": 2794000
+  },
+  {
+    "city": "Vancouver",
+    "country": "Canada",
+    "lat": 49.2827,
+    "lon": -123.1207,
+    "pop": 662000
+  },
+  {
+    "city": "Mexico City",
+    "country": "Mexico",
+    "lat": 19.4326,
+    "lon": -99.1332,
+    "pop": 9209000
+  },
+  {
+    "city": "Havana",
+    "country": "Cuba",
+    "lat": 23.1136,
+    "lon": -82.3666,
+    "pop": 2130000
+  },
+  {
+    "city": "Sao Paulo",
+    "country": "Brazil",
+    "lat": -23.5505,
+    "lon": -46.6333,
+    "pop": 12330000
+  },
+  {
+    "city": "Rio de Janeiro",
+    "country": "Brazil",
+    "lat": -22.9068,
+    "lon": -43.1729,
+    "pop": 6748000
+  },
+  {
+    "city": "Buenos Aires",
+    "country": "Argentina",
+    "lat": -34.6037,
+    "lon": -58.3816,
+    "pop": 3120000
+  },
+  {
+    "city": "Santiago",
+    "country": "Chile",
+    "lat": -33.4489,
+    "lon": -70.6693,
+    "pop": 6257000
+  },
+  {
+    "city": "Lima",
+    "country": "Peru",
+    "lat": -12.0464,
+    "lon": -77.0428,
+    "pop": 9750000
+  },
+  {
+    "city": "Bogota",
+    "country": "Colombia",
+    "lat": 4.711,
+    "lon": -74.0721,
+    "pop": 7181000
+  },
+  {
+    "city": "London",
+    "country": "UK",
+    "lat": 51.5074,
+    "lon": -0.1278,
+    "pop": 8982000
+  },
+  {
+    "city": "Paris",
+    "country": "France",
+    "lat": 48.8566,
+    "lon": 2.3522,
+    "pop": 2161000
+  },
+  {
+    "city": "Berlin",
+    "country": "Germany",
+    "lat": 52.52,
+    "lon": 13.405,
+    "pop": 3645000
+  },
+  {
+    "city": "Rome",
+    "country": "Italy",
+    "lat": 41.9028,
+    "lon": 12.4964,
+    "pop": 2873000
+  },
+  {
+    "city": "Madrid",
+    "country": "Spain",
+    "lat": 40.4168,
+    "lon": -3.7038,
+    "pop": 3223000
+  },
+  {
+    "city": "Amsterdam",
+    "country": "Netherlands",
+    "lat": 52.3676,
+    "lon": 4.9041,
+    "pop": 821000
+  },
+  {
+    "city": "Brussels",
+    "country": "Belgium",
+    "lat": 50.8503,
+    "lon": 4.3517,
+    "pop": 1209000
+  },
+  {
+    "city": "Geneva",
+    "country": "Switzerland",
+    "lat": 46.2044,
+    "lon": 6.1432,
+    "pop": 201000
+  },
+  {
+    "city": "Vienna",
+    "country": "Austria",
+    "lat": 48.2082,
+    "lon": 16.3738,
+    "pop": 1897000
+  },
+  {
+    "city": "Stockholm",
+    "country": "Sweden",
+    "lat": 59.3293,
+    "lon": 18.0686,
+    "pop": 975000
+  },
+  {
+    "city": "Oslo",
+    "country": "Norway",
+    "lat": 59.9139,
+    "lon": 10.7522,
+    "pop": 634000
+  },
+  {
+    "city": "Helsinki",
+    "country": "Finland",
+    "lat": 60.1699,
+    "lon": 24.9384,
+    "pop": 656000
+  },
+  {
+    "city": "Warsaw",
+    "country": "Poland",
+    "lat": 52.2297,
+    "lon": 21.0122,
+    "pop": 1765000
+  },
+  {
+    "city": "Kyiv",
+    "country": "Ukraine",
+    "lat": 50.4501,
+    "lon": 30.5234,
+    "pop": 2962000
+  },
+  {
+    "city": "Athens",
+    "country": "Greece",
+    "lat": 37.9838,
+    "lon": 23.7275,
+    "pop": 664000
+  },
+  {
+    "city": "Moscow",
+    "country": "Russia",
+    "lat": 55.7558,
+    "lon": 37.6173,
+    "pop": 13010000
+  },
+  {
+    "city": "Tokyo",
+    "country": "Japan",
+    "lat": 35.6762,
+    "lon": 139.6503,
+    "pop": 13960000
+  },
+  {
+    "city": "Beijing",
+    "country": "China",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "pop": 21540000
+  },
+  {
+    "city": "Shanghai",
+    "country": "China",
+    "lat": 31.2304,
+    "lon": 121.4737,
+    "pop": 24870000
+  },
+  {
+    "city": "Hong Kong",
+    "country": "China",
+    "lat": 22.3193,
+    "lon": 114.1694,
+    "pop": 7482000
+  },
+  {
+    "city": "Seoul",
+    "country": "South Korea",
+    "lat": 37.5665,
+    "lon": 126.978,
+    "pop": 9776000
+  },
+  {
+    "city": "Taipei",
+    "country": "Taiwan",
+    "lat": 25.033,
+    "lon": 121.5654,
+    "pop": 2646000
+  },
+  {
+    "city": "Singapore",
+    "country": "Singapore",
+    "lat": 1.3521,
+    "lon": 103.8198,
+    "pop": 5686000
+  },
+  {
+    "city": "Bangkok",
+    "country": "Thailand",
+    "lat": 13.7563,
+    "lon": 100.5018,
+    "pop": 10539000
+  },
+  {
+    "city": "Jakarta",
+    "country": "Indonesia",
+    "lat": -6.2088,
+    "lon": 106.8456,
+    "pop": 10560000
+  },
+  {
+    "city": "Manila",
+    "country": "Philippines",
+    "lat": 14.5995,
+    "lon": 120.9842,
+    "pop": 1846000
+  },
+  {
+    "city": "Kuala Lumpur",
+    "country": "Malaysia",
+    "lat": 3.139,
+    "lon": 101.6869,
+    "pop": 1808000
+  },
+  {
+    "city": "New Delhi",
+    "country": "India",
+    "lat": 28.6139,
+    "lon": 77.209,
+    "pop": 32941000
+  },
+  {
+    "city": "Mumbai",
+    "country": "India",
+    "lat": 19.076,
+    "lon": 72.8777,
+    "pop": 20961000
+  },
+  {
+    "city": "Dubai",
+    "country": "UAE",
+    "lat": 25.2048,
+    "lon": 55.2708,
+    "pop": 3331000
+  },
+  {
+    "city": "Doha",
+    "country": "Qatar",
+    "lat": 25.2854,
+    "lon": 51.531,
+    "pop": 956000
+  },
+  {
+    "city": "Riyadh",
+    "country": "Saudi Arabia",
+    "lat": 24.7136,
+    "lon": 46.6753,
+    "pop": 7676000
+  },
+  {
+    "city": "Tel Aviv",
+    "country": "Israel",
+    "lat": 32.0853,
+    "lon": 34.7818,
+    "pop": 460000
+  },
+  {
+    "city": "Jerusalem",
+    "country": "Israel",
+    "lat": 31.7683,
+    "lon": 35.2137,
+    "pop": 936000
+  },
+  {
+    "city": "Istanbul",
+    "country": "Turkey",
+    "lat": 41.0082,
+    "lon": 28.9784,
+    "pop": 15460000
+  },
+  {
+    "city": "Cairo",
+    "country": "Egypt",
+    "lat": 30.0444,
+    "lon": 31.2357,
+    "pop": 9540000
+  },
+  {
+    "city": "Johannesburg",
+    "country": "South Africa",
+    "lat": -26.2041,
+    "lon": 28.0473,
+    "pop": 5635000
+  },
+  {
+    "city": "Cape Town",
+    "country": "South Africa",
+    "lat": -33.9249,
+    "lon": 18.4241,
+    "pop": 4618000
+  },
+  {
+    "city": "Nairobi",
+    "country": "Kenya",
+    "lat": -1.2921,
+    "lon": 36.8219,
+    "pop": 4397000
+  },
+  {
+    "city": "Lagos",
+    "country": "Nigeria",
+    "lat": 6.5244,
+    "lon": 3.3792,
+    "pop": 14862000
+  },
+  {
+    "city": "Casablanca",
+    "country": "Morocco",
+    "lat": 33.5731,
+    "lon": -7.5898,
+    "pop": 3359000
+  },
+  {
+    "city": "Sydney",
+    "country": "Australia",
+    "lat": -33.8688,
+    "lon": 151.2093,
+    "pop": 5312000
+  },
+  {
+    "city": "Melbourne",
+    "country": "Australia",
+    "lat": -37.8136,
+    "lon": 144.9631,
+    "pop": 5078000
+  },
+  {
+    "city": "Auckland",
+    "country": "New Zealand",
+    "lat": -36.8485,
+    "lon": 174.7633,
+    "pop": 1657000
+  },
+  {
+    "city": "Honolulu",
+    "country": "USA",
+    "lat": 21.3069,
+    "lon": -157.8583,
+    "pop": 350000
+  }
+]
