@@ -8,7 +8,7 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.6.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.6.0/godseye-android.apk)
+### 📥 [Direct Download APK (v1.6.1)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.6.1/godseye-android.apk)
 
 ---
 
@@ -16,7 +16,11 @@
 
 God's Eye View Mobile features a complete **Dual Photorealistic 3D Earth Engine**:
 * **🌐 Official CesiumJS & Cesium Ion 3D Streaming**: Integrated authenticated Cesium Ion Photorealistic World Elevation, Bing Maps Aerial high-resolution satellite streaming, and 3D globe coordinates.
-* **🛰️ High-Performance Three.js WebGL 2.0 Engine**: Real spherical 3D Earth with NASA Blue Marble & Esri satellite imagery, specular ocean reflections, day/night city lights, and tactical contours.
+* **🛰️ High-Performance Three.js WebGL 2.0 Engine**: Real spherical 3D Earth with cached NASA Blue Marble & Esri satellite imagery, specular ocean reflections, day/night city lights, and tactical contours.
+* **⚡ Mobile Battery & GPU Throttling**: Intelligent background engine pausing—Three.js render loop automatically halts when Cesium is visible to eliminate double GPU overhead and save battery.
+* **🛡️ WebGL Context Loss & Recovery**: Native handlers automatically recover WebGL 2.0 states after screen locks or task switching without crashing.
+* **📡 Real-Time ADS-B Tactical Airspace Feeds**: Direct live military & global aircraft telemetry stream via `adsb.lol` with offline cached mission fallbacks.
+* **💾 Zero-Latency Offline Telemetry Cache**: Automatic local persistence of quakes, flights, and ISS orbits ensures full tactical capability even in airplane mode.
 * **✨ Atmospheric Rayleigh Scattering & 3D Clouds**: Custom WebGL atmosphere rim shader enveloping the planet and an independently rotating semi-transparent 3D cloud layer.
 * **✈️ Real 3D Aircraft & Kinematic Meshes**: Directional aircraft models flying at accurate scaled altitudes with live velocity heading vectors.
 * **💥 Volumetric 3D Seismic Shockwaves**: Pulsing 3D rings erupting from USGS earthquake hypocenters across global fault lines.

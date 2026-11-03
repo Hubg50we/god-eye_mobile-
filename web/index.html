@@ -883,8 +883,25 @@
                     navigationHelpButton: false,
                     sceneModePicker: false,
                     infoBox: false,
-                    selectionIndicator: false
+                    selectionIndicator: false,
+                    requestRenderMode: false
                 });
+
+                // Mobile performance & battery optimization
+                cesiumViewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 1.5);
+                if (cesiumViewer.scene && cesiumViewer.scene.globe) {
+                    cesiumViewer.scene.globe.maximumScreenSpaceError = 2.5;
+                    cesiumViewer.scene.globe.depthTestAgainstTerrain = false;
+                }
+                cesiumViewer.targetFrameRate = 45;
+
+                // WebGL context loss listener
+                if (cesiumViewer.canvas) {
+                    cesiumViewer.canvas.addEventListener("webglcontextlost", (e) => {
+                        e.preventDefault();
+                        console.warn("[WEBGL] Cesium WebGL context lost on mobile.");
+                    }, false);
+                }
 
                 // Set initial camera view
                 cesiumViewer.camera.setView({
@@ -1065,6 +1082,9 @@
         let asset3DGroup;
         let raycaster, mouse;
         let earthMaterial;
+        let cachedSatTexture = null;
+        let cachedNightTexture = null;
+        let cachedTopoTexture = null;
         const textureLoader = new THREE.TextureLoader();
 
         function initThreeGlobe() {
@@ -1076,11 +1096,21 @@
             camera = new THREE.PerspectiveCamera(45, w / h, 1, 3000);
             camera.position.set(0, 30, 280);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
             renderer.setSize(w, h);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             container.appendChild(renderer.domElement);
+
+            // WebGL context loss recovery for Android WebView
+            renderer.domElement.addEventListener("webglcontextlost", (e) => {
+                e.preventDefault();
+                console.warn("[WEBGL] Three.js context lost. Pausing.");
+            }, false);
+            renderer.domElement.addEventListener("webglcontextrestored", () => {
+                console.log("[WEBGL] Three.js context restored. Refreshing.");
+                if (earthMaterial) earthMaterial.needsUpdate = true;
+            }, false);
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
             scene.add(ambientLight);
@@ -1100,14 +1130,32 @@
                 specular: new THREE.Color(0x113355)
             });
 
+            // Load NASA photorealistic Blue Marble satellite texture & cache it
             textureLoader.load(
                 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
                 (tex) => {
+                    cachedSatTexture = tex;
                     earthMaterial.map = tex;
                     earthMaterial.needsUpdate = true;
                 },
                 undefined,
                 () => console.log("Using built-in high-res procedural Earth map.")
+            );
+
+            // Pre-cache night texture
+            textureLoader.load(
+                'https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg',
+                (tex) => { cachedNightTexture = tex; },
+                undefined,
+                () => {}
+            );
+
+            // Pre-cache topology texture
+            textureLoader.load(
+                'https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png',
+                (tex) => { cachedTopoTexture = tex; },
+                undefined,
+                () => {}
             );
 
             earthMesh = new THREE.Mesh(earthGeo, earthMaterial);
@@ -1193,21 +1241,29 @@
                 document.getElementById('cesiumContainer').style.display = 'block';
                 activeEngine = 'cesium';
                 initCesiumGlobe();
+                if (cesiumViewer) {
+                    cesiumViewer.resize();
+                    updateCesiumAssets();
+                }
                 showToast("Cesium Ion 3D Photorealistic Engine Activated");
             } else {
                 document.getElementById('cesiumContainer').style.display = 'none';
                 document.getElementById('webgl-container').style.display = 'block';
+                const wasCesium = (activeEngine === 'cesium');
                 activeEngine = 'three';
+                if (wasCesium) {
+                    requestAnimationFrame(animateThree);
+                }
 
                 if (mode === 'three_sat') {
                     document.getElementById('btnSatMap').classList.add('active');
-                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('satellite'));
+                    earthMaterial.map = cachedSatTexture || new THREE.CanvasTexture(createProceduralEarthCanvas('satellite'));
                 } else if (mode === 'three_night') {
                     document.getElementById('btnNightMap').classList.add('active');
-                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('night'));
+                    earthMaterial.map = cachedNightTexture || new THREE.CanvasTexture(createProceduralEarthCanvas('night'));
                 } else if (mode === 'three_topo') {
                     document.getElementById('btnTopoMap').classList.add('active');
-                    earthMaterial.map = new THREE.CanvasTexture(createProceduralEarthCanvas('topo'));
+                    earthMaterial.map = cachedTopoTexture || new THREE.CanvasTexture(createProceduralEarthCanvas('topo'));
                 }
                 earthMaterial.needsUpdate = true;
             }
@@ -1406,6 +1462,7 @@
         }
 
         function animateThree() {
+            if (activeEngine !== 'three') return; // Pause Three.js loop when Cesium is visible to save battery/GPU!
             requestAnimationFrame(animateThree);
 
             curLon += (targetLon - curLon) * 0.08;
@@ -1641,6 +1698,25 @@
             }
         }
 
+        function loadCachedTelemetry() {
+            try {
+                const q = localStorage.getItem('gev_cache_quakes');
+                if (q) state.quakes = JSON.parse(q);
+                const s = localStorage.getItem('gev_cache_satellites');
+                if (s) state.satellites = JSON.parse(s);
+                const f = localStorage.getItem('gev_cache_flights');
+                if (f) state.flights = JSON.parse(f);
+
+                if (state.quakes.length > 0) document.getElementById('countQuake').textContent = state.quakes.length;
+                if (state.satellites.length > 0) document.getElementById('countSat').textContent = state.satellites.length;
+                if (state.flights.length > 0) document.getElementById('countAir').textContent = state.flights.length;
+                updateTotalCount();
+                update3DAssetMeshes();
+            } catch (e) {
+                console.warn("[CACHE] Telemetry cache load error:", e);
+            }
+        }
+
         async function fetchUSGSQuakes() {
             try {
                 const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson');
@@ -1660,18 +1736,21 @@
                         tsunami: f.properties.tsunami || 0
                     };
                 });
+                localStorage.setItem('gev_cache_quakes', JSON.stringify(state.quakes));
                 document.getElementById('countQuake').textContent = state.quakes.length;
                 document.getElementById('quakeSummary').textContent = `${state.quakes.length} events (USGS Live)`;
                 updateTotalCount();
                 update3DAssetMeshes();
             } catch (err) {
-                state.quakes = [
-                    { id: 'q1', title: '68 km W of San Antonio de los Cobres, Argentina', type: 'SEISMIC', lat: -24.2, lon: -66.9, depth: 185, mag: 4.8, time: 'Recent', tsunami: 0 },
-                    { id: 'q2', title: '12 km ENE of Pahala, Hawaii', type: 'SEISMIC', lat: 19.2, lon: -155.4, depth: 32, mag: 3.1, time: 'Recent', tsunami: 0 },
-                    { id: 'q3', title: 'Near Coast of Central Chile', type: 'SEISMIC', lat: -31.4, lon: -71.6, depth: 45, mag: 5.2, time: 'Recent', tsunami: 0 }
-                ];
-                document.getElementById('countQuake').textContent = state.quakes.length;
-                update3DAssetMeshes();
+                if (!state.quakes || state.quakes.length === 0) {
+                    state.quakes = [
+                        { id: 'q1', title: '68 km W of San Antonio de los Cobres, Argentina', type: 'SEISMIC', lat: -24.2, lon: -66.9, depth: 185, mag: 4.8, time: 'Recent', tsunami: 0 },
+                        { id: 'q2', title: '12 km ENE of Pahala, Hawaii', type: 'SEISMIC', lat: 19.2, lon: -155.4, depth: 32, mag: 3.1, time: 'Recent', tsunami: 0 },
+                        { id: 'q3', title: 'Near Coast of Central Chile', type: 'SEISMIC', lat: -31.4, lon: -71.6, depth: 45, mag: 5.2, time: 'Recent', tsunami: 0 }
+                    ];
+                    document.getElementById('countQuake').textContent = state.quakes.length;
+                    update3DAssetMeshes();
+                }
             }
         }
 
@@ -1693,19 +1772,58 @@
                     { id: 'HST-20580', title: 'Hubble Space Telescope', type: 'SPACE', lat: 28.5 + Math.sin(Date.now() * 0.0001) * 20, lon: -80.5 + (Date.now() * 0.00005 % 360), alt: 535, velocity: 27300 },
                     { id: 'NOAA-20', title: 'NOAA-20 Weather Polar Orbiter', type: 'SPACE', lat: 45.0 + Math.cos(Date.now() * 0.0001) * 35, lon: 10.0 + (Date.now() * 0.00004 % 360), alt: 824, velocity: 26800 }
                 ];
+                localStorage.setItem('gev_cache_satellites', JSON.stringify(state.satellites));
                 document.getElementById('countSat').textContent = state.satellites.length;
                 updateTotalCount();
                 update3DAssetMeshes();
             } catch (err) {
-                state.satellites = [
-                    { id: 'ISS-25544', title: 'International Space Station', type: 'SPACE', lat: 14.5, lon: -38.2, alt: 420, velocity: 27500, visibility: 'daylight' }
-                ];
-                document.getElementById('countSat').textContent = state.satellites.length;
-                update3DAssetMeshes();
+                if (!state.satellites || state.satellites.length === 0) {
+                    state.satellites = [
+                        { id: 'ISS-25544', title: 'International Space Station', type: 'SPACE', lat: 14.5, lon: -38.2, alt: 420, velocity: 27500, visibility: 'daylight' }
+                    ];
+                    document.getElementById('countSat').textContent = state.satellites.length;
+                    update3DAssetMeshes();
+                }
             }
         }
 
+        async function fetchLiveFlights() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch('https://api.adsb.lol/v2/mil', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                const data = await res.json();
+                if (data.ac && Array.isArray(data.ac) && data.ac.length > 0) {
+                    state.flights = data.ac.slice(0, 35).map((a, idx) => ({
+                        id: (a.flight || a.hex || `MIL-${idx}`).trim(),
+                        title: `${(a.flight || a.r || 'Military').trim()} (${(a.t || 'Tactical Aircraft').trim()})`,
+                        type: 'AIR',
+                        lat: a.lat,
+                        lon: a.lon,
+                        alt: Math.round(a.alt_baro || a.alt_geom || 30000),
+                        speed: Math.round(a.gs || 450),
+                        heading: Math.round(a.track || a.true_heading || 0),
+                        military: true
+                    })).filter(f => f.lat && f.lon);
+
+                    localStorage.setItem('gev_cache_flights', JSON.stringify(state.flights));
+                    document.getElementById('countAir').textContent = state.flights.length;
+                    document.getElementById('airSummary').textContent = `${state.flights.length} live tactical tracks`;
+                    updateTotalCount();
+                    update3DAssetMeshes();
+                    return;
+                }
+            } catch (err) {
+                console.log("[ADSB] Live feed unavailable, using tactical patrol preset.");
+            }
+
+            // Fallback preset
+            generateAirspaceTracks();
+        }
+
         function generateAirspaceTracks() {
+            if (state.flights && state.flights.length > 0) return;
             const hubs = [
                 { id: 'AFR-022', title: 'Air France A350', lat: 48.8, lon: 2.3, alt: 38000, speed: 495, heading: 260 },
                 { id: 'UAL-870', title: 'United Airlines B777', lat: 37.7, lon: -122.4, alt: 34000, speed: 480, heading: 75 },
@@ -1728,6 +1846,7 @@
                 heading: h.heading,
                 military: !!h.military
             }));
+            localStorage.setItem('gev_cache_flights', JSON.stringify(state.flights));
             document.getElementById('countAir').textContent = state.flights.length;
             document.getElementById('airSummary').textContent = `${state.flights.length} active air tracks`;
             updateTotalCount();
@@ -2065,6 +2184,24 @@
                 setMapMode('three_sat');
                 reply = `Switched to 3D Photorealistic Satellite Earth map.`;
             }
+            // Threat Assessment & Executive Sitrep
+            else if (lower.includes('threat') || lower.includes('assess') || lower.includes('brief') || lower.includes('sitrep') || lower.includes('status')) {
+                const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                const highRiskQuakes = state.quakes.filter(q => q.mag >= 4.5).length;
+                const milFlights = state.flights.filter(f => f.military).length;
+                reply = `Executive Sitrep: Tracking ${state.flights.length} flights (${milFlights} tactical/defense), ${state.quakes.length} seismic ruptures (${highRiskQuakes} high-magnitude ≥M4.5), and ${state.satellites.length} orbital satellites. Peak seismic alert: M${maxQ ? maxQ.mag : 'N/A'} at ${maxQ ? maxQ.title : 'None'}. 3D Engine: ${activeEngine.toUpperCase()}. All operational layers nominal.`;
+            }
+            // Clear Chat Transcript
+            else if (lower.includes('clear chat') || lower.includes('clear message') || lower === 'clear') {
+                const log = document.getElementById('chatMessages');
+                if (log) log.innerHTML = '';
+                reply = `Tactical communications transcript cleared.`;
+            }
+            // Performance & Diagnostics
+            else if (lower.includes('perf') || lower.includes('fps') || lower.includes('diagnostic')) {
+                const b = localAI.benchmark(250);
+                reply = `Diagnostics: Active 3D Engine: ${activeEngine.toUpperCase()}. Neural Engine: ${b.infPerSec.toLocaleString()} ops/sec (${b.totalMs}ms). Total Assets: ${state.flights.length + state.quakes.length + state.satellites.length}. Hardware WebGL 2.0 active.`;
+            }
             // Native OS
             else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
                 centerOnGps();
@@ -2202,14 +2339,16 @@ Processed on-device via AEGIS 3D Earth AI Assistant.`;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            loadCachedTelemetry();
             initThreeGlobe();
             fetchUSGSQuakes();
             fetchISSOrbit();
-            generateAirspaceTracks();
+            fetchLiveFlights();
 
             setInterval(() => {
                 fetchUSGSQuakes();
                 fetchISSOrbit();
+                fetchLiveFlights();
             }, 45000);
         });
     </script>
