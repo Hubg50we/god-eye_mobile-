@@ -38,6 +38,7 @@ app/build/
 .idea/
 local.properties
 *.apk
+!release_bin/*.apk
 *.aab
 captures/
 .externalNativeBuild

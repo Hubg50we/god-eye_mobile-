@@ -71,8 +71,10 @@ flowchart TD
 
 ## 🚀 How to Get and Run the App
 
-### Option 1: Download Pre-Built APK (Easiest)
-1. Go to the [**Actions**](https://github.com/Hubg50we/god-eye_mobile-/actions) tab of this repository.
+### Option 1: Direct APK Download (Ready to Install)
+* **Direct Repo Download**: You can download [`godseye-android.apk`](release_bin/godseye-android.apk?raw=true) directly from the `release_bin/` folder in this repository!
+* **GitHub Releases**: Go to [**Releases**](https://github.com/Hubg50we/god-eye_mobile-/releases) and download the latest release APK.
+* **GitHub Actions**: Go to the [**Actions**](https://github.com/Hubg50we/god-eye_mobile-/actions) tab, click the latest workflow run, and download the `godseye-android-apk` artifact.
 2. Click the latest **Build Android Mobile APK** workflow run.
 3. Under **Artifacts**, download `GodsEyeView-Android-Debug-APK.zip`.
 4. Unzip and install `app-debug.apk` directly onto your Android device!
