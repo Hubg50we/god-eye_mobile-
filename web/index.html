@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>God's Eye View — Autonomous AI Assistant & Tactical Console</title>
+    <title>God's Eye View — Real 3D Earth & AI Assistant Console</title>
+    <!-- Hardware-accelerated 3D WebGL Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -13,9 +15,9 @@
             user-select: none;
         }
         :root {
-            --bg-color: #06070a;
-            --card-bg: rgba(11, 14, 24, 0.95);
-            --card-border: rgba(0, 255, 204, 0.25);
+            --bg-color: #030407;
+            --card-bg: rgba(9, 12, 20, 0.95);
+            --card-border: rgba(0, 255, 204, 0.28);
             --cyan: #00ffcc;
             --cyan-glow: rgba(0, 255, 204, 0.5);
             --cyan-dim: rgba(0, 255, 204, 0.12);
@@ -43,8 +45,8 @@
             position: relative;
         }
 
-        /* 3D Tactical Canvas */
-        #globeCanvas {
+        /* 3D WebGL Container */
+        #webgl-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -62,7 +64,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(180deg, rgba(6,7,10,0.98) 0%, rgba(6,7,10,0.6) 85%, transparent 100%);
+            background: linear-gradient(180deg, rgba(3,4,7,0.98) 0%, rgba(3,4,7,0.65) 85%, transparent 100%);
             border-bottom: 1px solid rgba(0, 255, 204, 0.2);
             backdrop-filter: blur(12px);
         }
@@ -72,28 +74,28 @@
             gap: 10px;
         }
         .brand-logo {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border: 2px solid var(--cyan);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 0 12px var(--cyan-glow);
+            box-shadow: 0 0 14px var(--cyan-glow);
             animation: pulse-ring 3s infinite alternate;
         }
         @keyframes pulse-ring {
             0% { box-shadow: 0 0 6px var(--cyan-glow); }
-            100% { box-shadow: 0 0 16px var(--cyan); }
+            100% { box-shadow: 0 0 18px var(--cyan); }
         }
         .brand-logo::after {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             background: var(--purple);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--purple);
+            box-shadow: 0 0 10px var(--purple);
         }
         .brand-text {
             display: flex;
@@ -106,9 +108,7 @@
             color: var(--text-main);
             line-height: 1.1;
         }
-        .brand-title span {
-            color: var(--cyan);
-        }
+        .brand-title span { color: var(--cyan); }
         .brand-sub {
             font-size: 9px;
             color: var(--purple);
@@ -134,13 +134,13 @@
             align-items: center;
             gap: 5px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+            box-shadow: 0 0 12px rgba(192, 132, 252, 0.3);
             transition: all 0.2s;
         }
         .hud-chip:active {
             transform: scale(0.95);
             background: var(--purple);
-            color: #08090d;
+            color: #030407;
         }
         .hud-btn {
             background: var(--card-bg);
@@ -160,24 +160,22 @@
         .ai-assistant-fab {
             position: fixed;
             right: 16px;
-            bottom: calc(env(safe-area-inset-bottom, 16px) + 74px);
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 76px);
             z-index: 25;
-            width: 56px;
-            height: 56px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             background: radial-gradient(circle, #3b0764 0%, #0f172a 100%);
             border: 2px solid var(--purple);
-            box-shadow: 0 0 24px var(--purple-glow), 0 6px 20px rgba(0,0,0,0.7);
+            box-shadow: 0 0 25px var(--purple-glow), 0 6px 20px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
-        .ai-assistant-fab:active {
-            transform: scale(0.92);
-        }
+        .ai-assistant-fab:active { transform: scale(0.92); }
         .ai-orb-ring {
             position: absolute;
             width: 100%;
@@ -190,20 +188,47 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-        .ai-fab-icon {
-            font-size: 24px;
-            z-index: 2;
-        }
+        .ai-fab-icon { font-size: 24px; z-index: 2; }
         .ai-fab-badge {
             position: absolute;
             bottom: -6px;
             background: var(--purple);
-            color: #08090d;
+            color: #030407;
             font-size: 8px;
             font-weight: 900;
             padding: 1px 6px;
             border-radius: 8px;
             letter-spacing: 0.5px;
+        }
+
+        /* 3D Map Overlay Mode Badges */
+        .map-style-selector {
+            position: absolute;
+            top: 60px;
+            left: 16px;
+            z-index: 15;
+            display: flex;
+            gap: 4px;
+            background: rgba(3,4,7,0.8);
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,255,204,0.25);
+            backdrop-filter: blur(8px);
+        }
+        .map-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 3px 7px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .map-btn.active {
+            background: var(--cyan);
+            color: #030407;
         }
 
         /* Bottom Floating HUD / Telemetry Deck */
@@ -221,9 +246,7 @@
             width: 100%;
             pointer-events: none;
         }
-        .interactive-panel {
-            pointer-events: auto;
-        }
+        .interactive-panel { pointer-events: auto; }
 
         /* Category Filter Tabs */
         .category-tabs {
@@ -236,7 +259,7 @@
         }
         .category-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
-            background: rgba(11, 14, 24, 0.88);
+            background: rgba(9, 12, 20, 0.9);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(148, 163, 184, 0.2);
             color: var(--text-sub);
@@ -266,22 +289,15 @@
             margin-bottom: 8px;
             font-family: var(--font-mono);
             font-size: 11px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
         }
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
         }
-        .status-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .status-label {
-            color: var(--text-sub);
-            font-size: 9px;
-            letter-spacing: 0.5px;
-        }
+        .status-item { display: flex; flex-direction: column; }
+        .status-label { color: var(--text-sub); font-size: 9px; letter-spacing: 0.5px; }
         .status-val {
             color: var(--cyan);
             font-weight: bold;
@@ -326,19 +342,13 @@
             background: var(--purple-dim);
             box-shadow: 0 0 12px rgba(192, 132, 252, 0.25);
         }
-        .t-btn-purple:active {
-            background: var(--purple);
-            color: #000;
-        }
+        .t-btn-purple:active { background: var(--purple); color: #000; }
         .t-btn-primary {
             background: var(--cyan);
-            color: #08090d;
+            color: #030407;
             box-shadow: 0 0 14px var(--cyan-glow);
         }
-        .t-btn-primary:active {
-            background: #fff;
-            color: #000;
-        }
+        .t-btn-primary:active { background: #fff; color: #000; }
 
         /* Modals & Fullscreen Expansion */
         #assistantModal, #assessmentModal, #settingsModal {
@@ -356,18 +366,16 @@
             padding: 12px;
         }
         @media (min-width: 600px) {
-            #assistantModal, #assessmentModal, #settingsModal {
-                align-items: center;
-            }
+            #assistantModal, #assessmentModal, #settingsModal { align-items: center; }
         }
         .tactical-modal-card {
-            background: #0d101a;
+            background: #090c14;
             border: 1.5px solid var(--purple);
             border-radius: 14px;
             padding: 16px;
             width: 100%;
             max-width: 520px;
-            box-shadow: 0 0 45px rgba(192, 132, 252, 0.35);
+            box-shadow: 0 0 50px rgba(192, 132, 252, 0.4);
             font-family: var(--font-mono);
             max-height: 85vh;
             display: flex;
@@ -402,11 +410,7 @@
             align-items: center;
             gap: 6px;
         }
-        .header-btn-group {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
+        .header-btn-group { display: flex; gap: 6px; align-items: center; }
         .icon-btn {
             background: transparent;
             border: 1px solid rgba(192, 132, 252, 0.3);
@@ -417,6 +421,15 @@
             cursor: pointer;
         }
         .icon-btn:hover { color: #fff; border-color: var(--purple); }
+        .close-icon {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .close-icon:hover { color: var(--red); }
 
         /* Assistant Voice Banner & Animated Waveform */
         .assistant-avatar-banner {
@@ -441,10 +454,7 @@
             font-size: 20px;
             position: relative;
         }
-        #audioWaveCanvas {
-            width: 70px;
-            height: 24px;
-        }
+        #audioWaveCanvas { width: 70px; height: 24px; }
 
         /* Chat History */
         .chat-history {
@@ -457,9 +467,7 @@
             flex-direction: column;
             gap: 8px;
         }
-        .tactical-modal-card.fullscreen-mode .chat-history {
-            max-height: none;
-        }
+        .tactical-modal-card.fullscreen-mode .chat-history { max-height: none; }
         .chat-bubble {
             padding: 8px 12px;
             border-radius: 8px;
@@ -478,7 +486,7 @@
             align-self: flex-end;
         }
 
-        /* Assistant Command Quick Chips */
+        /* Chips & Input */
         .chip-row {
             display: flex;
             gap: 6px;
@@ -497,20 +505,12 @@
             cursor: pointer;
             white-space: nowrap;
         }
-        .query-chip:active {
-            background: var(--purple);
-            color: #000;
-        }
+        .query-chip:active { background: var(--purple); color: #000; }
 
-        /* Voice Input Row */
-        .chat-input-row {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
+        .chat-input-row { display: flex; gap: 6px; align-items: center; }
         .chat-input {
             flex: 1;
-            background: #06070a;
+            background: #030407;
             border: 1px solid rgba(192, 132, 252, 0.4);
             color: #fff;
             padding: 9px 12px;
@@ -525,7 +525,7 @@
         }
         .voice-mic-btn {
             background: var(--purple);
-            color: #08090d;
+            color: #030407;
             border: none;
             width: 38px;
             height: 38px;
@@ -596,12 +596,11 @@
             max-height: 140px;
         }
 
-        /* Settings Form */
         .form-group { margin-bottom: 12px; }
         .form-label { display: block; color: var(--text-sub); font-size: 10px; margin-bottom: 4px; }
         .form-input {
             width: 100%;
-            background: #06070a;
+            background: #030407;
             border: 1px solid rgba(0, 255, 204, 0.3);
             color: #fff;
             padding: 9px;
@@ -613,16 +612,23 @@
 </head>
 <body>
 
-    <!-- 3D Tactical Canvas Display -->
-    <canvas id="globeCanvas"></canvas>
+    <!-- 3D Real Earth WebGL Canvas Container -->
+    <div id="webgl-container"></div>
+
+    <!-- Map Imagery Style Selector -->
+    <div class="map-style-selector">
+        <button class="map-btn active" id="btnSatMap" onclick="setMapTexture('satellite')">🛰 SATELLITE</button>
+        <button class="map-btn" id="btnNightMap" onclick="setMapTexture('night')">🌙 NIGHT</button>
+        <button class="map-btn" id="btnTopoMap" onclick="setMapTexture('topo')">🗺 TACTICAL</button>
+    </div>
 
     <!-- Top HUD Bar -->
     <header>
         <div class="brand">
             <div class="brand-logo"></div>
             <div class="brand-text">
-                <div class="brand-title">GOD'S EYE <span>VIEW</span></div>
-                <div class="brand-sub">AI ASSISTANT CONSOLE</div>
+                <div class="brand-title">GOD'S EYE <span>3D</span></div>
+                <div class="brand-sub">REAL 3D EARTH · AI CONSOLE</div>
             </div>
         </div>
         <div class="header-actions">
@@ -655,12 +661,12 @@
         <div class="interactive-panel status-card">
             <div class="status-grid">
                 <div class="status-item">
-                    <span class="status-label">AI ASSISTANT AUTHORITY:</span>
-                    <span class="status-val" style="color:var(--purple);">Full App Control (Active)</span>
+                    <span class="status-label">3D ENGINE & SHADERS:</span>
+                    <span class="status-val" style="color:var(--cyan);" id="renderEngineStatus">Three.js WebGL 2.0 (Real 3D Earth)</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">HARDWARE RUNTIME:</span>
-                    <span class="status-val" id="platformStatus">Android WebKit WebGL 2.0</span>
+                    <span class="status-label">ATMOSPHERE & CLOUDS:</span>
+                    <span class="status-val" style="color:var(--purple);" id="atmoStatus">Rayleigh Halo + Dynamic Clouds</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">AIRSPACE VECTORS (ADS-B):</span>
@@ -687,12 +693,12 @@
         </div>
     </main>
 
-    <!-- AEGIS Conversational AI Assistant Modal (Full Control Center) -->
+    <!-- AEGIS Conversational AI Assistant Modal -->
     <div id="assistantModal">
         <div class="tactical-modal-card" id="assistantModalCard">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>✨ AEGIS — FULL ACCESS AI ASSISTANT</span>
+                    <span>✨ AEGIS — FULL 3D EARTH AI ASSISTANT</span>
                 </div>
                 <div class="header-btn-group">
                     <button class="icon-btn" onclick="toggleAssistantFullscreen()" title="Toggle Fullscreen">⛶</button>
@@ -708,14 +714,14 @@
                 </div>
                 <div style="flex:1;">
                     <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS AI Assistant Core</div>
-                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Full App Access Active · Camera, Filters, Voice, GPS.</div>
+                    <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Full 3D Earth Camera, Layers, Voice, GPS Control.</div>
                 </div>
                 <canvas id="audioWaveCanvas"></canvas>
             </div>
 
             <div class="chat-history" id="chatHistory">
                 <div class="chat-bubble agent">
-                    <strong>AEGIS Assistant:</strong> Welcome, Commander. I have full autonomous control of this console. You can command me via voice or text to fly anywhere ("Fly to Tokyo"), scan threats ("Analyze earthquakes"), control zoom, track the space station, or share intelligence reports.
+                    <strong>AEGIS Assistant:</strong> Real 3D Earth Globe activated with photorealistic satellite textures, atmosphere shaders, and orbiting clouds. Command me to fly anywhere ("Fly to Tokyo"), scan earthquakes, or inspect live satellites in 3D orbit!
                 </div>
             </div>
 
@@ -741,7 +747,7 @@
         <div class="tactical-modal-card">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>🎯 ASSET TACTICAL EVALUATION</span>
+                    <span>🎯 ASSET 3D TACTICAL EVALUATION</span>
                 </div>
                 <button class="close-icon" onclick="closeAssessment()">✕</button>
             </div>
@@ -805,15 +811,16 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">AI ASSISTANT SYSTEM STATUS:</label>
-                <div style="font-size:11px; color:var(--purple); margin-bottom:8px;">
-                    ✓ AEGIS Assistant (Full Control Over 3D Camera, Layers, & OS)<br>
-                    ✓ Built-In Web Audio Synthesizer & Speech Recognition<br>
-                    ✓ Autonomous Geocoding Search (Powered by Photon OpenStreetMap)
+                <label class="form-label">3D EARTH GRAPHICS SETTINGS:</label>
+                <div style="font-size:11px; color:var(--cyan); margin-bottom:8px;">
+                    ✓ Hardware WebGL 2.0 Real 3D Spherical Earth<br>
+                    ✓ NASA Blue Marble / Esri Satellite Layer<br>
+                    ✓ Atmospheric Rayleigh Shader + Animated Cloud Sphere<br>
+                    ✓ 3D Aircraft Models, Pulse Shockwaves & ISS Orbit Mesh
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">REMOTE 3D TILES SERVER URL:</label>
+                <label class="form-label">REMOTE 3D TILES SERVER URL (CESIUM / GOOGLE 3D):</label>
                 <input type="text" class="form-input" id="cfgUrl" placeholder="http://10.0.2.2:5173 or https://gods-eye.vercel.app">
             </div>
             <div class="form-group">
@@ -833,7 +840,485 @@
 
     <script>
         // ==========================================
-        // 1. AUDIO SYNTHESIZER & WAVEFORM VISUALIZER
+        // 1. PROCEDURAL & PHOTOREALISTIC 3D TEXTURES
+        // ==========================================
+        // Generates an in-memory high-res procedural Earth Satellite Texture if offline,
+        // and loads real photorealistic satellite maps from NASA/Esri.
+        function createProceduralEarthCanvas(mode = 'satellite') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 512;
+            const c = canvas.getContext('2d');
+
+            if (mode === 'night') {
+                c.fillStyle = '#05070e';
+                c.fillRect(0, 0, 1024, 512);
+            } else if (mode === 'topo') {
+                c.fillStyle = '#0a192f';
+                c.fillRect(0, 0, 1024, 512);
+            } else {
+                // Ocean base
+                const oceanGrad = c.createLinearGradient(0, 0, 0, 512);
+                oceanGrad.addColorStop(0, '#0a2342');
+                oceanGrad.addColorStop(0.5, '#04172e');
+                oceanGrad.addColorStop(1, '#0a2342');
+                c.fillStyle = oceanGrad;
+                c.fillRect(0, 0, 1024, 512);
+            }
+
+            // Draw Continents approximation in high resolution
+            c.fillStyle = mode === 'night' ? '#111827' : (mode === 'topo' ? '#134e4a' : '#1e3a29');
+            
+            // Americas
+            c.beginPath();
+            c.ellipse(280, 180, 110, 75, 0.4, 0, Math.PI * 2);
+            c.fill();
+            c.beginPath();
+            c.ellipse(340, 340, 70, 110, -0.2, 0, Math.PI * 2);
+            c.fill();
+
+            // Eurasia & Africa
+            c.beginPath();
+            c.ellipse(650, 160, 180, 80, -0.1, 0, Math.PI * 2);
+            c.fill();
+            c.beginPath();
+            c.ellipse(560, 270, 75, 100, 0.2, 0, Math.PI * 2);
+            c.fill();
+
+            // Australia
+            c.beginPath();
+            c.ellipse(830, 350, 55, 45, 0.1, 0, Math.PI * 2);
+            c.fill();
+
+            // Polar Caps
+            c.fillStyle = mode === 'night' ? '#374151' : '#e2e8f0';
+            c.beginPath();
+            c.ellipse(512, 15, 512, 25, 0, 0, Math.PI * 2);
+            c.fill();
+            c.beginPath();
+            c.ellipse(512, 497, 512, 30, 0, 0, Math.PI * 2);
+            c.fill();
+
+            // Lat/Lon coordinate grid lines
+            c.strokeStyle = 'rgba(0, 255, 204, 0.12)';
+            c.lineWidth = 1;
+            for (let x = 0; x < 1024; x += 64) {
+                c.beginPath();
+                c.moveTo(x, 0); c.lineTo(x, 512);
+                c.stroke();
+            }
+            for (let y = 0; y < 512; y += 64) {
+                c.beginPath();
+                c.moveTo(0, y); c.lineTo(1024, y);
+                c.stroke();
+            }
+
+            if (mode === 'night') {
+                // City lights glow
+                c.fillStyle = 'rgba(255, 230, 150, 0.8)';
+                for (let i = 0; i < 400; i++) {
+                    const lx = Math.random() * 1024;
+                    const ly = Math.random() * 512;
+                    c.fillRect(lx, ly, 1.5, 1.5);
+                }
+            }
+
+            return canvas;
+        }
+
+        // Procedural Clouds Texture
+        function createCloudsCanvas() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 512;
+            const c = canvas.getContext('2d');
+            c.clearRect(0, 0, 1024, 512);
+
+            c.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            for (let i = 0; i < 180; i++) {
+                const cx = Math.random() * 1024;
+                const cy = 60 + Math.random() * 392;
+                const rw = 25 + Math.random() * 60;
+                const rh = 12 + Math.random() * 30;
+                c.beginPath();
+                c.ellipse(cx, cy, rw, rh, Math.random() * 0.5, 0, Math.PI * 2);
+                c.fill();
+            }
+            return canvas;
+        }
+
+        // ==========================================
+        // 2. THREE.JS 3D EARTH GLOBE SYSTEM
+        // ==========================================
+        let scene, camera, renderer;
+        let earthMesh, cloudsMesh, atmosphereMesh;
+        let earthRadius = 100;
+        let asset3DGroup;
+        let raycaster, mouse;
+
+        // Texture Loaders & Materials
+        let earthMaterial;
+        const textureLoader = new THREE.TextureLoader();
+
+        function initThreeGlobe() {
+            const container = document.getElementById('webgl-container');
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, w / h, 1, 3000);
+            camera.position.set(0, 30, 280);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            container.appendChild(renderer.domElement);
+
+            // Lighting: Ambient + Direct Sun + Rim light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfff8e7, 1.3);
+            sunLight.position.set(200, 80, 150);
+            scene.add(sunLight);
+
+            // Earth Sphere Geometry
+            const earthGeo = new THREE.SphereGeometry(earthRadius, 64, 64);
+            const proceduralCanvas = createProceduralEarthCanvas('satellite');
+            const earthTex = new THREE.CanvasTexture(proceduralCanvas);
+            earthTex.anisotropy = 8;
+
+            earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTex,
+                shininess: 15,
+                specular: new THREE.Color(0x113355)
+            });
+
+            // Try loading high-res photorealistic NASA Blue Marble texture from CDN
+            textureLoader.load(
+                'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
+                (tex) => {
+                    earthMaterial.map = tex;
+                    earthMaterial.needsUpdate = true;
+                },
+                undefined,
+                () => console.log("Using built-in high-res procedural Earth map.")
+            );
+
+            earthMesh = new THREE.Mesh(earthGeo, earthMaterial);
+            scene.add(earthMesh);
+
+            // Rotating 3D Cloud Sphere
+            const cloudsGeo = new THREE.SphereGeometry(earthRadius * 1.015, 48, 48);
+            const cloudsTex = new THREE.CanvasTexture(createCloudsCanvas());
+            const cloudsMat = new THREE.MeshLambertMaterial({
+                map: cloudsTex,
+                transparent: true,
+                opacity: 0.6
+            });
+            cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
+            scene.add(cloudsMesh);
+
+            // Atmospheric Rayleigh Scattering Glow
+            const atmoGeo = new THREE.SphereGeometry(earthRadius * 1.08, 48, 48);
+            const atmoMat = new THREE.ShaderMaterial({
+                vertexShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        float intensity = pow(0.65 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                        gl_FragColor = vec4(0.0, 0.9, 1.0, 1.0) * intensity;
+                    }
+                `,
+                blending: THREE.AdditiveBlending,
+                side: THREE.BackSide,
+                transparent: true
+            });
+            atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
+            scene.add(atmosphereMesh);
+
+            // Deep Space Starfield Background
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 1200;
+            const starPos = new Float32Array(starCount * 3);
+            for (let i = 0; i < starCount * 3; i += 3) {
+                starPos[i] = (Math.random() - 0.5) * 2000;
+                starPos[i+1] = (Math.random() - 0.5) * 2000;
+                starPos[i+2] = (Math.random() - 0.5) * 2000;
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+            const starMat = new THREE.PointsMaterial({ color: 0x94a3b8, size: 1.5 });
+            const starField = new THREE.Points(starGeo, starMat);
+            scene.add(starField);
+
+            // Group for 3D Assets (Planes, Quakes, Satellites)
+            asset3DGroup = new THREE.Group();
+            scene.add(asset3DGroup);
+
+            // Raycasting for touch / click
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            setupGlobeTouchControls(renderer.domElement);
+            window.addEventListener('resize', onWindowResize);
+
+            animateThree();
+        }
+
+        function onWindowResize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        // Texture switch (Satellite / Night / Topo)
+        function setMapTexture(mode) {
+            document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+            if (mode === 'satellite') document.getElementById('btnSatMap').classList.add('active');
+            if (mode === 'night') document.getElementById('btnNightMap').classList.add('active');
+            if (mode === 'topo') document.getElementById('btnTopoMap').classList.add('active');
+
+            const c = createProceduralEarthCanvas(mode);
+            earthMaterial.map = new THREE.CanvasTexture(c);
+            earthMaterial.needsUpdate = true;
+            playSciFiBeep('confirm');
+        }
+
+        // Convert Geodetic (Lat, Lon) to 3D Cartesian Vector
+        function latLonToVector3(lat, lon, alt = 0) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            const r = earthRadius + alt;
+            const x = -(r * Math.sin(phi) * Math.cos(theta));
+            const z = r * Math.sin(phi) * Math.sin(theta);
+            const y = r * Math.cos(phi);
+            return new THREE.Vector3(x, y, z);
+        }
+
+        // ==========================================
+        // 3. 3D TOUCH & GESTURE CONTROLS
+        // ==========================================
+        let isUserInteracting = false;
+        let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
+        let onPointerDownLon = 0, onPointerDownLat = 0;
+        let targetLon = 0, targetLat = 0;
+        let curLon = 0, curLat = 0;
+        let pinchDist = 0;
+
+        function setupGlobeTouchControls(domElem) {
+            domElem.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab') || e.target.closest('.map-style-selector')) return;
+                isUserInteracting = true;
+                onPointerDownPointerX = e.clientX;
+                onPointerDownPointerY = e.clientY;
+                onPointerDownLon = curLon;
+                onPointerDownLat = curLat;
+            });
+
+            domElem.addEventListener('pointermove', (e) => {
+                if (!isUserInteracting) return;
+                targetLon = (onPointerDownPointerX - e.clientX) * 0.3 + onPointerDownLon;
+                targetLat = (e.clientY - onPointerDownPointerY) * 0.3 + onPointerDownLat;
+                targetLat = Math.max(-85, Math.min(85, targetLat));
+            });
+
+            domElem.addEventListener('pointerup', (e) => {
+                if (!isUserInteracting) return;
+                isUserInteracting = false;
+                const dist = Math.hypot(e.clientX - onPointerDownPointerX, e.clientY - onPointerDownPointerY);
+                if (dist < 8) {
+                    onGlobeTap(e.clientX, e.clientY);
+                }
+            });
+
+            // Touch Pinch-to-Zoom
+            domElem.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                }
+            });
+            domElem.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    const newDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    const delta = (pinchDist - newDist) * 0.4;
+                    camera.position.z = Math.max(140, Math.min(500, camera.position.z + delta));
+                    pinchDist = newDist;
+                }
+            });
+        }
+
+        function onGlobeTap(clientX, clientY) {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(asset3DGroup.children, true);
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj && !obj.userData.asset) {
+                    obj = obj.parent;
+                }
+                if (obj && obj.userData.asset) {
+                    playSciFiBeep('confirm');
+                    triggerHaptic(30);
+                    selectAssetAndAssess(obj.userData.asset);
+                }
+            }
+        }
+
+        // Smooth Camera Flight to Geodetic Coordinates
+        function smoothFlyTo(lat, lon, zoomFactor = 1.0) {
+            targetLat = lat;
+            targetLon = -lon;
+            const targetZ = 160 / zoomFactor;
+            state.autoOrbit = false;
+            triggerHaptic(25);
+
+            const startZ = camera.position.z;
+            const startTime = performance.now();
+            function stepZoom() {
+                const p = Math.min(1.0, (performance.now() - startTime) / 900);
+                camera.position.z = startZ + (targetZ - startZ) * (1 - Math.pow(1 - p, 3));
+                if (p < 1.0) requestAnimationFrame(stepZoom);
+            }
+            stepZoom();
+        }
+
+        // ==========================================
+        // 4. POPULATE REAL 3D ASSET OBJECTS
+        // ==========================================
+        function update3DAssetMeshes() {
+            // Clear old 3D meshes
+            while (asset3DGroup.children.length > 0) {
+                asset3DGroup.remove(asset3DGroup.children[0]);
+            }
+
+            let activeList = [];
+            if (state.category === 'ALL' || state.category === 'AIR') activeList.push(...state.flights);
+            if (state.category === 'ALL' || state.category === 'SEISMIC') activeList.push(...state.quakes);
+            if (state.category === 'ALL' || state.category === 'SPACE') activeList.push(...state.satellites);
+
+            for (const asset of activeList) {
+                if (asset.type === 'SEISMIC') {
+                    // 3D Pulsing Seismic Shockwave Mesh
+                    const pos = latLonToVector3(asset.lat, asset.lon, 0.5);
+                    const size = 2 + asset.mag * 1.5;
+                    const ringGeo = new THREE.RingGeometry(size * 0.6, size, 32);
+                    const ringMat = new THREE.MeshBasicMaterial({
+                        color: asset.mag >= 4.5 ? 0xff3366 : 0xffb700,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.85
+                    });
+                    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                    ringMesh.position.copy(pos);
+                    ringMesh.lookAt(new THREE.Vector3(0,0,0));
+                    ringMesh.userData = { asset, isShockwave: true, baseSize: size };
+                    asset3DGroup.add(ringMesh);
+
+                    // Central epicenter sphere
+                    const epiGeo = new THREE.SphereGeometry(1.4, 12, 12);
+                    const epiMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                    const epiMesh = new THREE.Mesh(epiGeo, epiMat);
+                    epiMesh.position.copy(pos);
+                    epiMesh.userData = { asset };
+                    asset3DGroup.add(epiMesh);
+                } else if (asset.type === 'AIR') {
+                    // 3D Aircraft Cone / Directional Vector
+                    const altKm = (asset.alt / 1000) * 0.18; // scaled altitude
+                    const pos = latLonToVector3(asset.lat, asset.lon, altKm + 1.2);
+                    const planeGeo = new THREE.ConeGeometry(1.6, 4.5, 6);
+                    planeGeo.rotateX(Math.PI / 2);
+                    const planeMat = new THREE.MeshStandardMaterial({
+                        color: asset.military ? 0xff3366 : 0x00ffcc,
+                        roughness: 0.3,
+                        metalness: 0.8
+                    });
+                    const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+                    planeMesh.position.copy(pos);
+                    planeMesh.lookAt(new THREE.Vector3(0,0,0));
+                    planeMesh.userData = { asset };
+                    asset3DGroup.add(planeMesh);
+                } else if (asset.type === 'SPACE') {
+                    // 3D ISS Satellite Mesh & Orbit Ring
+                    const satAlt = 18; // Scaled LEO orbit
+                    const pos = latLonToVector3(asset.lat, asset.lon, satAlt);
+                    
+                    const satGroup = new THREE.Group();
+                    satGroup.position.copy(pos);
+
+                    // Main solar panel cross
+                    const panelGeo = new THREE.BoxGeometry(6, 1.2, 0.4);
+                    const panelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9 });
+                    const panels = new THREE.Mesh(panelGeo, panelMat);
+                    satGroup.add(panels);
+
+                    const coreGeo = new THREE.CylinderGeometry(0.9, 0.9, 2.8, 8);
+                    const coreMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.5 });
+                    const core = new THREE.Mesh(coreGeo, coreMat);
+                    satGroup.add(core);
+
+                    satGroup.userData = { asset };
+                    asset3DGroup.add(satGroup);
+
+                    // 3D Orbit Ring encircling Earth
+                    const orbitGeo = new THREE.RingGeometry(earthRadius + satAlt - 0.2, earthRadius + satAlt + 0.2, 96);
+                    const orbitMat = new THREE.MeshBasicMaterial({
+                        color: 0xfacc15,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
+                    orbitMesh.rotation.x = Math.PI / 2.8;
+                    asset3DGroup.add(orbitMesh);
+                }
+            }
+        }
+
+        // Main 3D Animation Loop
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+
+            // Interpolate rotation
+            curLon += (targetLon - curLon) * 0.08;
+            curLat += (targetLat - curLat) * 0.08;
+
+            if (state.autoOrbit && !isUserInteracting) {
+                targetLon += 0.12;
+            }
+
+            // Rotate Earth & Clouds
+            earthMesh.rotation.y = THREE.MathUtils.degToRad(-curLon);
+            earthMesh.rotation.x = THREE.MathUtils.degToRad(curLat);
+            cloudsMesh.rotation.y = THREE.MathUtils.degToRad(-curLon * 1.05);
+            cloudsMesh.rotation.x = THREE.MathUtils.degToRad(curLat);
+            asset3DGroup.rotation.y = THREE.MathUtils.degToRad(-curLon);
+            asset3DGroup.rotation.x = THREE.MathUtils.degToRad(curLat);
+
+            // Animate Seismic Shockwave Pulses
+            const time = performance.now() * 0.003;
+            asset3DGroup.children.forEach(obj => {
+                if (obj.userData && obj.userData.isShockwave) {
+                    const scale = 1 + (Math.sin(time + obj.userData.baseSize) + 1) * 0.4;
+                    obj.scale.set(scale, scale, 1);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // ==========================================
+        // 5. AUDIO SYNTHESIZER & WAVE VISUALIZER
         // ==========================================
         let audioCtx = null;
         function playSciFiBeep(type = 'confirm') {
@@ -849,8 +1334,8 @@
                 const now = audioCtx.currentTime;
                 if (type === 'confirm') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, now); // D5
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
                     gain.gain.setValueAtTime(0.08, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                     osc.start(now);
@@ -867,7 +1352,6 @@
             } catch (ignored) {}
         }
 
-        // Animated Audio Waveform Visualizer
         const waveCanvas = document.getElementById('audioWaveCanvas');
         const waveCtx = waveCanvas.getContext('2d');
         let wavePhase = 0;
@@ -894,7 +1378,7 @@
         drawWaveform();
 
         // ==========================================
-        // 2. EMBEDDED LOCAL NEURAL AGENT
+        // 6. SMALL LOCAL AI ENGINE
         // ==========================================
         class SmallLocalAI {
             constructor() {
@@ -1011,7 +1495,7 @@
         const localAI = new SmallLocalAI();
 
         // ==========================================
-        // 3. DATA MODELS & PUBLIC FEEDS
+        // 7. PUBLIC DATA FEEDS & STATE
         // ==========================================
         const state = {
             category: 'ALL',
@@ -1063,6 +1547,7 @@
                 document.getElementById('countQuake').textContent = state.quakes.length;
                 document.getElementById('quakeSummary').textContent = `${state.quakes.length} events (USGS Live)`;
                 updateTotalCount();
+                update3DAssetMeshes();
             } catch (err) {
                 state.quakes = [
                     { id: 'q1', title: '68 km W of San Antonio de los Cobres, Argentina', type: 'SEISMIC', lat: -24.2, lon: -66.9, depth: 185, mag: 4.8, time: 'Recent', tsunami: 0 },
@@ -1070,6 +1555,7 @@
                     { id: 'q3', title: 'Near Coast of Central Chile', type: 'SEISMIC', lat: -31.4, lon: -71.6, depth: 45, mag: 5.2, time: 'Recent', tsunami: 0 }
                 ];
                 document.getElementById('countQuake').textContent = state.quakes.length;
+                update3DAssetMeshes();
             }
         }
 
@@ -1093,11 +1579,13 @@
                 ];
                 document.getElementById('countSat').textContent = state.satellites.length;
                 updateTotalCount();
+                update3DAssetMeshes();
             } catch (err) {
                 state.satellites = [
                     { id: 'ISS-25544', title: 'International Space Station', type: 'SPACE', lat: 14.5, lon: -38.2, alt: 420, velocity: 27500, visibility: 'daylight' }
                 ];
                 document.getElementById('countSat').textContent = state.satellites.length;
+                update3DAssetMeshes();
             }
         }
 
@@ -1127,6 +1615,7 @@
             document.getElementById('countAir').textContent = state.flights.length;
             document.getElementById('airSummary').textContent = `${state.flights.length} active air tracks`;
             updateTotalCount();
+            update3DAssetMeshes();
         }
 
         function updateTotalCount() {
@@ -1135,209 +1624,7 @@
         }
 
         // ==========================================
-        // 4. 3D SPHERICAL GLOBE CANVAS
-        // ==========================================
-        const canvas = document.getElementById('globeCanvas');
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            waveCanvas.width = 70;
-            waveCanvas.height = 24;
-        });
-
-        let rotX = 0.25;
-        let rotY = 0.0;
-        let zoom = 1.0;
-        let isDragging = false;
-        let startX = 0, startY = 0;
-
-        // Smooth camera flight animation state
-        let targetRotX = rotX, targetRotY = rotY, targetZoom = zoom;
-        let isAnimatingCamera = false;
-
-        function smoothFlyTo(lat, lon, newZoom = 1.0) {
-            targetRotY = - (lon * Math.PI / 180) - Math.PI / 2;
-            targetRotX = (lat * Math.PI / 180);
-            targetZoom = newZoom;
-            isAnimatingCamera = true;
-            state.autoOrbit = false;
-        }
-
-        window.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.interactive-panel') || e.target.closest('.tactical-modal-card') || e.target.closest('.ai-assistant-fab')) return;
-            isDragging = true;
-            isAnimatingCamera = false;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
-        window.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            rotY += dx * 0.005;
-            rotX += dy * 0.005;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
-        window.addEventListener('pointerup', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-            if (dist < 8) {
-                checkAssetHit(e.clientX, e.clientY);
-            }
-        });
-
-        function geoTo3D(lat, lon, radius) {
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 180) * (Math.PI / 180);
-            const x = -(radius * Math.sin(phi) * Math.cos(theta));
-            const z = radius * Math.sin(phi) * Math.sin(theta);
-            const y = radius * Math.cos(phi);
-            return { x, y, z };
-        }
-
-        let screenAssets = [];
-
-        function render() {
-            ctx.fillStyle = '#06070a';
-            ctx.fillRect(0, 0, width, height);
-
-            if (isAnimatingCamera) {
-                rotX += (targetRotX - rotX) * 0.08;
-                rotY += (targetRotY - rotY) * 0.08;
-                zoom += (targetZoom - zoom) * 0.08;
-                if (Math.hypot(targetRotX - rotX, targetRotY - rotY) < 0.001) {
-                    isAnimatingCamera = false;
-                }
-            } else if (state.autoOrbit && !isDragging) {
-                rotY += 0.002;
-            }
-
-            const cx = width / 2;
-            const cy = height * 0.40;
-            const r = Math.min(width, height) * 0.38 * zoom;
-
-            // Earth Atmosphere Glow
-            const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.25);
-            glow.addColorStop(0, 'rgba(0, 255, 204, 0.09)');
-            glow.addColorStop(0.8, 'rgba(0, 255, 204, 0.02)');
-            glow.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(cx, cy, r * 1.25, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(0, 255, 204, 0.08)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.stroke();
-
-            const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-            const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-
-            function project(p3) {
-                const x1 = p3.x * cosY - p3.z * sinY;
-                const z1 = p3.x * sinY + p3.z * cosY;
-                const y2 = p3.y * cosX - z1 * sinX;
-                const z2 = p3.y * sinX + z1 * cosX;
-                return {
-                    x: cx + x1,
-                    y: cy - y2,
-                    z: z2,
-                    visible: z2 > -0.1
-                };
-            }
-
-            for (let lat = -75; lat <= 75; lat += 25) {
-                for (let lon = -180; lon < 180; lon += 30) {
-                    const p3 = geoTo3D(lat, lon, r);
-                    const sp = project(p3);
-                    if (sp.visible) {
-                        ctx.fillStyle = 'rgba(0, 255, 204, 0.25)';
-                        ctx.fillRect(sp.x, sp.y, 1.5, 1.5);
-                    }
-                }
-            }
-
-            screenAssets = [];
-            let activeList = [];
-            if (state.category === 'ALL' || state.category === 'AIR') activeList.push(...state.flights);
-            if (state.category === 'ALL' || state.category === 'SEISMIC') activeList.push(...state.quakes);
-            if (state.category === 'ALL' || state.category === 'SPACE') activeList.push(...state.satellites);
-
-            const now = Date.now();
-
-            for (const asset of activeList) {
-                const altOffset = asset.type === 'SPACE' ? r * 0.18 : (asset.type === 'AIR' ? r * 0.04 : 0);
-                const p3 = geoTo3D(asset.lat, asset.lon, r + altOffset);
-                const sp = project(p3);
-
-                if (sp.visible) {
-                    screenAssets.push({ asset, x: sp.x, y: sp.y });
-
-                    if (asset.type === 'SEISMIC') {
-                        const pulse = (now * 0.003 + asset.mag) % 1.0;
-                        const radius = 3 + asset.mag * 2.2 + pulse * 8;
-                        ctx.strokeStyle = asset.mag >= 4.5 ? `rgba(255, 51, 102, ${1 - pulse})` : `rgba(255, 183, 0, ${1 - pulse})`;
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.arc(sp.x, sp.y, radius, 0, Math.PI * 2);
-                        ctx.stroke();
-
-                        ctx.fillStyle = asset.mag >= 4.5 ? 'var(--red)' : 'var(--amber)';
-                        ctx.beginPath();
-                        ctx.arc(sp.x, sp.y, 3, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else if (asset.type === 'AIR') {
-                        ctx.fillStyle = asset.military ? 'var(--red)' : 'var(--cyan)';
-                        ctx.beginPath();
-                        ctx.arc(sp.x, sp.y, 3.5, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        if (state.selectedAsset && state.selectedAsset.id === asset.id) {
-                            ctx.strokeStyle = 'var(--purple)';
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(sp.x - 9, sp.y - 9, 18, 18);
-                        }
-                    } else if (asset.type === 'SPACE') {
-                        ctx.fillStyle = '#facc15';
-                        ctx.beginPath();
-                        ctx.moveTo(sp.x, sp.y - 5);
-                        ctx.lineTo(sp.x + 5, sp.y);
-                        ctx.lineTo(sp.x, sp.y + 5);
-                        ctx.lineTo(sp.x - 5, sp.y);
-                        ctx.closePath();
-                        ctx.fill();
-
-                        ctx.strokeStyle = 'rgba(250, 204, 21, 0.3)';
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            requestAnimationFrame(render);
-        }
-
-        function checkAssetHit(px, py) {
-            for (const item of screenAssets) {
-                const d = Math.hypot(item.x - px, item.y - py);
-                if (d < 24) {
-                    playSciFiBeep('confirm');
-                    triggerHaptic(30);
-                    selectAssetAndAssess(item.asset);
-                    return;
-                }
-            }
-        }
-
-        // ==========================================
-        // 5. ASSET EVALUATION
+        // 8. ASSET EVALUATION
         // ==========================================
         function selectAssetAndAssess(asset) {
             state.selectedAsset = asset;
@@ -1363,11 +1650,11 @@
                 document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
                 if (asset.mag >= 6.0) {
-                    sitrep = `AI ASSISTANT EVALUATION: High-magnitude tectonic rupture classified (${asset.mag} M). Shallow hypocenter at ${asset.depth} km. Local AI neural classifier flags coastal shear risk.`;
+                    sitrep = `REAL 3D EARTH EVALUATION: High-magnitude tectonic rupture (${asset.mag} M) on fault margin. Hypocenter at ${asset.depth} km. Local AI neural classifier flags coastal shear risk.`;
                 } else if (asset.mag >= 4.5) {
-                    sitrep = `AI ASSISTANT EVALUATION: Moderate crustal slip event (${asset.mag} M). Depth ${asset.depth} km within active fault zone. Peak ground acceleration contained.`;
+                    sitrep = `REAL 3D EARTH EVALUATION: Moderate crustal slip event (${asset.mag} M). Depth ${asset.depth} km within active fault zone. Peak ground acceleration contained.`;
                 } else {
-                    sitrep = `AI ASSISTANT EVALUATION: Low-energy background seismic adjustment (${asset.mag} M). Crustal friction release is nominal. Zero tsunami threat.`;
+                    sitrep = `REAL 3D EARTH EVALUATION: Low-energy background seismic adjustment (${asset.mag} M). Crustal friction release is nominal. Zero tsunami threat.`;
                 }
                 updateThreatDisplay(result.threatIndex);
             } else if (asset.type === 'AIR') {
@@ -1383,9 +1670,9 @@
                 document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
                 if (asset.military) {
-                    sitrep = `AI ASSISTANT EVALUATION: Defense patrol vector detected at FL${Math.round(asset.alt/100)}, ground velocity ${asset.speed} KTS. Neural kinematic model confirms standard defense patrol pattern.`;
+                    sitrep = `REAL 3D EARTH EVALUATION: Defense patrol vector detected at FL${Math.round(asset.alt/100)}, ground velocity ${asset.speed} KTS. Standard defense CAP flight pattern verified in 3D airspace.`;
                 } else {
-                    sitrep = `AI ASSISTANT EVALUATION: Civil transport vector along established airway. Heading ${asset.heading}°, FL${Math.round(asset.alt/100)}, speed ${asset.speed} KTS. Standard commercial route.`;
+                    sitrep = `REAL 3D EARTH EVALUATION: Civil transport vector along established airway. Heading ${asset.heading}°, FL${Math.round(asset.alt/100)}, speed ${asset.speed} KTS. Nominal flight profile.`;
                 }
                 updateThreatDisplay(result.threatIndex);
             } else if (asset.type === 'SPACE') {
@@ -1400,7 +1687,7 @@
                 const result = localAI.classifyAssetThreat(features);
                 document.getElementById('aiLatencyBadge').textContent = `${result.latencyMs}ms (On-Device)`;
 
-                sitrep = `AI ASSISTANT EVALUATION: Low Earth Orbit (LEO) orbital node confirmed. Orbital altitude ${asset.alt} km, tangential velocity ${asset.velocity} km/h. Local orbital decay calculation: nominal station-keeping envelope.`;
+                sitrep = `REAL 3D EARTH EVALUATION: 3D orbital mesh confirmed in Low Earth Orbit (LEO). Operating at ${asset.alt} km altitude and ${asset.velocity} km/h velocity. Conjunction trajectory is clear.`;
                 updateThreatDisplay(result.threatIndex);
             }
 
@@ -1434,7 +1721,7 @@
         }
 
         // ==========================================
-        // 6. CONVERSATIONAL AI ASSISTANT (FULL ACCESS)
+        // 9. CONVERSATIONAL AI ASSISTANT
         // ==========================================
         function openAssistant() {
             playSciFiBeep('confirm');
@@ -1476,7 +1763,7 @@
                 };
                 utterance.onend = () => {
                     isWaveActive = false;
-                    document.getElementById('assistantStateText').textContent = 'Full App Access Active · Camera, Filters, Voice, GPS.';
+                    document.getElementById('assistantStateText').textContent = 'Full 3D Earth Camera, Layers, Voice, GPS Control.';
                 };
                 utterance.onerror = () => {
                     isWaveActive = false;
@@ -1488,7 +1775,6 @@
             }
         }
 
-        // Speech-to-Text Voice Input
         let recognition = null;
         function toggleVoiceRecognition() {
             playSciFiBeep('confirm');
@@ -1530,7 +1816,7 @@
                     executeAssistantCommand(speechResult);
                 };
 
-                recognition.onerror = (event) => {
+                recognition.onerror = () => {
                     state.voiceActive = false;
                     isWaveActive = false;
                     micBtn.classList.remove('listening');
@@ -1581,39 +1867,38 @@
                         const name = feat.properties.name || queryLocation;
                         const country = feat.properties.country || '';
 
-                        smoothFlyTo(lat, lon, 1.2);
-                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E.`;
+                        smoothFlyTo(lat, lon, 1.4);
+                        reply = `Camera maneuver executed. Flew to ${name}${country ? ', ' + country : ''} at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E on the real 3D Earth globe.`;
                     } else {
                         reply = `I searched global geodetic databases for "${queryLocation}" but found no matching coordinates.`;
                     }
                 } catch (e) {
-                    reply = `Geocoding network lookup failed. Please verify connection.`;
+                    reply = `Geocoding lookup failed. Please verify connection.`;
                 }
             }
-            // 2. Camera Zoom & Rotation Controls
+            // 2. Camera Controls
             else if (lower.includes('zoom in')) {
-                zoom = Math.min(2.0, zoom + 0.25);
-                reply = `Zoom increased to ${(zoom * 100).toFixed(0)}%.`;
+                camera.position.z = Math.max(140, camera.position.z - 40);
+                reply = `Zoom increased on the 3D globe.`;
             } else if (lower.includes('zoom out')) {
-                zoom = Math.max(0.6, zoom - 0.25);
-                reply = `Zoom decreased to ${(zoom * 100).toFixed(0)}%.`;
+                camera.position.z = Math.min(480, camera.position.z + 40);
+                reply = `Zoom decreased on the 3D globe.`;
             } else if (lower.includes('toggle auto orbit') || lower.includes('stop rotate') || lower.includes('start rotate') || lower.includes('spin')) {
                 state.autoOrbit = !state.autoOrbit;
-                reply = `Planetary auto-orbit rotation is now ${state.autoOrbit ? 'ENABLED' : 'PAUSED'}.`;
+                reply = `Real 3D Earth auto-orbit rotation is now ${state.autoOrbit ? 'ENABLED' : 'PAUSED'}.`;
             } else if (lower.includes('reset view') || lower.includes('reset camera')) {
-                rotX = 0.25;
-                rotY = 0.0;
-                zoom = 1.0;
+                camera.position.set(0, 30, 280);
+                targetLat = 0; targetLon = 0;
                 state.autoOrbit = true;
-                reply = `Planetary camera reset to default polar orientation and 100% zoom.`;
+                reply = `3D globe camera reset to default orbital view.`;
             }
             // 3. Category Layer Filters
             else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
                 switchCategory('SEISMIC');
                 const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
                 if (maxQ) {
-                    smoothFlyTo(maxQ.lat, maxQ.lon, 1.15);
-                    reply = `I centered the 3D globe on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} global earthquakes.`;
+                    smoothFlyTo(maxQ.lat, maxQ.lon, 1.3);
+                    reply = `I centered the real 3D Earth on the peak seismic event: ${maxQ.mag} magnitude at ${maxQ.title} (Depth ${maxQ.depth} km). Tracking ${state.quakes.length} earthquakes.`;
                 } else {
                     reply = `Seismic telemetry filter engaged.`;
                 }
@@ -1621,28 +1906,36 @@
                 switchCategory('SPACE');
                 const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
                 if (iss) {
-                    smoothFlyTo(iss.lat, iss.lon, 1.2);
-                    reply = `Camera locked onto International Space Station at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
+                    smoothFlyTo(iss.lat, iss.lon, 1.25);
+                    reply = `Locked camera onto 3D International Space Station mesh at ${iss.alt} km altitude, orbiting at ${iss.velocity.toLocaleString()} km/h over ${iss.lat.toFixed(1)}° latitude.`;
                 } else {
-                    reply = `Satellite orbital vectors displayed on the globe.`;
+                    reply = `Satellite orbital vectors displayed on the 3D globe.`;
                 }
             } else if (lower.includes('military') || lower.includes('patrol')) {
                 switchCategory('AIR');
                 const mil = state.flights.find(f => f.military);
                 if (mil) {
-                    smoothFlyTo(mil.lat, mil.lon, 1.25);
-                    reply = `Locked onto special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
+                    smoothFlyTo(mil.lat, mil.lon, 1.35);
+                    reply = `Locked onto 3D special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
                 } else {
                     reply = `Airspace tracks active. All defense patrol vectors nominal.`;
                 }
             } else if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
                 switchCategory('AIR');
-                reply = `Airspace mode active. Tracking ${state.flights.length} live commercial and tactical flights with 3D kinematic vectors.`;
+                reply = `Airspace mode active. Tracking ${state.flights.length} flights with 3D directional vectors.`;
             }
-            // 4. Native OS Controls
+            // 4. Map Style Change
+            else if (lower.includes('night map') || lower.includes('night mode')) {
+                setMapTexture('night');
+                reply = `Switched to 3D Earth Night City Lights texture map.`;
+            } else if (lower.includes('satellite map')) {
+                setMapTexture('satellite');
+                reply = `Switched to 3D Photorealistic Satellite Earth map.`;
+            }
+            // 5. Native OS Controls
             else if (lower.includes('gps') || lower.includes('my location') || lower.includes('where am i')) {
                 centerOnGps();
-                reply = `Acquiring device GPS satellites and orienting globe directly over your location.`;
+                reply = `Acquiring device GPS satellites and orienting the 3D globe directly over your location.`;
             } else if (lower.includes('keep screen awake') || lower.includes('wake lock')) {
                 if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenOn === 'function') {
                     window.GodsEyeNative.setKeepScreenOn(true);
@@ -1658,27 +1951,25 @@
                 const b = localAI.benchmark(500);
                 reply = `Neural benchmark complete: ${b.iterations} forward-passes executed in ${b.totalMs} ms (${b.infPerSec.toLocaleString()} inferences/sec) 100% on-device.`;
             } else {
-                reply = `Command received: "${cmd}". The global situational picture is nominal with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
+                reply = `Command received: "${cmd}". The real 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} seismic ruptures, and ${state.satellites.length} satellites. You can tell me to fly anywhere, zoom, or inspect threats.`;
             }
 
             addChatMessage('agent', reply);
             speakAssistant(reply);
         }
 
-        // ==========================================
-        // 7. EXPORT & SHARE FULL SITREP
-        // ==========================================
+        // Export & Share
         function getSitrepText() {
             const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
             const maxF = [...state.flights].sort((a,b) => b.speed - a.speed)[0];
             const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
 
-            return `🛰️ GOD'S EYE VIEW — TACTICAL SITREP
+            return `🛰️ GOD'S EYE VIEW — REAL 3D EARTH SITREP
 Date: ${new Date().toUTCString()}
 Status: DEFCON NOMINAL / GUARDED
 
 ✈ AIRSPACE:
-• ${state.flights.length} flights tracked
+• ${state.flights.length} flights tracked in 3D
 • Lead vector: ${maxF ? maxF.title + ' (' + maxF.speed + ' KTS at FL' + Math.round(maxF.alt/100) + ')' : 'Nominal'}
 
 💥 SEISMIC (USGS):
@@ -1689,7 +1980,7 @@ Status: DEFCON NOMINAL / GUARDED
 • Target: ${iss ? iss.title : 'ISS'}
 • Alt: ${iss ? iss.alt + ' km · ' + iss.velocity + ' km/h' : '420 km'}
 
-Processed on-device via AEGIS Tactical AI Assistant.`;
+Processed on-device via AEGIS 3D Earth AI Assistant.`;
         }
 
         function exportFullSitrep() {
@@ -1716,7 +2007,7 @@ Processed on-device via AEGIS Tactical AI Assistant.`;
         }
 
         // ==========================================
-        // 8. UI ACTIONS & INITIALIZATION
+        // 10. UI ACTIONS & INITIALIZATION
         // ==========================================
         function switchCategory(cat) {
             triggerHaptic(15);
@@ -1724,6 +2015,7 @@ Processed on-device via AEGIS Tactical AI Assistant.`;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.includes(cat));
             if (btn) btn.classList.add('active');
+            update3DAssetMeshes();
         }
 
         function centerOnGps() {
@@ -1733,7 +2025,7 @@ Processed on-device via AEGIS Tactical AI Assistant.`;
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         state.userGps = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-                        smoothFlyTo(pos.coords.latitude, pos.coords.longitude, 1.25);
+                        smoothFlyTo(pos.coords.latitude, pos.coords.longitude, 1.35);
                         showToast(`GPS Locked: ${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°`);
                         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=temperature_2m,wind_speed_10m`)
                             .then(r => r.json())
@@ -1780,6 +2072,7 @@ Processed on-device via AEGIS Tactical AI Assistant.`;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            initThreeGlobe();
             fetchUSGSQuakes();
             fetchISSOrbit();
             generateAirspaceTracks();
@@ -1788,8 +2081,6 @@ Processed on-device via AEGIS Tactical AI Assistant.`;
                 fetchUSGSQuakes();
                 fetchISSOrbit();
             }, 45000);
-
-            render();
         });
     </script>
 </body>

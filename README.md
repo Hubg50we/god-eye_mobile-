@@ -8,7 +8,19 @@
 
 **God's Eye View Mobile** is the native Android application port of [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) — an open-source real-time spatial intelligence simulator and interactive 3D globe console running in high-performance WebGL on mobile devices.
 
-### 📥 [Direct Download APK (v1.4.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.4.0/godseye-android.apk)
+### 📥 [Direct Download APK (v1.5.0)](https://github.com/Hubg50we/god-eye_mobile-/releases/download/v1.5.0/godseye-android.apk)
+
+---
+
+## 🌍 Real 3D Earth Map Engine (Everything Included)
+
+God's Eye View Mobile features a complete **Photorealistic 3D Earth WebGL Engine**:
+* **🛰️ Real High-Res Earth Textures**: Photorealistic NASA Blue Marble & Esri satellite imagery with ocean specular reflections, day/night city lights, and tactical contours.
+* **✨ Atmospheric Rayleigh Scattering & 3D Clouds**: Custom WebGL atmosphere rim shader enveloping the planet and an independently rotating semi-transparent 3D cloud layer.
+* **✈️ Real 3D Aircraft & Kinematic Meshes**: Directional aircraft models flying at accurate scaled altitudes with live velocity heading vectors.
+* **💥 Volumetric 3D Seismic Shockwaves**: Pulsing 3D rings erupting from USGS earthquake hypocenters across global fault lines.
+* **🛰️ 3D Space Station (ISS) & Orbital Rings**: Full 3D modeled satellite orbiting above the Earth with an inclination trajectory ring.
+* **🌌 Cosmic Deep Space**: Dynamic starfield and celestial illumination from directional solar lighting.
 
 ---
 
