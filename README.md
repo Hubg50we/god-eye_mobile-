@@ -208,4 +208,15 @@ God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic,
 ### 7. 📱 Complete Mobile Hardware & System Control
 - **Open Any App**: *"Open YouTube"*, *"Open Camera"*, *"Open Maps"*, *"Open Chrome"*, *"Open Settings"*.
 - **Hardware Peripherals**: *"Turn on flashlight"*, *"Turn off flashlight"*, *"Call 911"*, *"Set volume to 80%"*.
+
+### 8. 🌐 Universal Cross-Device Optimization & Adaptive Engine (v3.3.0)
+- **Automatic Hardware Profiling**: Detects CPU cores, RAM, refresh rate, and power save state (`low`, `medium`, `high`, `flagship`).
+- **Dynamic 3D Adaptive Scaling**:
+  - *Low-Spec & Emulators (<3GB RAM)*: Caps resolution scale to 1.0, 30 FPS target, simplified backdrop filters to eliminate GPU stutter.
+  - *Mid-Range (4-6GB RAM)*: Balanced 1.25x resolution scale at 60 FPS.
+  - *Flagships (Snapdragon 8 Gen 1/2/3, 8GB+ RAM)*: 1.5x - 1.75x ultra-crisp resolution at 90-120Hz high refresh rate.
+- **Runtime Stutter Protection**: Dynamically auto-throttles if frame rate dips below 22 FPS to prevent thermal throttling or UI lag.
+- **Universal Form Factor Responsiveness**: Native edge-to-edge display cutout notch support, dynamic safe-area insets, and optimized split layouts for Foldables (Galaxy Z Fold, Pixel Fold) and Tablets.
+- **Voice Commands**: *"Optimize device"*, *"Boost performance"*, *"Performance status"*, *"Toggle power saver"*.
+
 - **Android Default Assistant**: Registered with `ACTION_ASSIST`—summon J.A.R.V.I.S. by holding down the Android home or power button.

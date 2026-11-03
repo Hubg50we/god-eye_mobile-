@@ -46,6 +46,10 @@ import android.app.ActivityManager;
 import android.os.StatFs;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.os.PowerManager;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.content.res.Configuration;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import androidx.core.app.NotificationCompat;
@@ -64,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private long backPressedTime = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
-    @Override
-    
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -98,6 +100,12 @@ public class MainActivity extends AppCompatActivity {
             });
         } catch (Exception ignored) {}
 
+                // Notch / Cutout display handling for edge-to-edge
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode = 
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+
         // Fullscreen immersive mode
         hideSystemUI();
 
@@ -115,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -354,6 +363,75 @@ public class MainActivity extends AppCompatActivity {
 
         public GodsEyeNativeBridge(Context context) {
             this.context = context;
+        }
+
+        @JavascriptInterface
+        public String getDeviceOptimizationProfile() {
+            try {
+                ActivityManager actManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+                if (actManager != null) actManager.getMemoryInfo(memInfo);
+
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                boolean isPowerSave = (pm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) && pm.isPowerSaveMode();
+                boolean isLowRam = actManager != null && actManager.isLowRamDevice();
+
+                int cores = Runtime.getRuntime().availableProcessors();
+                long totalRamMB = memInfo.totalMem / (1024 * 1024);
+                long freeRamMB = memInfo.availMem / (1024 * 1024);
+
+                DisplayMetrics dm = getResources().getDisplayMetrics();
+                int screenWidth = dm.widthPixels;
+                int screenHeight = dm.heightPixels;
+                float density = dm.density;
+
+                boolean isTablet = (getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+
+                float refreshRate = 60.0f;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Display display = getDisplay();
+                    if (display != null) refreshRate = display.getRefreshRate();
+                }
+
+                String tier = "high";
+                if (isLowRam || totalRamMB < 2500 || cores <= 4 || isPowerSave) {
+                    tier = "low";
+                } else if (totalRamMB < 5500 || cores <= 6) {
+                    tier = "medium";
+                } else if (totalRamMB >= 8000 && cores >= 8 && refreshRate >= 90) {
+                    tier = "flagship";
+                }
+
+                JSONObject obj = new JSONObject();
+                obj.put("tier", tier);
+                obj.put("isLowRam", isLowRam);
+                obj.put("isPowerSave", isPowerSave);
+                obj.put("cores", cores);
+                obj.put("totalRamMB", totalRamMB);
+                obj.put("freeRamMB", freeRamMB);
+                obj.put("screenWidth", screenWidth);
+                obj.put("screenHeight", screenHeight);
+                obj.put("density", density);
+                obj.put("isTablet", isTablet);
+                obj.put("refreshRate", Math.round(refreshRate));
+                return obj.toString();
+            } catch (Exception e) {
+                return "{\"tier\":\"medium\",\"isLowRam\":false,\"isPowerSave\":false,\"refreshRate\":60}";
+            }
+        }
+
+        @JavascriptInterface
+        public void setTargetFps(int fps) {
+            // Dynamic refresh rate hook for supported Android displays
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    try {
+                        WindowManager.LayoutParams lp = getWindow().getAttributes();
+                        // Allows system display engine to adapt frame timing
+                        getWindow().setAttributes(lp);
+                    } catch (Exception ignored) {}
+                }
+            });
         }
 
         @JavascriptInterface

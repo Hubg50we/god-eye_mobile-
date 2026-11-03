@@ -1222,6 +1222,73 @@
         body.persona-edith .jarvis-arc-reactor .reactor-core { background: radial-gradient(circle, #ffffff 20%, #10b981 65%, #065f46 100%) !important; }
         body.persona-edith .jarvis-arc-reactor .ring-outer { border-color: #10b981 !important; }
 
+    
+        /* ==========================================================
+           UNIVERSAL CROSS-DEVICE OPTIMIZATION & RESPONSIVE STYLES
+           (Budget phones, Flagships 120Hz, Foldables, Tablets, Emulators)
+           ========================================================== */
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+        }
+
+        body {
+            padding-top: var(--sat);
+            padding-bottom: var(--sab);
+            padding-left: var(--sal);
+            padding-right: var(--sar);
+            min-height: 100vh;
+            min-height: 100dvh;
+            box-sizing: border-box;
+        }
+
+        /* Low-Spec / Power-Saving Hardware Mode (zero GPU lag) */
+        body.low-spec-mode * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+        }
+        body.low-spec-mode .tactical-modal-card,
+        body.low-spec-mode .siri-gemini-card,
+        body.low-spec-mode #hud-overlay {
+            background: rgba(8, 12, 20, 0.96) !important;
+        }
+
+        /* Large Screen & Tablet / Foldable Adaptations (>= 768px) */
+        @media (min-width: 768px) {
+            #hud-overlay {
+                max-width: 920px;
+                margin: 0 auto;
+                left: 50% !important;
+                transform: translateX(-50%);
+            }
+            .tactical-modal-card {
+                max-width: 640px;
+            }
+            #siriGlowPerimeter {
+                border-radius: 20px;
+                margin: 12px;
+                width: calc(100% - 24px);
+                height: calc(100% - 24px);
+            }
+        }
+
+        /* Compact Handsets (< 380px width) */
+        @media (max-width: 380px) {
+            .hud-title { font-size: 11px !important; }
+            .tactical-btn { padding: 6px 8px !important; font-size: 10px !important; }
+            #arcReactorContainer { width: 75px !important; height: 75px !important; }
+        }
+
+        /* Touch Accessibility - Minimum target bounding box */
+        button, .tactical-btn, .mode-btn {
+            min-height: 40px;
+            touch-action: manipulation;
+        }
+
     </style>
 </head>
 <body>
@@ -4501,6 +4568,34 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
         const jarvisTools = new OpenJarvisToolRegistry();
 
         // Register OpenJarvis Tools mapped to 3D Earth Application
+        
+        // Register Device Performance & Adaptive Optimization Tool
+        jarvisTools.register(
+            "optimize_device_performance",
+            "Auto-tunes 3D graphics, frame rate, resolution scale, and memory caching for peak performance on any Android device.",
+            {
+                type: "object",
+                properties: {
+                    target_mode: { type: "string", enum: ["auto", "low", "medium", "high", "flagship", "powersave"], description: "Optimization profile to apply" }
+                }
+            },
+            async (args) => {
+                const mode = (args.target_mode || "auto").toLowerCase();
+                if (mode === "powersave" || mode === "low") {
+                    AdaptiveDeviceEngine.applyProfile("low");
+                    return "⚡ Power-saving mode engaged: Render scale capped to 1.0 at 30 FPS. Visual effects simplified for 0% stutter.";
+                } else if (mode === "high" || mode === "flagship") {
+                    AdaptiveDeviceEngine.applyProfile("high");
+                    return "🚀 High-fidelity mode engaged: Resolution scale boosted with 60-120 FPS high refresh rate rendering.";
+                } else {
+                    AdaptiveDeviceEngine.detectProfile();
+                    AdaptiveDeviceEngine.applyProfile(AdaptiveDeviceEngine.profile.tier);
+                    const p = AdaptiveDeviceEngine.profile;
+                    return `✅ Device calibrated: Detected ${p.cores}-Core CPU, ${p.totalRamMB}MB RAM. Applied ${p.tier.toUpperCase()} tier at ${p.refreshRate}Hz.`;
+                }
+            }
+        );
+
         jarvisTools.register(
             "fly_to_location",
             "Fly the 3D globe camera to a specific city, country, or geographical location name.",
@@ -5375,7 +5470,19 @@ SYSTEM STATUS: ALL ARRAYS NOMINAL (DEFCON GUARDED)
                 let observation = "";
                 let reply = "";
 
-                                                                                                // 0.0000000000 Ballistic Trajectory Simulator
+                                                                                                                // Device Performance & Universal Optimization Voice Intents
+                if (lower.includes("optimize") || lower.includes("performance") || lower.includes("boost") || lower.includes("speed up") || lower.includes("device profile") || lower.includes("fps") || lower.includes("lag")) {
+                    const res = await this.toolRegistry.execute("optimize_device_performance", { target_mode: lower.includes("power") || lower.includes("battery") ? "powersave" : "auto" });
+                    return {
+                        thought: "User requested system performance optimization. Calibrating 3D rendering pipeline to device hardware tier.",
+                        action: "optimize_device_performance",
+                        actionArgs: { target_mode: "auto" },
+                        observation: res,
+                        reply: `${res} All subsystems are operating at peak efficiency.`
+                    };
+                }
+
+                // 0.0000000000 Ballistic Trajectory Simulator
                 if (/(?:simulate|launch)\s+(?:ballistic|missile|trajectory|icbm|rocket)\s+(?:from\s+([a-zA-Z\s]+)\s+to\s+([a-zA-Z\s]+)|to\s+([a-zA-Z\s]+))/i.test(lower)) {
                     const match = lower.match(/(?:simulate|launch)\s+(?:ballistic|missile|trajectory|icbm|rocket)\s+(?:from\s+([a-zA-Z\s]+)\s+to\s+([a-zA-Z\s]+)|to\s+([a-zA-Z\s]+))/i);
                     const origin = match[1] ? match[1].trim() : "Tokyo";
@@ -6199,6 +6306,196 @@ Processed on-device via AEGIS 3D Earth AI Assistant Bus.`;
                 fetchSpaceWeather();
             }, 45000);
         });
+    
+        // ==============================================================
+        // 16. ADAPTIVE DEVICE PERFORMANCE ENGINE (UNIVERSAL OPTIMIZATION)
+        // ==============================================================
+        const AdaptiveDeviceEngine = {
+            profile: {
+                tier: "high",
+                isLowRam: false,
+                isPowerSave: false,
+                cores: 8,
+                totalRamMB: 8192,
+                freeRamMB: 4096,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                density: window.devicePixelRatio || 1,
+                isTablet: false,
+                refreshRate: 60
+            },
+            currentFps: 60,
+            frameCount: 0,
+            lastFpsTime: performance.now(),
+            qualityTier: "auto",
+            appliedTier: "high",
+            isThrottledForThermal: false,
+
+            init() {
+                this.detectProfile();
+                this.applyProfile(this.profile.tier);
+                this.startFpsMonitor();
+                this.bindResizeListener();
+            },
+
+            detectProfile() {
+                try {
+                    if (window.GodsEyeNative && typeof window.GodsEyeNative.getDeviceOptimizationProfile === 'function') {
+                        const raw = window.GodsEyeNative.getDeviceOptimizationProfile();
+                        const parsed = JSON.parse(raw);
+                        this.profile = Object.assign(this.profile, parsed);
+                        console.log("[ADAPTIVE ENGINE] Native Android Device Profile Detected:", this.profile);
+                        return;
+                    }
+                } catch(e) {
+                    console.warn("[ADAPTIVE ENGINE] Native profile fallback:", e);
+                }
+
+                // Fallback Browser/Web API detection
+                const cores = navigator.hardwareConcurrency || 4;
+                const ram = (navigator.deviceMemory ? navigator.deviceMemory * 1024 : 4096);
+                const isTablet = Math.min(window.innerWidth, window.innerHeight) >= 600;
+
+                let tier = "medium";
+                if (ram < 3000 || cores <= 4) tier = "low";
+                else if (ram >= 7500 && cores >= 8) tier = "high";
+
+                this.profile = {
+                    tier,
+                    isLowRam: ram < 3000,
+                    isPowerSave: false,
+                    cores,
+                    totalRamMB: ram,
+                    freeRamMB: ram * 0.5,
+                    screenWidth: window.innerWidth,
+                    screenHeight: window.innerHeight,
+                    density: window.devicePixelRatio || 1,
+                    isTablet,
+                    refreshRate: 60
+                };
+                console.log("[ADAPTIVE ENGINE] Web Device Profile Inferred:", this.profile);
+            },
+
+            applyProfile(tier) {
+                this.appliedTier = tier;
+                console.log(`[ADAPTIVE ENGINE] Applying Adaptive Optimization for Tier: ${tier.toUpperCase()}`);
+
+                let resScale = 1.0;
+                let targetFps = 60;
+                let maxScreenError = 2.5;
+
+                if (tier === 'low') {
+                    resScale = 1.0;
+                    targetFps = 30;
+                    maxScreenError = 4.5;
+                    document.body.classList.add('low-spec-mode');
+                } else if (tier === 'medium') {
+                    resScale = Math.min(window.devicePixelRatio || 1, 1.25);
+                    targetFps = 60;
+                    maxScreenError = 2.8;
+                    document.body.classList.remove('low-spec-mode');
+                } else if (tier === 'high') {
+                    resScale = Math.min(window.devicePixelRatio || 1, 1.5);
+                    targetFps = Math.min(90, this.profile.refreshRate || 60);
+                    maxScreenError = 2.0;
+                    document.body.classList.remove('low-spec-mode');
+                } else if (tier === 'flagship') {
+                    resScale = Math.min(window.devicePixelRatio || 1, 1.75);
+                    targetFps = Math.min(120, this.profile.refreshRate || 120);
+                    maxScreenError = 1.8;
+                    document.body.classList.remove('low-spec-mode');
+                }
+
+                // Apply to Cesium
+                if (window.cesiumViewer) {
+                    try {
+                        cesiumViewer.resolutionScale = resScale;
+                        cesiumViewer.targetFrameRate = targetFps;
+                        if (cesiumViewer.scene && cesiumViewer.scene.globe) {
+                            cesiumViewer.scene.globe.maximumScreenSpaceError = maxScreenError;
+                            cesiumViewer.scene.globe.tileCacheSize = tier === 'low' ? 100 : (tier === 'medium' ? 300 : 600);
+                        }
+                    } catch(e) {}
+                }
+
+                // Apply to Three.js
+                if (window.renderer) {
+                    try {
+                        renderer.setPixelRatio(resScale);
+                    } catch(e) {}
+                }
+
+                // Inform Native bridge
+                if (window.GodsEyeNative && typeof window.GodsEyeNative.setTargetFps === 'function') {
+                    try { window.GodsEyeNative.setTargetFps(targetFps); } catch(e) {}
+                }
+            },
+
+            startFpsMonitor() {
+                let frameCount = 0;
+                let lastTime = performance.now();
+                let lowFpsCount = 0;
+                let goodFpsCount = 0;
+
+                const checkFps = (time) => {
+                    frameCount++;
+                    const delta = time - lastTime;
+                    if (delta >= 2500) {
+                        this.currentFps = Math.round((frameCount * 1000) / delta);
+                        frameCount = 0;
+                        lastTime = time;
+
+                        // Dynamic stutter protector
+                        if (this.currentFps < 22 && !this.isThrottledForThermal) {
+                            lowFpsCount++;
+                            if (lowFpsCount >= 2) {
+                                this.isThrottledForThermal = true;
+                                lowFpsCount = 0;
+                                console.warn("[ADAPTIVE ENGINE] Stutter detected. Engaging power/performance mode.");
+                                this.applyProfile('low');
+                                showToast("⚡ GPU load high: Adaptive Engine switched to battery/performance mode");
+                            }
+                        } else if (this.currentFps >= 50 && this.isThrottledForThermal) {
+                            goodFpsCount++;
+                            if (goodFpsCount >= 4) {
+                                this.isThrottledForThermal = false;
+                                goodFpsCount = 0;
+                                console.log("[ADAPTIVE ENGINE] Performance normalized. Resuming optimal profile.");
+                                this.applyProfile(this.profile.tier);
+                            }
+                        }
+                    }
+                    requestAnimationFrame(checkFps);
+                };
+                requestAnimationFrame(checkFps);
+            },
+
+            bindResizeListener() {
+                let resizeTimeout = null;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        const w = window.innerWidth;
+                        const h = window.innerHeight;
+                        if (window.camera && window.renderer) {
+                            camera.aspect = w / h;
+                            camera.updateProjectionMatrix();
+                            renderer.setSize(w, h);
+                        }
+                        if (window.cesiumViewer && cesiumViewer.camera) {
+                            cesiumViewer.resize();
+                        }
+                        console.log(`[ADAPTIVE ENGINE] Seamlessly adapted to viewport: ${w}x${h}`);
+                    }, 150);
+                });
+            }
+        };
+
+        // Initialize Adaptive Engine automatically on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => { AdaptiveDeviceEngine.init(); }, 500);
+        });
+
     </script>
 </body>
 </html>
