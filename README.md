@@ -211,6 +211,14 @@ God's Eye View Mobile is powered by **J.A.R.V.I.S. v3.2.0**—a movie-authentic,
 
 
 
+
+### 11. 🎬 Hollywood Mark 85 Visual & Micro-Interaction Suite (v3.6.0)
+- **Segmented 10-Coil Arc Reactor Orb**: Movie-authentic Mark 85 electromagnetic stator with 10 copper/gold induction coil segments positioned at 36° intervals, counter-rotating gyroscopic laser rings, and unibeam core with audio-reactive coronal breathing.
+- **Apple Intelligence / Gemini Live Liquid Perimeter**: Seamless conic-gradient chromatic beam flowing around the display bezel with real-time audio-reactive pulse breathing.
+- **Repulsor Shockwave Touch FX**: Interactive kinetic energy shockwave ripples propagating outward upon tapping any HUD button or the Arc Reactor orb.
+- **Chamfered Cyber-Tech Panels**: Flight-grade military HUD cards styled with angular polygon cuts (`clip-path: polygon(...)`) and illuminated reticle corner brackets (`⌜ ⌝ ⌞ ⌟`).
+- **Cockpit Artificial Horizon Ribbon**: Real-time kinetic compass heading, pitch angle, roll tilt, and G-force calculations.
+
 ### 10. 🔄 Multi-Channel Autonomous In-App Updater & OTA Engine (v3.5.0)
 - **Automatic GitHub Release Detection**: Queries `api.github.com/repos/Hubg50we/god-eye_mobile-/releases/latest` to check for newer tactical builds on startup.
 - **One-Tap Background Download**: Uses Android's native `DownloadManager` with notification tray progress and `REQUEST_INSTALL_PACKAGES` integration.

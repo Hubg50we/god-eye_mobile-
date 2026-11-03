@@ -1416,6 +1416,173 @@
             cursor: pointer;
         }
 
+    
+        /* ==============================================================
+           HOLLYWOOD MARK 85 HOLOGRAPHIC H.U.D. & VISUAL ENHANCEMENT SUITE
+           ============================================================== */
+
+        /* 1. Global Holographic Scanline & Micro-Grid Substratum */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: 
+                repeating-linear-gradient(0deg, rgba(0, 240, 255, 0.018) 0px, transparent 1px, transparent 3px),
+                radial-gradient(ellipse at 50% 10%, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 99998;
+        }
+
+        /* 2. Apple Intelligence & Gemini Live Fluid Liquid Perimeter */
+        .siri-glow-perimeter {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 99997;
+            opacity: 0;
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+        }
+
+        .siri-glow-perimeter.active {
+            opacity: 1 !important;
+        }
+
+        .siri-glow-perimeter::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 4px solid transparent;
+            border-radius: 18px;
+            background: conic-gradient(
+                from var(--siri-angle, 0deg),
+                #00f0ff 0%,
+                #3b82f6 20%,
+                #a855f7 40%,
+                #ec4899 60%,
+                #f59e0b 80%,
+                #00f0ff 100%
+            ) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.8)) drop-shadow(0 0 35px rgba(168, 85, 247, 0.6));
+            animation: siriLiquidFlow 3s linear infinite, siriPulseBreath 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes siriLiquidFlow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        @keyframes siriPulseBreath {
+            0% { filter: drop-shadow(0 0 12px rgba(0,240,255,0.7)); border-width: 3px; }
+            100% { filter: drop-shadow(0 0 28px rgba(236,72,153,0.95)) drop-shadow(0 0 50px rgba(59,130,246,0.8)); border-width: 6px; }
+        }
+
+        /* 3. Authentic Mark 85 10-Coil Arc Reactor Orb */
+        .ai-assistant-fab {
+            width: 70px !important;
+            height: 70px !important;
+            background: radial-gradient(circle, rgba(10, 24, 48, 0.96) 0%, rgba(2, 6, 14, 0.98) 100%) !important;
+            border: 1.5px solid rgba(0, 240, 255, 0.7) !important;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.45), inset 0 0 16px rgba(0, 240, 255, 0.3) !important;
+        }
+
+        .arc-reactor-stator {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        .arc-induction-coil {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 5px; height: 12px;
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            border: 1px solid #fde68a;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.75);
+            margin-left: -2.5px; margin-top: -30px;
+            transform-origin: 2.5px 30px;
+        }
+
+        .arc-induction-coil:nth-child(1)  { transform: rotate(0deg); }
+        .arc-induction-coil:nth-child(2)  { transform: rotate(36deg); }
+        .arc-induction-coil:nth-child(3)  { transform: rotate(72deg); }
+        .arc-induction-coil:nth-child(4)  { transform: rotate(108deg); }
+        .arc-induction-coil:nth-child(5)  { transform: rotate(144deg); }
+        .arc-induction-coil:nth-child(6)  { transform: rotate(180deg); }
+        .arc-induction-coil:nth-child(7)  { transform: rotate(216deg); }
+        .arc-induction-coil:nth-child(8)  { transform: rotate(252deg); }
+        .arc-induction-coil:nth-child(9)  { transform: rotate(288deg); }
+        .arc-induction-coil:nth-child(10) { transform: rotate(324deg); }
+
+        .ai-fab-core {
+            width: 26px !important;
+            height: 26px !important;
+            background: radial-gradient(circle, #ffffff 18%, #00f0ff 65%, #0369a1 100%) !important;
+            box-shadow: 0 0 20px #00f0ff, 0 0 40px rgba(0, 240, 255, 0.6) !important;
+            animation: arcBreathing 2s ease-in-out infinite alternate !important;
+        }
+
+        /* 4. Chamfered Cyber-Tech Panels with Reticle Corner Brackets */
+        .status-card, .tactical-modal-card {
+            background: rgba(6, 12, 24, 0.9) !important;
+            backdrop-filter: blur(20px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+            border: 1px solid rgba(0, 240, 255, 0.35) !important;
+            clip-path: polygon(
+                0 10px, 10px 0, 
+                calc(100% - 10px) 0, 100% 10px, 
+                100% calc(100% - 10px), calc(100% - 10px) 100%, 
+                10px 100%, 0 calc(100% - 10px)
+            );
+            position: relative;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.75), inset 0 0 20px rgba(0, 240, 255, 0.08) !important;
+        }
+
+        /* 5. Repulsor Touch Shockwave Effect */
+        .repulsor-shockwave {
+            position: fixed;
+            border-radius: 50%;
+            border: 2px solid #00f0ff;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%) scale(0.2);
+            animation: repulsorBlast 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+
+        @keyframes repulsorBlast {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+        }
+
+        /* 6. Kinetic Cockpit Horizon Ribbon */
+        .cockpit-ribbon {
+            position: fixed;
+            top: 56px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: rgba(6, 14, 28, 0.92);
+            border: 1px solid rgba(0, 240, 255, 0.45);
+            border-radius: 24px;
+            padding: 6px 16px;
+            color: #38bdf8;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            letter-spacing: 1.2px;
+            backdrop-filter: blur(14px);
+            z-index: 9999;
+            box-shadow: 0 0 22px rgba(0, 240, 255, 0.28);
+            align-items: center;
+            gap: 14px;
+        }
+
     </style>
 </head>
 <body>
@@ -1466,16 +1633,44 @@
         <button onclick="cancelActiveTask()" style="background:#ef4444; color:#fff; border:none; border-radius:12px; padding:2px 8px; font-size:9px; font-weight:bold; cursor:pointer;">ABORT</button>
     </div>
 
-    <!-- Floating Interactive AI Assistant Orb Button -->
-        <div class="ai-assistant-fab" onclick="openAssistant()" title="Summon J.A.R.V.I.S. Tactical AI">
+    <!-- Apple Intelligence / Siri / Gemini Fluid Glow Perimeter Container -->
+    <div id="siriGlowPerimeter" class="siri-glow-perimeter"></div>
+
+    <!-- Cockpit Artificial Horizon Ribbon -->
+    <div id="cockpitRibbon" class="cockpit-ribbon">
+        <div class="cockpit-item">🧭 <span id="cockpitHdg" class="cockpit-val">HDG: 000°</span></div>
+        <div class="cockpit-item">📐 <span id="cockpitPitch" class="cockpit-val">PITCH: +0°</span></div>
+        <div class="cockpit-item">⚡ <span id="cockpitRoll" class="cockpit-val">ROLL: 0°</span></div>
+        <div class="cockpit-item">🚀 <span id="cockpitG" class="cockpit-val">G: 1.00</span></div>
+    </div>
+
+    <!-- Upgraded Movie-Authentic Mark 85 10-Coil Arc-Reactor Floating Orb -->
+    <div class="ai-assistant-fab" onclick="openAssistant(); triggerRepulsorShockwave(event);" title="Summon J.A.R.V.I.S. Tactical AI">
         <div class="ai-fab-aura"></div>
+        
+        <!-- 10 Radial Magnetic Induction Coils -->
+        <div class="arc-reactor-stator">
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+            <div class="arc-induction-coil"></div>
+        </div>
+
+        <!-- Concentric Counter-Rotating Gyro Rings -->
         <div class="ai-fab-ring-outer"></div>
         <div class="ai-fab-ring-inner"></div>
+
+        <!-- High-Energy Unibeam Core -->
         <div class="ai-fab-core">
             <span>⚡</span>
         </div>
         <div class="ai-fab-badge" style="background:#00f0ff; color:#000; font-weight:900;">J.A.R.V.I.S.</div>
-    </div>
     </div>
 
     <!-- Bottom Floating Tactical Deck -->
