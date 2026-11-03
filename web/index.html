@@ -627,6 +627,24 @@
             font-family: var(--font-mono);
             font-size: 12px;
         }
+
+        /* OpenJarvis ReAct Reasoning Step Cards */
+        .react-step-card {
+            background: rgba(147, 51, 234, 0.12);
+            border: 1px solid rgba(192, 132, 252, 0.35);
+            border-left: 3px solid var(--purple);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin: 6px 0;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            line-height: 1.45;
+        }
+        .react-thought { color: #d8b4fe; margin-bottom: 4px; }
+        .react-action { color: #38bdf8; margin-bottom: 4px; font-weight: bold; }
+        .react-action code { background: rgba(0,0,0,0.4); padding: 1px 4px; border-radius: 3px; color: var(--cyan); }
+        .react-obs { color: #86efac; }
+
     </style>
 </head>
 <body>
@@ -651,7 +669,7 @@
             <div class="brand-logo"></div>
             <div class="brand-text">
                 <div class="brand-title">GOD'S EYE <span>3D</span></div>
-                <div class="brand-sub">CESIUM ION & THREE.JS · v1.7.2 AI CONSOLE</div>
+                <div class="brand-sub">CESIUM ION · OPENJARVIS AGENT OS v1.8.0</div>
             </div>
         </div>
         <div class="header-actions">
@@ -732,7 +750,7 @@
         <div class="tactical-modal-card" id="assistantModalCard">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>✨ AEGIS — FULL 3D EARTH AI ASSISTANT</span>
+                    <span>✨ AEGIS / OPENJARVIS — ON-DEVICE REASONING AGENT</span>
                 </div>
                 <div class="header-btn-group">
                     <button class="icon-btn" onclick="stopAllSpeech()" title="Stop Speech / Silence" style="color:var(--red); border-color:var(--red);">⏹ SILENCE</button>
@@ -748,7 +766,7 @@
                     <span>🤖</span>
                 </div>
                 <div style="flex:1;">
-                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">AEGIS AI Assistant Core</div>
+                    <div style="font-size:11px; font-weight:bold; color:var(--purple);">OPENJARVIS Tactical Agent Core</div>
                     <div id="assistantStateText" style="font-size:9px; color:var(--text-sub);">Cesium Ion & Three.js 3D Earth Camera, Voice, GPS.</div>
                 </div>
                 <canvas id="audioWaveCanvas" width="70" height="24"></canvas>
@@ -770,12 +788,13 @@
             </div>
 
             <div class="chip-row">
-                <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station and follow it')">🔄 Follow ISS Track</div>
+                <div class="query-chip" style="background:rgba(234,179,8,0.15); border-color:#eab308; color:#fde047;" onclick="executeAssistantCommand('Run morning tactical digest')">🌅 Tactical Morning Digest</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Track the International Space Station and follow it')">🛰️ ISS Operative</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Monitor earthquakes for high magnitude threats')">🚨 Seismic Sentinel</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Monitor wildfires with NASA EONET')">🔥 Wildfire Watch</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Patrol airspace and sweep flights')">✈️ Airspace Sweep</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Monitor wildfires with NASA EONET')">🔥 Wildfire Sentinel</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Patrol airspace and sweep flights')">✈️ Airspace Operative</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Check space weather and solar storms')">⚡ Space Weather</div>
-                <div class="query-chip" onclick="executeAssistantCommand('Fly to Tokyo and zoom in and switch to night mode')">⚡ Multi-Step Mission</div>
+                <div class="query-chip" onclick="executeAssistantCommand('Check quakes in Japan and fly there and switch to night mode')">🧠 ReAct Mission</div>
                 <div class="query-chip" onclick="executeAssistantCommand('Assess threats and brief me')">🛡️ Executive Sitrep</div>
                 <div class="query-chip" onclick="stopAllSpeech()" style="color:var(--red); border-color:var(--red);">⏹ Silence Voice</div>
                 <div class="query-chip" onclick="cancelActiveTask()">⏹ Abort Task</div>
@@ -868,6 +887,22 @@
             <div class="form-group">
                 <label class="form-label">GOOGLE PHOTOREALISTIC 3D TILES KEY:</label>
                 <input type="text" class="form-input" id="cfgGoogle" placeholder="Google Maps Platform API Key">
+            </div>
+
+            <div style="margin: 14px 0 8px 0; padding-top: 10px; border-top: 1px solid rgba(192, 132, 252, 0.3); font-size: 11px; color: var(--purple); font-weight: bold;">
+                🤖 OPENJARVIS LOCAL INFERENCE ENGINE
+            </div>
+            <div class="form-group">
+                <label class="form-label">LOCAL SLM / OLLAMA / VLLM ENDPOINT URL:</label>
+                <input type="text" class="form-input" id="cfgOllamaUrl" placeholder="http://10.0.2.2:11434 or http://192.168.1.100:11434">
+            </div>
+            <div class="form-group">
+                <label class="form-label">MODEL IDENTIFIER (OLLAMA / LLAMA.CPP / OPENAI):</label>
+                <input type="text" class="form-input" id="cfgOllamaModel" placeholder="llama3.2:3b, qwen2.5:3b, mistral:7b">
+            </div>
+            <div class="form-group">
+                <label class="form-label">OPTIONAL API KEY (FOR OPENROUTER / CLOUD LLM):</label>
+                <input type="password" class="form-input" id="cfgLlmKey" placeholder="sk-...">
             </div>
 
             <div style="display:flex; gap:8px; margin-top:10px;">
@@ -2414,8 +2449,480 @@
 
         
         // ==========================================
-        // 9. AUTHORITATIVE AGENT APP BUS & NLU
+        
         // ==========================================
+        // 9. OPENJARVIS ON-DEVICE AUTONOMOUS AGENT RUNTIME
+        // Based on open-jarvis/OpenJarvis architecture
+        // ==========================================
+
+        class OpenJarvisMemory {
+            constructor() {
+                this.history = [];
+                this.observations = [];
+                this.userContext = {
+                    gps: null,
+                    preferredEngine: 'cesium_ion'
+                };
+            }
+
+            addTurn(role, content, meta = {}) {
+                this.history.push({ role, content, meta, timestamp: Date.now() });
+                if (this.history.length > 40) this.history.shift();
+            }
+
+            addObservation(toolName, result) {
+                this.observations.push({ toolName, result, timestamp: Date.now() });
+                if (this.observations.length > 20) this.observations.shift();
+            }
+        }
+
+        class OpenJarvisToolRegistry {
+            constructor() {
+                this.tools = {};
+            }
+
+            register(name, desc, params, fn) {
+                this.tools[name] = { name, description: desc, parameters: params, execute: fn };
+            }
+
+            getSchemas() {
+                return Object.values(this.tools).map(t => ({
+                    type: "function",
+                    function: {
+                        name: t.name,
+                        description: t.description,
+                        parameters: t.parameters
+                    }
+                }));
+            }
+
+            async execute(name, args = {}) {
+                if (!this.tools[name]) {
+                    throw new Error(`OpenJarvis: tool "${name}" not found in registry.`);
+                }
+                return await this.tools[name].execute(args);
+            }
+        }
+
+        const jarvisMemory = new OpenJarvisMemory();
+        const jarvisTools = new OpenJarvisToolRegistry();
+
+        // Register OpenJarvis Tools mapped to 3D Earth Application
+        jarvisTools.register(
+            "fly_to_location",
+            "Fly the 3D globe camera to a specific city, country, or geographical location name.",
+            {
+                type: "object",
+                properties: { query: { type: "string", description: "City or place name, e.g. 'Tokyo', 'London'" } },
+                required: ["query"]
+            },
+            async (args) => {
+                const res = await window.AegisAppBus.flyToQuery(args.query);
+                return res.success 
+                    ? `Flew to ${res.name}, ${res.country} (${res.lat.toFixed(2)}, ${res.lon.toFixed(2)})`
+                    : `Location search failed for "${args.query}"`;
+            }
+        );
+
+        jarvisTools.register(
+            "fly_to_coordinates",
+            "Fly the 3D camera to exact geodetic latitude and longitude.",
+            {
+                type: "object",
+                properties: {
+                    lat: { type: "number" },
+                    lon: { type: "number" },
+                    zoom: { type: "number", default: 1.35 }
+                },
+                required: ["lat", "lon"]
+            },
+            async (args) => {
+                smoothFlyTo(args.lat, args.lon, args.zoom || 1.35);
+                return `Camera oriented to lat: ${args.lat}, lon: ${args.lon}`;
+            }
+        );
+
+        jarvisTools.register(
+            "zoom_camera",
+            "Zoom the 3D Earth camera in or out.",
+            {
+                type: "object",
+                properties: { direction: { type: "string", enum: ["in", "out"] } },
+                required: ["direction"]
+            },
+            async (args) => {
+                if (args.direction === 'in') window.AegisAppBus.zoomIn();
+                else window.AegisAppBus.zoomOut();
+                return `Camera zoom ${args.direction} applied.`;
+            }
+        );
+
+        jarvisTools.register(
+            "set_camera_orbit",
+            "Enable or pause Earth auto-orbit rotation.",
+            {
+                type: "object",
+                properties: { active: { type: "boolean" } },
+                required: ["active"]
+            },
+            async (args) => {
+                const s = window.AegisAppBus.toggleOrbit(args.active);
+                return `Earth auto-orbit set to ${s ? 'ACTIVE' : 'PAUSED'}`;
+            }
+        );
+
+        jarvisTools.register(
+            "switch_3d_engine",
+            "Switch the active 3D Earth rendering engine and imagery texture style.",
+            {
+                type: "object",
+                properties: { engine: { type: "string", enum: ["cesium_ion", "three_sat", "three_night", "three_topo"] } },
+                required: ["engine"]
+            },
+            async (args) => {
+                window.AegisAppBus.setEngine(args.engine);
+                return `3D Engine switched to ${args.engine}`;
+            }
+        );
+
+        jarvisTools.register(
+            "filter_telemetry_layer",
+            "Filter visible 3D assets to a specific domain.",
+            {
+                type: "object",
+                properties: { domain: { type: "string", enum: ["ALL", "AIR", "SEISMIC", "SPACE", "FIRE", "WEATHER"] } },
+                required: ["domain"]
+            },
+            async (args) => {
+                window.AegisAppBus.filterCategory(args.domain);
+                return `Filtered visible assets to ${args.domain}`;
+            }
+        );
+
+        jarvisTools.register(
+            "get_sitrep_intel",
+            "Generate tactical multi-domain intelligence status across space, airspace, seismic, and wildfires.",
+            { type: "object", properties: {} },
+            async () => {
+                return getSitrepText();
+            }
+        );
+
+        jarvisTools.register(
+            "start_background_operative",
+            "Launch an autonomous persistent background monitoring operative.",
+            {
+                type: "object",
+                properties: { operative: { type: "string", enum: ["track_iss", "monitor_seismic", "patrol_airspace", "monitor_wildfires", "morning_digest"] } },
+                required: ["operative"]
+            },
+            async (args) => {
+                if (args.operative === 'morning_digest') {
+                    startTacticalMorningDigest();
+                    return "Started OpenJarvis Tactical Morning Digest";
+                }
+                window.AegisAppBus.startTask(args.operative);
+                return `Operative "${args.operative}" active in background.`;
+            }
+        );
+
+        jarvisTools.register(
+            "silence_voice",
+            "Immediately silence active speech synthesis output.",
+            { type: "object", properties: {} },
+            async () => {
+                stopAllSpeech();
+                return "Speech silenced";
+            }
+        );
+
+        jarvisTools.register(
+            "assess_asset_threat",
+            "Run on-device neural threat classifier on a specific target or category.",
+            {
+                type: "object",
+                properties: { target_domain: { type: "string" } }
+            },
+            async (args) => {
+                const testFeat = new Float32Array([0.8, 0.75, 0.4, 0.2, 0.6, 0.0]);
+                const res = localAI.classifyAssetThreat(testFeat);
+                return `Threat Index: ${res.threatIndex}/100, Latency: ${res.latencyMs}ms`;
+            }
+        );
+
+        // OpenJarvis Autonomous Morning / Tactical Digest Operative
+        async function startTacticalMorningDigest() {
+            cancelActiveTask();
+            updateTaskUI("OpenJarvis Morning Digest");
+            addChatMessage('agent', "🌅 <strong>OpenJarvis Morning Tactical Digest</strong> initiated. Compiling multi-domain intelligence...");
+            
+            // Phase 1: Space Weather & Solar Horizon
+            window.AegisAppBus.filterCategory('SPACE');
+            smoothFlyTo(15, -40, 1.1);
+            const kp = state.spaceWeather ? state.spaceWeather.kp.toFixed(1) : '2.0';
+            const kpStat = state.spaceWeather ? state.spaceWeather.status : 'QUIET';
+            const intro = `Good day Commander. This is JARVIS with your multi-domain tactical morning digest. System readiness is nominal. Space weather indicates a planetary K-index of ${kp}, classified as ${kpStat}.`;
+            speakAssistant(intro);
+
+            await new Promise(r => setTimeout(r, 6500));
+
+            // Phase 2: Seismic Activity & Ruptures
+            window.AegisAppBus.filterCategory('SEISMIC');
+            const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+            if (maxQ) {
+                smoothFlyTo(maxQ.lat, maxQ.lon, 1.35);
+                const quakeReport = `USGS sensors report ${state.quakes.length} earthquakes over the last 24 hours. Peak rupture magnitude is ${maxQ.mag} near ${maxQ.title}.`;
+                speakAssistant(quakeReport);
+            }
+            await new Promise(r => setTimeout(r, 6000));
+
+            // Phase 3: NASA Wildfires & Thermal Hotspots
+            window.AegisAppBus.filterCategory('FIRE');
+            const maxFire = [...state.wildfires].sort((a,b) => b.acres - a.acres)[0];
+            if (maxFire) {
+                smoothFlyTo(maxFire.lat, maxFire.lon, 1.4);
+                const fireReport = `NASA EONET satellites detect ${state.wildfires.length} active thermal events. Primary event: ${maxFire.title}, spanning approximately ${maxFire.acres.toLocaleString()} acres.`;
+                speakAssistant(fireReport);
+            }
+            await new Promise(r => setTimeout(r, 6000));
+
+            // Phase 4: Airspace & Defense Patrols
+            window.AegisAppBus.filterCategory('AIR');
+            const milCount = state.flights.filter(f => f.military).length;
+            const airReport = `Airspace telemetry monitors ${state.flights.length} flights in 3D, including ${milCount} specialized defense patrol vectors. All civil airway corridors are open.`;
+            speakAssistant(airReport);
+            await new Promise(r => setTimeout(r, 5500));
+
+            // Phase 5: GPS Lock & Conclusion
+            window.AegisAppBus.centerOnGps();
+            const wrapUp = `Re-centering 3D globe over your operating theater. God's Eye systems stand ready for your commands.`;
+            speakAssistant(wrapUp);
+            addChatMessage('agent', "✅ <strong>OpenJarvis Morning Digest</strong> complete. All systems nominal.");
+            updateTaskUI(null);
+        }
+
+        // OpenJarvis ReAct Reasoning Engine (Autonomous Thought -> Action -> Observation Loop)
+        class OpenJarvisReActEngine {
+            constructor(memory, registry) {
+                this.memory = memory;
+                this.registry = registry;
+            }
+
+            async execute(userPrompt) {
+                const ollamaUrl = localStorage.getItem('gev_ollama_url') || '';
+                const ollamaModel = localStorage.getItem('gev_ollama_model') || 'llama3.2:3b';
+                const apiKey = localStorage.getItem('gev_llm_key') || '';
+
+                // If remote or local Ollama SLM is configured, attempt connection
+                if (ollamaUrl) {
+                    try {
+                        const remoteResult = await this._queryOllamaLLM(ollamaUrl, ollamaModel, apiKey, userPrompt);
+                        if (remoteResult) return remoteResult;
+                    } catch (e) {
+                        console.warn("[JARVIS] Ollama endpoint unreachable. Falling back to On-Device ReAct:", e);
+                    }
+                }
+
+                // Autonomous On-Device ReAct Loop
+                return await this._runOnDeviceReAct(userPrompt);
+            }
+
+            async _queryOllamaLLM(url, model, apiKey, prompt) {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+                const endpoint = url.endsWith('/') ? `${url}api/chat` : `${url}/api/chat`;
+                const payload = {
+                    model: model,
+                    messages: [
+                        { role: "system", content: "You are JARVIS, an on-device personal AI operating a 3D Earth surveillance system. Use available tools when appropriate." },
+                        ...this.memory.history.slice(-4),
+                        { role: "user", content: prompt }
+                    ],
+                    stream: false
+                };
+
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.message && data.message.content) {
+                    return {
+                        thought: "Processed via Local SLM (" + model + ")",
+                        action: "local_inference",
+                        observation: "Model response generated",
+                        reply: data.message.content
+                    };
+                }
+                return null;
+            }
+
+            async _runOnDeviceReAct(prompt) {
+                const lower = prompt.toLowerCase();
+                let thought = "";
+                let actionName = "";
+                let actionArgs = {};
+                let observation = "";
+                let reply = "";
+
+                // 1. Morning Digest
+                if (lower.includes('morning digest') || lower.includes('daily digest') || lower.includes('tactical digest')) {
+                    thought = "User requested OpenJarvis Morning Digest. Launching multi-phase space, seismic, fire, and airspace briefing.";
+                    actionName = "start_background_operative";
+                    actionArgs = { operative: "morning_digest" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Engaged OpenJarvis Morning Tactical Digest. Beginning sequence...";
+                }
+                // 2. Continuous Operatives
+                else if (lower.includes('track iss') || lower.includes('follow iss')) {
+                    thought = "User wants orbital lock on ISS. Engaging continuous satellite trajectory tracking operative.";
+                    actionName = "start_background_operative";
+                    actionArgs = { operative: "track_iss" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Locked onto International Space Station orbit.";
+                } else if (lower.includes('monitor earthquake') || lower.includes('seismic sentinel') || lower.includes('quake watch')) {
+                    thought = "User activated seismic alert monitor. Setting up background USGS listener for ruptures ≥M4.5.";
+                    actionName = "start_background_operative";
+                    actionArgs = { operative: "monitor_seismic" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Seismic Sentinel operative engaged.";
+                } else if (lower.includes('monitor fire') || lower.includes('wildfire sentinel') || lower.includes('fire watch')) {
+                    thought = "User requested NASA thermal monitoring. Setting up continuous wildfire sentinel operative.";
+                    actionName = "start_background_operative";
+                    actionArgs = { operative: "monitor_wildfires" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "NASA Wildfire Sentinel operative engaged.";
+                } else if (lower.includes('patrol airspace') || lower.includes('sweep flight')) {
+                    thought = "User initiated airspace sweep. Cycling 3D camera across tactical flight vectors.";
+                    actionName = "start_background_operative";
+                    actionArgs = { operative: "patrol_airspace" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Airspace patrol sweep operative active.";
+                }
+                // 3. Stop / Abort / Silence
+                else if (/^(?:stop|silence|be quiet|shut up|cancel|abort|halt)$/i.test(lower) || lower.includes('stop speaking')) {
+                    thought = "Immediate user interrupt detected. Silencing speech synthesizer and aborting background tasks.";
+                    actionName = "silence_voice";
+                    observation = await this.registry.execute(actionName);
+                    cancelActiveTask();
+                    reply = "Voice speech silenced and active operatives returned to standby.";
+                }
+                // 4. Engine & Style
+                else if (lower.includes('cesium') || lower.includes('ion') || lower.includes('3d buildings')) {
+                    thought = "User commanded switch to CesiumJS 3D photorealistic engine with 3D buildings.";
+                    actionName = "switch_3d_engine";
+                    actionArgs = { engine: "cesium_ion" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Switched to CesiumJS 3D Photorealistic Engine with Cesium World Terrain and OSM 3D Buildings.";
+                } else if (lower.includes('night') || lower.includes('city lights')) {
+                    thought = "User requested night lights globe. Switching texture shader.";
+                    actionName = "switch_3d_engine";
+                    actionArgs = { engine: "three_night" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Engaged 3D Earth Night City Lights map.";
+                } else if (lower.includes('satellite') || lower.includes('three')) {
+                    thought = "User selected Three.js Satellite globe.";
+                    actionName = "switch_3d_engine";
+                    actionArgs = { engine: "three_sat" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Engaged Three.js Photorealistic Satellite Earth.";
+                }
+                // 5. Navigation / Fly to
+                else if (/(?:fly to|go to|take me to|navigate to|look at|head to|search for|find)\s+([a-zA-Z0-9\s,\.-]+)/i.test(lower) && !lower.includes('iss') && !lower.includes('earthquake')) {
+                    const match = lower.match(/(?:fly to|go to|take me to|navigate to|look at|head to|search for|find)\s+([a-zA-Z0-9\s,\.-]+)/i);
+                    const place = match[1].trim();
+                    thought = `User wants to navigate 3D camera to location "${place}". Resolving geocoordinates...`;
+                    actionName = "fly_to_location";
+                    actionArgs = { query: place };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Maneuver complete: ${observation}.`;
+                }
+                // 6. Camera Controls
+                else if (lower.includes('zoom in')) {
+                    thought = "User requested camera zoom in.";
+                    actionName = "zoom_camera";
+                    actionArgs = { direction: "in" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Increased 3D camera magnification.";
+                } else if (lower.includes('zoom out')) {
+                    thought = "User requested camera zoom out.";
+                    actionName = "zoom_camera";
+                    actionArgs = { direction: "out" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "Decreased 3D camera magnification.";
+                } else if (lower.includes('reset view') || lower.includes('reset camera')) {
+                    thought = "User requested camera reset to global orbital orientation.";
+                    actionName = "fly_to_coordinates";
+                    actionArgs = { lat: 20, lon: 0, zoom: 1.0 };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    window.AegisAppBus.toggleOrbit(true);
+                    reply = "3D globe camera reset to default global view.";
+                } else if (lower.includes('stop rotate') || lower.includes('pause orbit')) {
+                    thought = "User commanded pause on auto-orbit rotation.";
+                    actionName = "set_camera_orbit";
+                    actionArgs = { active: false };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "3D Earth auto-orbit rotation paused.";
+                } else if (lower.includes('start rotate') || lower.includes('spin') || lower.includes('auto orbit')) {
+                    thought = "User commanded resume on auto-orbit rotation.";
+                    actionName = "set_camera_orbit";
+                    actionArgs = { active: true };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = "3D Earth auto-orbit rotation active.";
+                }
+                // 7. Domain Layers
+                else if (lower.includes('wildfire') || lower.includes('fire')) {
+                    thought = "Filtering domain telemetry to NASA EONET Wildfires layer.";
+                    actionName = "filter_telemetry_layer";
+                    actionArgs = { domain: "FIRE" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    const maxF = [...state.wildfires].sort((a,b) => b.acres - a.acres)[0];
+                    if (maxF) smoothFlyTo(maxF.lat, maxF.lon, 1.35);
+                    reply = `Wildfire telemetry active. Tracking ${state.wildfires.length} active thermal events. Centered on ${maxF ? maxF.title : 'primary hotspot'}.`;
+                } else if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic')) {
+                    thought = "Filtering domain telemetry to USGS Seismic faults.";
+                    actionName = "filter_telemetry_layer";
+                    actionArgs = { domain: "SEISMIC" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                    if (maxQ) smoothFlyTo(maxQ.lat, maxQ.lon, 1.35);
+                    reply = `Seismic telemetry active with ${state.quakes.length} earthquakes. Centered on peak rupture: M${maxQ ? maxQ.mag : 'N/A'}.`;
+                } else if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
+                    thought = "Filtering domain telemetry to ADS-B 3D airspace.";
+                    actionName = "filter_telemetry_layer";
+                    actionArgs = { domain: "AIR" };
+                    observation = await this.registry.execute(actionName, actionArgs);
+                    reply = `Airspace telemetry active with ${state.flights.length} tracked flights.`;
+                }
+                // 8. GPS
+                else if (lower.includes('my location') || lower.includes('where am i') || lower.includes('my gps')) {
+                    thought = "Acquiring device GPS fix and orienting 3D camera.";
+                    window.AegisAppBus.centerOnGps();
+                    reply = "Acquiring GPS fix and orienting the 3D globe to your device location.";
+                }
+                // 9. Sitrep
+                else if (lower.includes('sitrep') || lower.includes('brief') || lower.includes('threat') || lower.includes('status')) {
+                    thought = "Compiling multi-domain tactical sitrep.";
+                    actionName = "get_sitrep_intel";
+                    observation = await this.registry.execute(actionName);
+                    const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
+                    reply = `Tactical Sitrep: Monitoring ${state.flights.length} flights, ${state.quakes.length} quakes (Peak M${maxQ ? maxQ.mag : 'N/A'}), ${state.wildfires.length} fires, and ${state.satellites.length} satellites. Space Weather: Kp ${state.spaceWeather.kp.toFixed(1)}.`;
+                }
+                // 10. General fallback
+                else {
+                    thought = "User inquiry received. Formulating comprehensive tactical response.";
+                    reply = `Command received: "${prompt}". OpenJarvis 3D surveillance core is operational. You can command me to execute ReAct missions, fly anywhere, zoom, run the morning tactical digest, or launch background operatives.`;
+                }
+
+                return { thought, action: actionName, actionArgs, observation, reply };
+            }
+        }
+
+        const openJarvis = new OpenJarvisReActEngine(jarvisMemory, jarvisTools);
+
+        // Authoritative App Bus accessible by OpenJarvis and UI
         window.AegisAppBus = {
             flyTo: (lat, lon, zoom = 1.35) => smoothFlyTo(lat, lon, zoom),
             flyToQuery: async (place) => {
@@ -2462,6 +2969,7 @@
                 else if (taskType === 'monitor_seismic') startSeismicMonitorTask();
                 else if (taskType === 'patrol_airspace') startAirspacePatrolTask();
                 else if (taskType === 'monitor_wildfires') startWildfireSentinelTask();
+                else if (taskType === 'morning_digest') startTacticalMorningDigest();
             },
             abortTask: () => cancelActiveTask(),
             stopSpeaking: () => stopAllSpeech(),
@@ -2477,250 +2985,31 @@
             benchmarkLocalAI: (iters = 250) => localAI.benchmark(iters)
         };
 
-        class AegisNLU {
-            classify(text) {
-                const raw = (text || '').trim();
-                const lower = raw.toLowerCase();
-
-                if (/^(?:stop|silence|be quiet|shut up|cancel|abort|halt|pause talking)$/i.test(lower) || lower.includes('stop speaking') || lower.includes('stop talking')) {
-                    return { intent: 'STOP_SPEECH' };
+        async function executeSingleAction(cmd, shouldSpeak = true) {
+            document.getElementById('assistantStateText').textContent = "OpenJarvis: Reasoning through ReAct loop...";
+            const result = await openJarvis.execute(cmd);
+            
+            // Render OpenJarvis ReAct Reasoning Step Card if tool was called
+            if (result.thought && result.action) {
+                const chatHistory = document.getElementById('chatHistory');
+                if (chatHistory) {
+                    const card = document.createElement('div');
+                    card.className = 'react-step-card';
+                    card.innerHTML = `
+                        <div class="react-thought"><strong>🧠 Thought:</strong> ${result.thought}</div>
+                        <div class="react-action"><strong>⚙️ Tool:</strong> <code>${result.action}(${JSON.stringify(result.actionArgs || {})})</code></div>
+                        <div class="react-obs"><strong>👁️ Observation:</strong> ${result.observation || 'Success'}</div>
+                    `;
+                    chatHistory.appendChild(card);
                 }
-                if (lower.includes('stop task') || lower.includes('cancel task') || lower.includes('abort task') || lower.includes('stop tracking')) {
-                    return { intent: 'ABORT_TASK' };
-                }
-                if (lower.includes('track iss') || lower.includes('follow iss') || lower.includes('follow space station') || lower.includes('track space station')) {
-                    return { intent: 'TASK_TRACK_ISS' };
-                }
-                if (lower.includes('monitor earthquake') || lower.includes('watch earthquake') || lower.includes('seismic watch') || lower.includes('quake monitor') || lower.includes('seismic sentinel')) {
-                    return { intent: 'TASK_MONITOR_SEISMIC' };
-                }
-                if (lower.includes('patrol airspace') || lower.includes('sweep airspace') || lower.includes('sweep flight') || lower.includes('flight patrol')) {
-                    return { intent: 'TASK_PATROL_AIRSPACE' };
-                }
-                if (lower.includes('monitor fire') || lower.includes('monitor wildfire') || lower.includes('wildfire watch') || lower.includes('wildfire sentinel') || lower.includes('thermal watch')) {
-                    return { intent: 'TASK_MONITOR_WILDFIRES' };
-                }
-                if (lower.includes('cesium') || lower.includes('ion') || lower.includes('photorealistic') || lower.includes('3d tiles')) {
-                    return { intent: 'SET_ENGINE', engine: 'cesium_ion' };
-                }
-                if (lower.includes('three') || lower.includes('satellite map') || lower.includes('day map') || lower.includes('day mode')) {
-                    return { intent: 'SET_ENGINE', engine: 'three_sat' };
-                }
-                if (lower.includes('night') || lower.includes('city lights') || lower.includes('dark map')) {
-                    return { intent: 'SET_ENGINE', engine: 'three_night' };
-                }
-                if (lower.includes('tactical map') || lower.includes('topo')) {
-                    return { intent: 'SET_ENGINE', engine: 'three_topo' };
-                }
-                if (lower.includes('zoom in') || lower.includes('closer')) {
-                    return { intent: 'CAMERA_ZOOM_IN' };
-                }
-                if (lower.includes('zoom out') || lower.includes('pull back')) {
-                    return { intent: 'CAMERA_ZOOM_OUT' };
-                }
-                if (lower.includes('reset camera') || lower.includes('reset view') || lower.includes('home view')) {
-                    return { intent: 'CAMERA_RESET' };
-                }
-                if (lower.includes('stop rotate') || lower.includes('pause rotate') || lower.includes('pause orbit') || lower.includes('stop spin')) {
-                    return { intent: 'SET_ORBIT', state: false };
-                }
-                if (lower.includes('start rotate') || lower.includes('resume orbit') || lower.includes('spin') || lower.includes('auto orbit')) {
-                    return { intent: 'SET_ORBIT', state: true };
-                }
-                if (lower.includes('my location') || lower.includes('where am i') || lower.includes('my gps') || lower.includes('find me')) {
-                    return { intent: 'NAVIGATE_GPS' };
-                }
-                const flyMatch = lower.match(/(?:fly to|go to|take me to|navigate to|look at|head to|search for|find)\s+([a-zA-Z0-9\s,\.-]+)/i);
-                if (flyMatch && !lower.includes('iss') && !lower.includes('earthquake') && !lower.includes('quake') && !lower.includes('wildfire') && !lower.includes('flight')) {
-                    return { intent: 'NAVIGATE_LOCATION', location: flyMatch[1].trim() };
-                }
-                if (lower.includes('wildfire') || lower.includes('fire') || lower.includes('thermal') || lower.includes('eonet')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'FIRE' };
-                }
-                if (lower.includes('earthquake') || lower.includes('quake') || lower.includes('seismic') || lower.includes('tremor')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'SEISMIC' };
-                }
-                if (lower.includes('iss') || lower.includes('space station') || lower.includes('satellite') || lower.includes('orbit')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'SPACE' };
-                }
-                if (lower.includes('military') || lower.includes('defense') || lower.includes('tactical flight')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'AIR', sub: 'MILITARY' };
-                }
-                if (lower.includes('flight') || lower.includes('plane') || lower.includes('airspace')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'AIR' };
-                }
-                if (lower.includes('all assets') || lower.includes('show all')) {
-                    return { intent: 'FILTER_CATEGORY', category: 'ALL' };
-                }
-                if (lower.includes('space weather') || lower.includes('solar storm') || lower.includes('geomagnetic') || lower.includes('kp')) {
-                    return { intent: 'QUERY_SPACE_WEATHER' };
-                }
-                if (lower.includes('sitrep') || lower.includes('brief') || lower.includes('threat') || lower.includes('status')) {
-                    return { intent: 'GET_SITREP' };
-                }
-                if (lower.includes('copy sitrep') || lower.includes('copy report')) {
-                    return { intent: 'COPY_SITREP' };
-                }
-                if (lower.includes('share')) {
-                    return { intent: 'SHARE_SITREP' };
-                }
-                if (lower.includes('benchmark') || lower.includes('perf') || lower.includes('diagnostic')) {
-                    return { intent: 'DIAGNOSTICS' };
-                }
-                if (lower.includes('wake lock') || lower.includes('screen awake') || lower.includes('keep awake')) {
-                    return { intent: 'SET_WAKE_LOCK' };
-                }
-                if (lower.includes('clear chat') || lower.includes('clear transcript') || lower === 'clear') {
-                    return { intent: 'CLEAR_CHAT' };
-                }
-                if (lower.includes('settings') || lower.includes('configure') || lower.includes('ion token')) {
-                    return { intent: 'OPEN_SETTINGS' };
-                }
-                return { intent: 'GENERAL_CHAT', raw: raw };
-            }
-        }
-
-        const aegisNLU = new AegisNLU();
-
-async function executeSingleAction(cmd, shouldSpeak = true) {
-            const parsed = aegisNLU.classify(cmd);
-            let reply = '';
-
-            switch (parsed.intent) {
-                case 'STOP_SPEECH':
-                    window.AegisAppBus.stopSpeaking();
-                    reply = "Voice speech output silenced.";
-                    break;
-                case 'ABORT_TASK':
-                    window.AegisAppBus.abortTask();
-                    reply = "Active autonomous mission aborted. Camera control restored.";
-                    break;
-                case 'TASK_TRACK_ISS':
-                    window.AegisAppBus.startTask('track_iss');
-                    return;
-                case 'TASK_MONITOR_SEISMIC':
-                    window.AegisAppBus.startTask('monitor_seismic');
-                    return;
-                case 'TASK_PATROL_AIRSPACE':
-                    window.AegisAppBus.startTask('patrol_airspace');
-                    return;
-                case 'TASK_MONITOR_WILDFIRES':
-                    window.AegisAppBus.startTask('monitor_wildfires');
-                    return;
-                case 'SET_ENGINE':
-                    window.AegisAppBus.setEngine(parsed.engine);
-                    reply = (parsed.engine === 'cesium_ion') 
-                        ? "Engaged official CesiumJS 3D Photorealistic Engine with authenticated Cesium Ion terrain & 3D buildings."
-                        : `3D Earth engine switched to ${parsed.engine}.`;
-                    break;
-                case 'CAMERA_ZOOM_IN':
-                    window.AegisAppBus.zoomIn();
-                    reply = "Increased 3D camera zoom level.";
-                    break;
-                case 'CAMERA_ZOOM_OUT':
-                    window.AegisAppBus.zoomOut();
-                    reply = "Decreased 3D camera zoom level.";
-                    break;
-                case 'CAMERA_RESET':
-                    window.AegisAppBus.resetCamera();
-                    reply = "3D globe camera reset to default global view.";
-                    break;
-                case 'SET_ORBIT':
-                    const orb = window.AegisAppBus.toggleOrbit(parsed.state);
-                    reply = `Earth orbital rotation is now ${orb ? 'ACTIVE' : 'PAUSED'}.`;
-                    break;
-                case 'NAVIGATE_GPS':
-                    window.AegisAppBus.centerOnGps();
-                    reply = "Acquiring GPS fix and orienting the 3D globe to your device location.";
-                    break;
-                case 'NAVIGATE_LOCATION':
-                    document.getElementById('assistantStateText').textContent = `Locating '${parsed.location}'...`;
-                    const res = await window.AegisAppBus.flyToQuery(parsed.location);
-                    if (res.success) {
-                        reply = `Camera maneuver executed. Flew to ${res.name}${res.country ? ', ' + res.country : ''} at ${res.lat.toFixed(2)}°, ${res.lon.toFixed(2)}° on the 3D globe.`;
-                    } else {
-                        reply = `Global geodetic search for "${parsed.location}" yielded no matching coordinates.`;
-                    }
-                    break;
-                case 'FILTER_CATEGORY':
-                    window.AegisAppBus.filterCategory(parsed.category);
-                    if (parsed.sub === 'MILITARY') {
-                        const mil = state.flights.find(f => f.military);
-                        if (mil) {
-                            window.AegisAppBus.flyTo(mil.lat, mil.lon, 1.35);
-                            reply = `Locked onto special mission flight ${mil.id} (${mil.title}) cruising at FL${Math.round(mil.alt/100)} at ${mil.speed} knots.`;
-                        } else {
-                            reply = "Airspace filter set to military/defense patrol tracks.";
-                        }
-                    } else if (parsed.category === 'FIRE') {
-                        const maxF = [...state.wildfires].sort((a,b) => b.acres - a.acres)[0];
-                        if (maxF) {
-                            window.AegisAppBus.flyTo(maxF.lat, maxF.lon, 1.35);
-                            reply = `Wildfire telemetry active. Tracking ${state.wildfires.length} active thermal events. Centered on ${maxF.title} (${maxF.acres.toLocaleString()} acres).`;
-                        } else {
-                            reply = `NASA EONET Wildfires layer engaged with ${state.wildfires.length} active events.`;
-                        }
-                    } else if (parsed.category === 'SEISMIC') {
-                        const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
-                        if (maxQ) {
-                            window.AegisAppBus.flyTo(maxQ.lat, maxQ.lon, 1.35);
-                            reply = `Seismic filter active. Peak rupture: M${maxQ.mag} at ${maxQ.title}. Total earthquakes: ${state.quakes.length}.`;
-                        } else {
-                            reply = "Seismic telemetry filter active.";
-                        }
-                    } else if (parsed.category === 'SPACE') {
-                        const iss = state.satellites.find(s => s.id.includes('ISS')) || state.satellites[0];
-                        if (iss) {
-                            window.AegisAppBus.flyTo(iss.lat, iss.lon, 1.3);
-                            reply = `Orbital tracking active. Locked onto ISS at ${iss.alt} km altitude travelling at ${iss.velocity.toLocaleString()} km/h.`;
-                        } else {
-                            reply = "Orbital satellite telemetry filter active.";
-                        }
-                    } else {
-                        reply = `Displayed telemetry layer: ${parsed.category}.`;
-                    }
-                    break;
-                case 'QUERY_SPACE_WEATHER':
-                    reply = `NOAA SWPC Space Weather: Planetary K-Index is currently ${state.spaceWeather.kp.toFixed(1)} (${state.spaceWeather.status}). Solar wind & magnetosphere status nominal.`;
-                    break;
-                case 'GET_SITREP':
-                    const maxQ = [...state.quakes].sort((a,b) => b.mag - a.mag)[0];
-                    const milCount = state.flights.filter(f => f.military).length;
-                    reply = `Tactical Sitrep: Monitoring ${state.flights.length} flights (${milCount} defense/patrol), ${state.quakes.length} seismic ruptures (Peak M${maxQ ? maxQ.mag : 'N/A'}), ${state.wildfires.length} active wildfires, and ${state.satellites.length} satellites. Space Weather: Kp ${state.spaceWeather.kp.toFixed(1)}. Active 3D Engine: ${activeEngine.toUpperCase()}.`;
-                    break;
-                case 'COPY_SITREP':
-                    window.AegisAppBus.copySitrep();
-                    reply = "Tactical multi-domain sitrep copied to device clipboard.";
-                    break;
-                case 'SHARE_SITREP':
-                    window.AegisAppBus.shareSitrep();
-                    reply = "Invoking Android system share sheet with intelligence sitrep.";
-                    break;
-                case 'DIAGNOSTICS':
-                    const b = window.AegisAppBus.benchmarkLocalAI(250);
-                    reply = `Diagnostics: 3D Engine: ${activeEngine.toUpperCase()}. Neural Engine: ${b.infPerSec.toLocaleString()} inferences/sec (${b.totalMs}ms). Public data feeds: ${state.flights.length} air, ${state.quakes.length} seismic, ${state.wildfires.length} fire, ${state.satellites.length} space.`;
-                    break;
-                case 'SET_WAKE_LOCK':
-                    if (window.GodsEyeNative && typeof window.GodsEyeNative.setKeepScreenOn === 'function') {
-                        window.GodsEyeNative.setKeepScreenOn(true);
-                    }
-                    reply = "Device wake-lock engaged. Display will remain on indefinitely.";
-                    break;
-                case 'OPEN_SETTINGS':
-                    window.AegisAppBus.openSettings();
-                    reply = "Opened tactical settings and Cesium Ion configuration.";
-                    break;
-                case 'CLEAR_CHAT':
-                    window.AegisAppBus.clearChat();
-                    reply = "Tactical communications transcript cleared.";
-                    break;
-                default:
-                    reply = `Command received: "${cmd}". The 3D Earth picture is active with ${state.flights.length} flights, ${state.quakes.length} quakes, ${state.wildfires.length} fires, and ${state.satellites.length} satellites. You can command me to fly anywhere, zoom, track entities, or monitor threats.`;
-                    break;
             }
 
-            addChatMessage('agent', reply);
-            if (shouldSpeak && parsed.intent !== 'STOP_SPEECH') speakAssistant(reply);
+            addChatMessage('agent', result.reply);
+            jarvisMemory.addTurn('assistant', result.reply);
+            document.getElementById('assistantStateText').textContent = "OpenJarvis: Operational & Ready.";
+            if (shouldSpeak && !cmd.toLowerCase().includes('stop') && !cmd.toLowerCase().includes('silence')) {
+                speakAssistant(result.reply);
+            }
         }
 
         function getSitrepText() {

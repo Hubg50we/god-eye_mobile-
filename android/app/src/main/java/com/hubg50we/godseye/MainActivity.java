@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public String getAppVersion() {
-            return "1.7.2";
+            return "1.8.0";
         }
     }
 }
